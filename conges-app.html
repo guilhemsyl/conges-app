@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Congés</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --cp-color: #e74c3c;
+            --rc-color: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .login-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            text-transform: capitalize;
+        }
+
+        .balances {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+        }
+
+        .balance-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .balance-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Avatar cliquable dans le header */
+        .user-avatar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-avatar-btn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--light-color);
+            border-bottom: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            background: white;
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: bold;
+        }
+
+        .nav-tab.hidden {
+            display: none;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .year-navigation {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .year-navigation button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .year-navigation button:hover {
+            background: #2980b9;
+        }
+
+        .year-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .months-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .month-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .month-title {
+            font-weight: bold;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            min-height: 40px;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .day-cell:hover:not(.empty):not(.other-month):not(.disabled) {
+            background: #f0f0f0;
+        }
+
+        .day-cell.selected {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .day-cell.other-month {
+            color: #bdc3c7;
+            cursor: default;
+        }
+
+        .day-cell.today {
+            background: #e8f4fc;
+            font-weight: bold;
+        }
+
+        .day-cell.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .day-number {
+            margin-bottom: 2px;
+        }
+
+        .leave-indicator {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            margin-top: auto;
+        }
+
+        .leave-indicator.CP {
+            background: var(--cp-color);
+        }
+
+        .leave-indicator.RC {
+            background: var(--rc-color);
+        }
+
+        .leave-indicator.pending {
+            background: var(--warning-color);
+        }
+
+        .range-selection-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .range-selection-info.active {
+            display: block;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
+            background: var(--light-color);
+            font-weight: bold;
+        }
+
+        .data-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-success { background: var(--secondary-color); color: white; }
+        .btn-success:hover { background: #27ae60; }
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: var(--warning-color); color: white; }
+        .btn-warning:hover { background: #e67e22; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 { margin: 0; color: var(--dark-color); }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .modal-body { margin-bottom: 20px; }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        .notification {
+            background: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            gap: 10px;
+            border-left: 4px solid;
+            min-width: 250px;
+        }
+
+        .notification.success { border-left-color: var(--secondary-color); }
+        .notification.error { border-left-color: var(--danger-color); }
+        .notification.info { border-left-color: var(--primary-color); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        /* Bandeau avertissement première connexion */
+        .first-login-banner {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .first-login-banner .banner-icon { font-size: 1.3rem; }
+
+        /* Indicateur de force du mot de passe */
+        .password-strength {
+            margin-top: 8px;
+            font-size: 0.85rem;
+        }
+
+        .strength-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: #eee;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .strength-weak   { width: 33%; background: var(--danger-color); }
+        .strength-medium { width: 66%; background: var(--warning-color); }
+        .strength-strong { width: 100%; background: var(--secondary-color); }
+
+        .password-rules {
+            font-size: 0.82rem;
+            color: #7f8c8d;
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+
+        .password-rules .rule { display: flex; align-items: center; gap: 5px; }
+        .password-rules .rule.ok  { color: var(--secondary-color); }
+        .password-rules .rule.nok { color: #bdc3c7; }
+
+        @media (max-width: 768px) {
+            .login-container { margin: 20px; padding: 20px; }
+            .app-header { flex-direction: column; text-align: center; }
+            .header-left, .header-right { width: 100%; justify-content: center; }
+            .header-right { flex-direction: column; gap: 10px; }
+            .nav-tabs { flex-direction: column; }
+            .nav-tab { min-width: auto; }
+            .months-container { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+            .modal { width: 95%; margin: 0 10px; }
+            .header-buttons { flex-direction: column; width: 100%; }
+        }
+    </style>
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+        emailjs.init('-liETNfsHvYCFH6N2');
+    </script>
+</head>
+<body>
+
+    <!-- Page de login -->
+    <div id="login-page" class="login-container">
+        <div class="login-header">
+            <h1>Gestion des Congés</h1>
+            <p>Connectez-vous pour accéder à votre espace</p>
+        </div>
+        <form class="login-form" id="login-form">
+            <div class="form-group">
+                <label for="login-username">Identifiant</label>
+                <input type="text" id="login-username" placeholder="Votre identifiant" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Mot de passe</label>
+                <input type="password" id="login-password" placeholder="Votre mot de passe" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Se connecter</button>
+        </form>
+        <div style="margin-top: 15px; text-align: center;">
+            <button id="forgot-password-btn" style="background:none; border:none; color: var(--primary-color); cursor:pointer; font-size:0.9rem; text-decoration:underline;">
+                🔑 Mot de passe oublié ?
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: réinitialisation de mot de passe -->
+    <div id="reset-password-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>🔑 Réinitialiser le mot de passe</h2>
+                <button class="modal-close" id="close-reset-password-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; color: #7f8c8d; font-size: 0.95rem;">
+                    Entrez votre adresse email. Si elle est reconnue, votre mot de passe sera réinitialisé
+                    au mot de passe initial. Vous devrez en choisir un nouveau à la reconnexion.
+                </p>
+                <div class="form-group">
+                    <label for="reset-email">Adresse email :</label>
+                    <input type="email" id="reset-email" placeholder="votre@email.com">
+                </div>
+                <div id="reset-confirm-msg" style="display:none; margin-top:12px; padding:12px; border-radius:6px; font-size:0.9rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-reset-password">Annuler</button>
+                <button class="btn btn-primary" id="confirm-reset-password">Réinitialiser</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application principale -->
+    <div id="app-container" class="app-container" style="display: none;">
+        <header class="app-header">
+            <div class="header-left">
+                <h1>Gestion des Congés</h1>
+                <div class="user-info">
+                    <span class="user-name" id="current-user-name">Utilisateur</span>
+                    <span class="user-role" id="current-user-role">rôle</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="balances">
+                    <div class="balance-item">
+                        <span>CP:</span>
+                        <span class="balance-value" id="cp-balance">0</span>
+                    </div>
+                    <div class="balance-item">
+                        <span>RC:</span>
+                        <span class="balance-value" id="rc-balance">0</span>
+                    </div>
+                </div>
+                <!-- FIX: avatar cliquable pour ouvrir le menu utilisateur -->
+                <button class="user-avatar-btn" id="user-menu-btn" title="Menu utilisateur">U</button>
+                <div class="header-buttons">
+                    <button class="btn btn-danger btn-sm" id="logout-btn">🚪 Déconnexion</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-view="calendar">Calendrier</button>
+            <button class="nav-tab" data-view="list">Mes Congés</button>
+            <button class="nav-tab hidden" data-view="team" id="team-tab">Équipe</button>
+            <button class="nav-tab hidden" data-view="admin" id="admin-tab">Administration</button>
+        </nav>
+
+        <main class="main-content">
+            <div id="calendar-view" class="view-container active">
+                <div class="calendar-controls">
+                    <div class="year-navigation">
+                        <button id="prev-year">←</button>
+                        <span class="year-title" id="current-year">2026</span>
+                        <button id="next-year">→</button>
+                    </div>
+                </div>
+                <div class="range-selection-info" id="range-selection-info">
+                    <strong>Sélection:</strong> <span id="selected-range">Aucune</span>
+                </div>
+                <div class="months-container" id="calendar-months"></div>
+            </div>
+
+            <div id="list-view" class="view-container">
+                <div class="calendar-controls">
+                    <div class="filter-controls">
+                        <label for="filter-year">Année:</label>
+                        <select id="filter-year">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                        <label for="filter-type">Type:</label>
+                        <select id="filter-type">
+                            <option value="all">Tous</option>
+                            <option value="CP">CP</option>
+                            <option value="RC">RC</option>
+                        </select>
+                        <label for="filter-status">Statut:</label>
+                        <select id="filter-status">
+                            <option value="all">Tous</option>
+                            <option value="approved">Validé</option>
+                            <option value="pending">En attente</option>
+                            <option value="rejected">Refusé</option>
+                        </select>
+                        <button id="apply-filters" class="btn btn-primary">Appliquer</button>
+                        <button id="reset-filters" class="btn btn-secondary">Réinitialiser</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Durée</th>
+                            <th>Statut</th>
+                            <th>Commentaire</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leave-list-body"></tbody>
+                </table>
+            </div>
+
+            <div id="team-view" class="view-container">
+                <div class="calendar-controls">
+                    <div class="year-navigation">
+                        <button id="team-prev-year">←</button>
+                        <span class="year-title" id="team-current-year">2026</span>
+                        <button id="team-next-year">→</button>
+                    </div>
+                </div>
+                <div class="months-container" id="team-calendar"></div>
+            </div>
+
+            <div id="admin-view" class="view-container">
+                <div class="admin-controls">
+                    <button class="btn btn-primary" id="add-user-btn">➕ Ajouter un salarié</button>
+                </div>
+                <h3>Liste des salariés</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Identifiant</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Service</th>
+                            <th>CP</th>
+                            <th>RC</th>
+                            <th>Manager</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list-body"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: poser un congé -->
+    <div id="add-leave-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Poser un congé</h2>
+                <button class="modal-close" id="close-add-leave-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Dates:</label>
+                    <input type="text" id="leave-dates" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="leave-type">Type:</label>
+                    <select id="leave-type">
+                        <option value="CP">CP</option>
+                        <option value="RC">RC</option>
+                    </select>
+                </div>
+                <!-- Options RC (affiché seulement si type = RC) -->
+                <div class="form-group" id="rc-options" style="display:none; background:#f0f7ff; padding:12px; border-radius:6px; border:1px solid #b3d4f5;">
+                    <label>Durée RC :</label>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+                        <select id="rc-duration-mode" style="flex:0 0 auto;">
+                            <option value="day">Journée entière</option>
+                            <option value="hours">Durée personnalisée</option>
+                        </select>
+                        <input type="text" id="rc-hours-input" placeholder="ex: 1h30, 2h, 45min"
+                               style="display:none; flex:1; min-width:140px;">
+                    </div>
+                    <div id="rc-duration-preview" style="margin-top:8px; font-size:0.85rem; color:#2980b9;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="leave-comment">Commentaire:</label>
+                    <textarea id="leave-comment" placeholder="Optionnel"></textarea>
+                </div>
+                <div class="form-group">
+                    <p>Jours sélectionnés: <strong id="selected-days-count">0</strong></p>
+                    <p>Solde disponible: <strong id="current-cp-balance">0</strong> CP, <strong id="current-rc-balance">0</strong> RC</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-add-leave">Annuler</button>
+                <button class="btn btn-primary" id="confirm-add-leave">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: annuler un congé -->
+    <div id="cancel-leave-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Annuler un congé</h2>
+                <button class="modal-close" id="close-cancel-leave-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="cancel-leave-message"></p>
+                <div class="form-group">
+                    <label for="cancel-reason">Raison (obligatoire):</label>
+                    <textarea id="cancel-reason" placeholder="Indiquez la raison de l'annulation"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-cancel-leave">Annuler</button>
+                <button class="btn btn-danger" id="confirm-cancel-leave">Confirmer l'annulation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: valider un congé (manager) -->
+    <div id="validate-leave-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Valider un congé</h2>
+                <button class="modal-close" id="close-validate-leave-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="validate-leave-message"></p>
+                <div class="form-group">
+                    <label for="validation-comment">Commentaire:</label>
+                    <textarea id="validation-comment" placeholder="Optionnel (obligatoire en cas de refus)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-validation">Annuler</button>
+                <button class="btn btn-danger" id="reject-leave">Refuser</button>
+                <button class="btn btn-success" id="approve-leave">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: ajouter un salarié -->
+    <div id="add-user-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Ajouter un salarié</h2>
+                <button class="modal-close" id="close-add-user-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-user-name">Nom:</label>
+                        <input type="text" id="new-user-name" placeholder="Nom du salarié" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-user-email">Email:</label>
+                        <input type="email" id="new-user-email" placeholder="email@entreprise.com" required>
+                    </div>
+                </div>
+                <div style="background:#eafaf1; padding:10px; border-radius:6px; margin-bottom:10px; font-size:0.85rem; color:#27ae60; border:1px solid #2ecc71;">
+                    ✅ L'identifiant sera l'email. Le mot de passe initial sera <em>email + associationsaintemarie</em>. Le salarié devra le changer à la première connexion.
+                </div>
+                <input type="hidden" id="new-user-username">
+                <input type="hidden" id="new-user-password">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-user-role">Rôle:</label>
+                        <select id="new-user-role" required>
+                            <option value="employé">Employé</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-user-manager">Manager:</label>
+                        <select id="new-user-manager">
+                            <option value="">Aucun</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-user-service">Service / Équipe :</label>
+                        <select id="new-user-service" required>
+                            <option value="jour">Jour (7h/jour RC)</option>
+                            <option value="nuit">Nuit (10h/jour RC)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-user-cp">Solde CP:</label>
+                        <input type="number" id="new-user-cp" value="25" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-user-rc">Solde RC initial (ex: 3h30):</label>
+                        <input type="text" id="new-user-rc" value="0" placeholder="ex: 0, 1h30, 2h" required>
+                    </div>
+                    <div class="form-group"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-add-user">Annuler</button>
+                <button class="btn btn-primary" id="confirm-add-user">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: éditer un salarié -->
+    <div id="edit-user-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Éditer un salarié</h2>
+                <button class="modal-close" id="close-edit-user-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-user-name">Nom:</label>
+                        <input type="text" id="edit-user-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-user-email">Email:</label>
+                        <input type="email" id="edit-user-email" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-user-username">Identifiant:</label>
+                        <input type="text" id="edit-user-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-user-password">Nouveau mot de passe (laisser vide pour conserver):</label>
+                        <input type="password" id="edit-user-password" placeholder="Nouveau mot de passe">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-user-role">Rôle:</label>
+                        <select id="edit-user-role" required>
+                            <option value="employé">Employé</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-user-manager">Manager:</label>
+                        <select id="edit-user-manager">
+                            <option value="">Aucun</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-user-service">Service / Équipe :</label>
+                        <select id="edit-user-service" required>
+                            <option value="jour">Jour (7h/jour RC)</option>
+                            <option value="nuit">Nuit (10h/jour RC)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-user-cp">Solde CP:</label>
+                        <input type="number" id="edit-user-cp" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-user-rc">Solde RC (ex: 3h30):</label>
+                        <input type="text" id="edit-user-rc" placeholder="ex: 0, 1h30, 2h" required>
+                    </div>
+                    <div class="form-group"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-edit-user">Annuler</button>
+                <button class="btn btn-primary" id="confirm-edit-user">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: menu utilisateur -->
+    <div id="user-menu-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Mon compte</h2>
+                <button class="modal-close" id="close-user-menu-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div class="user-avatar" style="width: 60px; height: 60px; font-size: 1.5rem; margin: 0 auto 10px;">
+                            <span id="menu-user-initial">U</span>
+                        </div>
+                        <div style="font-weight: bold;" id="menu-user-name">Utilisateur</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;" id="menu-user-role">Rôle</div>
+                    </div>
+                    <button class="btn btn-secondary" id="change-password-btn">🔑 Changer de mot de passe</button>
+                    <button class="btn btn-danger" id="logout-btn-modal">🚪 Déconnexion</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: changement de mot de passe FORCÉ (première connexion) -->
+    <div id="force-change-password-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header" style="background: linear-gradient(135deg,#f39c12,#e67e22); color:white; margin:-25px -25px 20px; padding:20px 25px; border-radius:8px 8px 0 0;">
+                <h2 style="color:white;">🔑 Changement de mot de passe obligatoire</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:15px; color:#7f8c8d;">
+                    C'est votre première connexion. Vous devez définir un mot de passe personnel avant de continuer.
+                </p>
+                <div class="form-group">
+                    <label for="force-new-password">Nouveau mot de passe :</label>
+                    <input type="password" id="force-new-password" placeholder="8 à 10 caractères" maxlength="10">
+                    <div class="password-strength">
+                        <div class="strength-bar"><div class="strength-fill" id="force-strength-fill" style="width:0%"></div></div>
+                        <div id="force-strength-label" style="margin-top:4px; font-size:0.8rem; color:#bbb">Entrez un mot de passe</div>
+                    </div>
+                    <div class="password-rules" id="force-password-rules">
+                        <div class="rule nok" id="rule-length">✗ Entre 8 et 10 caractères</div>
+                        <div class="rule nok" id="rule-letter">✗ Au moins une lettre (majuscule ou minuscule)</div>
+                        <div class="rule nok" id="rule-digit">✗ Au moins un chiffre</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="force-confirm-password">Confirmer le mot de passe :</label>
+                    <input type="password" id="force-confirm-password" placeholder="Répétez le mot de passe" maxlength="10">
+                    <div id="force-match-msg" style="font-size:0.82rem; margin-top:5px; color:#bbb;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- Pas de bouton Annuler : changement obligatoire -->
+                <button class="btn btn-primary" id="confirm-force-change-password">Définir mon mot de passe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: changer de mot de passe -->
+    <div id="change-password-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Changer de mot de passe</h2>
+                <button class="modal-close" id="close-change-password-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="current-password">Mot de passe actuel:</label>
+                    <input type="password" id="current-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Nouveau mot de passe :</label>
+                    <input type="password" id="new-password" placeholder="8 à 10 caractères" maxlength="10" required>
+                    <div class="password-strength">
+                        <div class="strength-bar"><div class="strength-fill" id="change-strength-fill" style="width:0%"></div></div>
+                        <div id="change-strength-label" style="margin-top:4px; font-size:0.8rem; color:#bbb">Entrez un mot de passe</div>
+                    </div>
+                    <div class="password-rules">
+                        <div class="rule nok" id="change-rule-length">✗ Entre 8 et 10 caractères</div>
+                        <div class="rule nok" id="change-rule-letter">✗ Au moins une lettre</div>
+                        <div class="rule nok" id="change-rule-digit">✗ Au moins un chiffre</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirmer le nouveau mot de passe :</label>
+                    <input type="password" id="confirm-password" placeholder="Répétez le mot de passe" maxlength="10" required>
+                    <div id="change-match-msg" style="font-size:0.82rem; margin-top:5px; color:#bbb;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-change-password">Annuler</button>
+                <button class="btn btn-primary" id="confirm-change-password">Changer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification-container" id="notification-container"></div>
+
+    <script>
+        // ========== DONNÉES ==========
+        let users = [
+            { id: 1, username: "sylvain@entreprise.com", password: "sylvain@entreprise.comassociationsaintemarie",
+              name: "Sylvain Guilhem", email: "sylvain@entreprise.com",
+              role: "employé", managerId: 2, service: "jour", balances: { CP: 25, RC: 0 }, mustChangePassword: true },
+            { id: 2, username: "jean.dupont@entreprise.com", password: "jean.dupont@entreprise.comassociationsaintemarie",
+              name: "Jean Dupont", email: "jean.dupont@entreprise.com",
+              role: "manager", managerId: null, service: "jour", balances: { CP: 30, RC: 0 }, mustChangePassword: true },
+            { id: 3, username: "marie.martin@entreprise.com", password: "marie.martin@entreprise.comassociationsaintemarie",
+              name: "Marie Martin", email: "marie.martin@entreprise.com",
+              role: "employé", managerId: 2, service: "nuit", balances: { CP: 22, RC: 0 }, mustChangePassword: true },
+            { id: 4, username: "admin@entreprise.com", password: "admin@entreprise.comassociationsaintemarie",
+              name: "Admin System", email: "admin@entreprise.com",
+              role: "admin", managerId: null, service: "jour", balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+            { id: 5, username: "guilhem.syl@gmail.com", password: "guilhem.syl@gmail.comassociationsaintemarie",
+              name: "Sylvain Guilhem", email: "guilhem.syl@gmail.com",
+              role: "admin", managerId: null, service: "jour", balances: { CP: 0, RC: 0 }, mustChangePassword: true }
+        ];
+        // RC stocké en MINUTES. 1 journée = 420 min (jour) ou 600 min (nuit)
+        // Quarts d'heure = multiples de 15 min
+
+        let leaves = {
+            '2026-05-08': { id: 'l1', userId: 1, type: 'CP', status: 'approved', comment: '' },
+            '2026-05-09': { id: 'l2', userId: 1, type: 'CP', status: 'approved', comment: '' },
+            '2026-06-12': { id: 'l3', userId: 1, type: 'CP', status: 'pending', comment: 'Congé pour déménagement' },
+            '2026-06-15': { id: 'l4', userId: 3, type: 'RC', status: 'pending', comment: '' }
+        };
+
+        let currentUser = null;
+        let currentYear = 2026;
+        let selectedDates = [];
+        let isSelectingRange = false;
+        let firstSelectedDate = null;
+        let isLoggedIn = false;
+
+        // Clé pour savoir quel mois a déjà été crédité (format "YYYY-MM")
+        // Stockée dans localStorage pour persister entre les sessions
+        const ACCRUAL_KEY = 'cp_last_accrual';
+
+        // ========== UTILITAIRES ==========
+        const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+        const dayNames = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+        function generateId() {
+            return users.length === 0 ? 1 : Math.max(...users.map(u => u.id)) + 1;
+        }
+
+        // ========== UTILITAIRES RC (en minutes) ==========
+        // Convertir une saisie admin RC (ex: "3h45" ou "225") en minutes
+        function parseRCInput(val) {
+            if (!val && val !== 0) return 0;
+            const s = String(val).trim();
+            const parsed = parseHoursMinutes(s);
+            if (parsed !== null) return parsed;
+            // Fallback: nombre seul = minutes
+            const n = parseFloat(s);
+            return isNaN(n) ? 0 : roundToQuarter(n);
+        }
+        // Journée RC selon service
+        function rcDayMinutes(user) {
+            return (user && user.service === 'nuit') ? 600 : 420;
+        }
+
+        // Formater des minutes en "Xh YYmin" ou "Xh"
+        function formatMinutes(totalMin) {
+            if (!totalMin && totalMin !== 0) return '0h';
+            const h = Math.floor(Math.abs(totalMin) / 60);
+            const m = Math.abs(totalMin) % 60;
+            const sign = totalMin < 0 ? '-' : '';
+            if (m === 0) return `${sign}${h}h`;
+            return `${sign}${h}h${String(m).padStart(2,'0')}`;
+        }
+
+        // Arrondir au quart d'heure le plus proche
+        function roundToQuarter(minutes) {
+            return Math.round(minutes / 15) * 15;
+        }
+
+        // Convertir "Xh YYmin" ou "Xh" en minutes
+        function parseHoursMinutes(str) {
+            str = str.trim().toLowerCase().replace(',', '.');
+            // Format "1h30" ou "1h 30" ou "1h30min"
+            const match = str.match(/^(\d+)h(\d+)?(?:min)?$/);
+            if (match) {
+                const h = parseInt(match[1]) || 0;
+                const m = parseInt(match[2]) || 0;
+                return roundToQuarter(h * 60 + m);
+            }
+            // Format "90min" ou "90"
+            const minOnly = str.match(/^(\d+)\s*(?:min)?$/);
+            if (minOnly) return roundToQuarter(parseInt(minOnly[1]));
+            return null;
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('fr-FR', {
+                weekday: 'short', month: 'short', day: 'numeric'
+            });
+        }
+
+        function isToday(dateStr) {
+            return new Date(dateStr).toDateString() === new Date().toDateString();
+        }
+
+        function isPastDate(dateStr) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            return new Date(dateStr) < today;
+        }
+
+        function getUserById(id) {
+            if (id === undefined || id === null || isNaN(id)) return null;
+            const userId = typeof id === 'string' ? parseInt(id) : id;
+            return users.find(u => u.id === userId) || null;
+        }
+
+        function getUserByUsername(username) {
+            // L'identifiant de connexion est l'email - insensible à la casse
+            const norm = username.trim().toLowerCase();
+            return users.find(u =>
+                u.email.toLowerCase() === norm ||
+                u.username.toLowerCase() === norm
+            ) || null;
+        }
+
+        // ========== RÉINITIALISATION MOT DE PASSE ==========
+        async function resetPassword(email) {
+            const user = users.find(u => u.email === email.trim().toLowerCase());
+            if (!user) return false;
+
+            // Remettre le mot de passe initial et forcer le changement
+            const tempPassword = user.email + 'associationsaintemarie';
+            user.password = tempPassword;
+            user.mustChangePassword = true;
+
+            // Envoi de l'email via EmailJS
+            await emailjs.send('service_oawv7mi', 'template_f82be1k', {
+                to_email:     user.email,
+                to_name:      user.name,
+                user_email:   user.email,
+                temp_password: tempPassword
+            });
+
+            return true;
+        }
+
+        // ========== VALIDATION MOT DE PASSE ==========
+        // Règles : 8 à 10 caractères, au moins 1 lettre, au moins 1 chiffre
+        function validatePasswordComplexity(pwd) {
+            const len   = pwd.length >= 8 && pwd.length <= 10;
+            const letter = /[a-zA-Z]/.test(pwd);
+            const digit  = /[0-9]/.test(pwd);
+            return { len, letter, digit, valid: len && letter && digit };
+        }
+
+        function getPasswordStrength(pwd) {
+            const r = validatePasswordComplexity(pwd);
+            const score = [r.len, r.letter, r.digit].filter(Boolean).length;
+            if (score === 3) return { label: 'Fort ✅', cls: 'strength-strong' };
+            if (score === 2) return { label: 'Moyen ⚠️', cls: 'strength-medium' };
+            return { label: 'Faible ❌', cls: 'strength-weak' };
+        }
+
+        function bindPasswordStrength(inputId, fillId, labelId, ruleLenId, ruleLetId, ruleDigId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', () => {
+                const pwd = input.value;
+                const r = validatePasswordComplexity(pwd);
+                const s = pwd.length ? getPasswordStrength(pwd) : null;
+
+                const fill  = document.getElementById(fillId);
+                const lbl   = document.getElementById(labelId);
+                fill.className = 'strength-fill ' + (s ? s.cls : '');
+                fill.style.width = s ? '' : '0%';
+                lbl.textContent = s ? s.label : 'Entrez un mot de passe';
+
+                const setRule = (id, ok) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.className = 'rule ' + (ok ? 'ok' : 'nok');
+                    el.textContent = (ok ? '✓ ' : '✗ ') + el.textContent.slice(2);
+                };
+                setRule(ruleLenId,  r.len);
+                setRule(ruleLetId,  r.letter);
+                setRule(ruleDigId,  r.digit);
+            });
+        }
+
+        function isManager() {
+            return currentUser && (currentUser.role === 'manager' || currentUser.role === 'admin');
+        }
+
+        function isAdmin() {
+            return currentUser && currentUser.role === 'admin';
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.innerHTML = `
+                <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span style="flex:1">${message}</span>
+            `;
+            container.appendChild(notif);
+            setTimeout(() => notif.remove(), 5000);
+        }
+
+        // ========== ACCUMULATION MENSUELLE CP ==========
+        function runMonthlyAccrual() {
+            const now = new Date();
+            // Seulement le 1er du mois (ou si c'est le 1er et que ce mois n'a pas encore été crédité)
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const lastAccrual = localStorage.getItem(ACCRUAL_KEY);
+
+            if (lastAccrual === currentMonthKey) return; // déjà crédité ce mois
+
+            const today = now.getDate();
+            if (today !== 1) return; // on ne crédite que le 1er du mois
+
+            // Créditer 2.5 CP à chaque salarié (sauf admin pur sans soldes)
+            let count = 0;
+            users.forEach(user => {
+                user.balances.CP = Math.round((user.balances.CP + 2.5) * 10) / 10;
+                count++;
+            });
+
+            // Marquer ce mois comme crédité
+            localStorage.setItem(ACCRUAL_KEY, currentMonthKey);
+
+            console.log(`[CP Accrual] ${currentMonthKey} : +2.5 CP crédités pour ${count} salarié(s)`);
+        }
+
+        // Forcer le crédit pour un mois donné (usage admin)
+        function forceMonthlyAccrual() {
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            users.forEach(user => {
+                user.balances.CP = Math.round((user.balances.CP + 2.5) * 10) / 10;
+            });
+            localStorage.setItem(ACCRUAL_KEY, currentMonthKey);
+            updateBalances();
+            if (isAdmin()) renderUsersList();
+            showNotification('2.5 CP crédités à tous les salariés', 'success');
+        }
+
+        // ========== AUTHENTIFICATION ==========
+        // FIX: updateUIForCurrentUser au niveau global pour être accessible depuis login()
+        function updateUIForCurrentUser() {
+            if (!currentUser) return;
+
+            document.getElementById('current-user-name').textContent = currentUser.name;
+            document.getElementById('current-user-role').textContent = currentUser.role;
+            updateBalances();
+
+            // Mettre à jour l'avatar dans le header
+            document.getElementById('user-menu-btn').textContent = currentUser.name.charAt(0).toUpperCase();
+
+            // Afficher/masquer les onglets selon le rôle
+            document.getElementById('team-tab').classList.toggle('hidden', !isManager());
+            document.getElementById('admin-tab').classList.toggle('hidden', !isAdmin());
+
+            // Réactiver l'onglet calendrier par défaut
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelector('[data-view="calendar"]').classList.add('active');
+            document.getElementById('calendar-view').classList.add('active');
+        }
+
+        function login(username, password) {
+            const user = getUserByUsername(username);
+            if (!user) { showNotification('Identifiant incorrect', 'error'); return false; }
+            // Pour le mot de passe initial, on compare aussi avec l'email normalisé
+            // au cas où l'utilisateur aurait tapé son email avec une casse différente
+            const initialPassword = user.email.toLowerCase() + 'associationsaintemarie';
+            const passwordMatch = (user.password === password) || (user.mustChangePassword && password === initialPassword);
+            if (!passwordMatch) { showNotification('Mot de passe incorrect', 'error'); return false; }
+
+            currentUser = user;
+            isLoggedIn = true;
+            currentYear = new Date().getFullYear();
+
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+
+            // Accumulation CP auto (crédite si c'est le 1er du mois et pas encore fait)
+            runMonthlyAccrual();
+            // Resynchroniser currentUser avec les balances potentiellement mises à jour
+            currentUser = getUserById(currentUser.id) || currentUser;
+
+            updateUIForCurrentUser();
+            renderCalendar();
+            generateLeaveList();
+            if (isAdmin()) renderUsersList();
+
+            // FIX: si première connexion, forcer le changement de mot de passe
+            if (user.mustChangePassword) {
+                document.getElementById('force-change-password-modal').classList.add('active');
+                showNotification(`Bienvenue, ${user.name} ! Veuillez définir votre mot de passe.`, 'info');
+            } else {
+                showNotification(`Bienvenue, ${user.name} !`, 'success');
+            }
+            return true;
+        }
+
+        function logout() {
+            currentUser = null;
+            isLoggedIn = false;
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            showNotification('Vous avez été déconnecté', 'info');
+        }
+
+        function backToLogin() {
+            currentUser = null;
+            isLoggedIn = false;
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+        }
+
+        function changePassword(currentPassword, newPassword, confirmPassword) {
+            if (!currentUser) { showNotification('Vous devez être connecté', 'error'); return false; }
+            if (currentUser.password !== currentPassword) { showNotification('Mot de passe actuel incorrect', 'error'); return false; }
+            return applyNewPassword(newPassword, confirmPassword);
+        }
+
+        // Valide et applique un nouveau mot de passe (utilisé lors du changement forcé et volontaire)
+        function applyNewPassword(newPassword, confirmPassword) {
+            const r = validatePasswordComplexity(newPassword);
+            if (!r.len)    { showNotification('Le mot de passe doit contenir entre 8 et 10 caractères', 'error'); return false; }
+            if (!r.letter) { showNotification('Le mot de passe doit contenir au moins une lettre', 'error'); return false; }
+            if (!r.digit)  { showNotification('Le mot de passe doit contenir au moins un chiffre', 'error'); return false; }
+            if (newPassword !== confirmPassword) { showNotification('Les mots de passe ne correspondent pas', 'error'); return false; }
+
+            currentUser.password = newPassword;
+            currentUser.mustChangePassword = false;
+            const userInArray = getUserById(currentUser.id);
+            if (userInArray) {
+                userInArray.password = newPassword;
+                userInArray.mustChangePassword = false;
+            }
+            showNotification('Mot de passe défini avec succès !', 'success');
+            return true;
+        }
+
+        // ========== GESTION DES CONGÉS ==========
+        function updateBalances() {
+            if (!currentUser) return;
+            document.getElementById('cp-balance').textContent = currentUser.balances.CP;
+            document.getElementById('rc-balance').textContent = formatMinutes(currentUser.balances.RC);
+            document.getElementById('current-cp-balance').textContent = currentUser.balances.CP;
+            document.getElementById('current-rc-balance').textContent = formatMinutes(currentUser.balances.RC);
+        }
+
+        function updateUserBalances(userId) {
+            const user = getUserById(userId);
+            if (user && user.id === currentUser.id) {
+                currentUser.balances = { ...user.balances };
+                updateBalances();
+            }
+        }
+
+        function addLeave(dates, type) {
+            const comment = document.getElementById('leave-comment').value;
+            const totalDays = dates.length;
+
+            if (type === 'CP') {
+                if (currentUser.balances.CP < totalDays) {
+                    showNotification('Solde CP insuffisant', 'error'); return false;
+                }
+                dates.forEach(dateStr => {
+                    leaves[dateStr] = {
+                        id: 'l-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                        userId: currentUser.id, type: 'CP', status: 'pending',
+                        durationMin: null, // CP = journée entière
+                        comment: comment,
+                        dateRequested: new Date().toISOString().split('T')[0]
+                    };
+                });
+                currentUser.balances.CP -= totalDays;
+
+            } else if (type === 'RC') {
+                // Lire la durée RC : journée ou heures
+                const rcMode = document.getElementById('rc-duration-mode').value;
+                let durationMin;
+                if (rcMode === 'day') {
+                    durationMin = rcDayMinutes(currentUser) * totalDays;
+                } else {
+                    const raw = document.getElementById('rc-hours-input').value.trim();
+                    durationMin = parseHoursMinutes(raw);
+                    if (!durationMin || durationMin <= 0) {
+                        showNotification('Durée RC invalide. Ex: 1h30, 2h, 45min', 'error'); return false;
+                    }
+                    if (durationMin % 15 !== 0) {
+                        showNotification('La durée RC doit être un multiple de 15 minutes', 'error'); return false;
+                    }
+                }
+                if (currentUser.balances.RC < durationMin) {
+                    showNotification(`Solde RC insuffisant (${formatMinutes(currentUser.balances.RC)} disponible)`, 'error'); return false;
+                }
+                // RC ne peut couvrir qu'1 date à la fois en mode heures
+                if (rcMode === 'hours' && dates.length > 1) {
+                    showNotification('En mode heures, sélectionnez une seule date', 'error'); return false;
+                }
+                dates.forEach(dateStr => {
+                    const dur = rcMode === 'day' ? rcDayMinutes(currentUser) : durationMin;
+                    leaves[dateStr] = {
+                        id: 'l-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                        userId: currentUser.id, type: 'RC', status: 'pending',
+                        durationMin: dur,
+                        comment: comment,
+                        dateRequested: new Date().toISOString().split('T')[0]
+                    };
+                });
+                currentUser.balances.RC -= durationMin;
+            }
+
+            const userInArray = getUserById(currentUser.id);
+            if (userInArray) userInArray.balances = { ...currentUser.balances };
+
+            updateBalances();
+            showNotification(type === 'CP'
+                ? `CP posé : ${totalDays} jour(s)`
+                : `RC posé : ${formatMinutes(leaves[dates[0]].durationMin * (type === 'RC' && document.getElementById('rc-duration-mode').value === 'day' ? totalDays : 1))}`,
+                'success');
+            return true;
+        }
+
+        // FIX: la raison est passée en paramètre, pas relue depuis le DOM dans la fonction
+        function cancelLeave(dateStr) {
+            const leave = leaves[dateStr];
+            if (!leave || leave.userId !== currentUser.id) return false;
+            if (leave.status !== 'approved') {
+                showNotification('Seuls les congés validés peuvent être annulés', 'error'); return false;
+            }
+            const reason = document.getElementById('cancel-reason').value;
+            leave.status = 'cancellation_requested';
+            leave.cancelReason = reason;
+            leave.cancelDate = new Date().toISOString().split('T')[0];
+            // Rembourser le solde RC en minutes
+            if (leave.type === 'RC') {
+                const refund = leave.durationMin || rcDayMinutes(currentUser);
+                currentUser.balances.RC += refund;
+                const u = getUserById(currentUser.id);
+                if (u) u.balances.RC = currentUser.balances.RC;
+            }
+            showNotification("Demande d'annulation envoyée", 'success');
+            return true;
+        }
+
+        function validateLeave(dateStr, status, comment) {
+            const leave = leaves[dateStr];
+            if (!leave) return false;
+
+            const user = getUserById(leave.userId);
+            if (!isManager() || !user || (user.managerId !== currentUser.id && !isAdmin())) {
+                showNotification('Non autorisé', 'error'); return false;
+            }
+
+            leave.status = status;
+            leave.validationComment = comment;
+            leave.validatedBy = currentUser.id;
+            leave.validationDate = new Date().toISOString().split('T')[0];
+
+            if (status === 'rejected') {
+                if (leave.type === 'CP') user.balances.CP += 1;
+                else if (leave.type === 'RC') {
+                    // Rembourser en minutes
+                    const dur = leave.durationMin || rcDayMinutes(user);
+                    user.balances.RC += dur;
+                }
+                updateUserBalances(user.id);
+            }
+
+            showNotification(`Congé ${status === 'approved' ? 'validé' : 'refusé'}`, 'success');
+            return true;
+        }
+
+        // ========== GESTION DES SALARIÉS ==========
+        function addUser(name, email, username, password, role, managerId, cp, rc) {
+            if (!name || !email || !username || !password) {
+                showNotification('Tous les champs sont obligatoires', 'error'); return false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showNotification('Format d\'email invalide', 'error'); return false;
+            }
+            if (users.some(u => u.username === username)) {
+                showNotification('Identifiant déjà utilisé', 'error'); return false;
+            }
+            if (users.some(u => u.email === email)) {
+                showNotification('Email déjà utilisé', 'error'); return false;
+            }
+
+            const serviceVal = document.getElementById('new-user-service').value || 'jour';
+            users.push({
+                id: generateId(),
+                username: email,
+                password: email + 'associationsaintemarie',
+                name, email, role,
+                managerId: managerId ? parseInt(managerId) : null,
+                service: serviceVal,
+                // RC stocké en minutes (champ saisi en h:min converti)
+                balances: { CP: parseInt(cp) || 0, RC: parseRCInput(rc) },
+                mustChangePassword: true
+            });
+
+            showNotification(`Salarié ${name} ajouté`, 'success');
+            renderUsersList();
+            return true;
+        }
+
+        function editUser(id, name, email, username, password, role, managerId, cp, rc) {
+            id = parseInt(id);
+            if (isNaN(id)) { showNotification('ID invalide', 'error'); return false; }
+            if (!name || !email || !username) {
+                showNotification('Nom, email et identifiant sont obligatoires', 'error'); return false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showNotification('Format d\'email invalide', 'error'); return false;
+            }
+
+            const user = getUserById(id);
+            if (!user) { showNotification('Salarié introuvable', 'error'); return false; }
+
+            if (users.some(u => u.username === username && u.id !== id)) {
+                showNotification('Identifiant déjà utilisé', 'error'); return false;
+            }
+            if (users.some(u => u.email === email && u.id !== id)) {
+                showNotification('Email déjà utilisé', 'error'); return false;
+            }
+
+            user.name = name; user.email = email; user.username = username;
+            if (password) {
+                if (password.length < 6) {
+                    showNotification('Le mot de passe doit contenir au moins 6 caractères', 'error'); return false;
+                }
+                user.password = password;
+            }
+            user.role = role;
+            user.managerId = managerId ? parseInt(managerId) : null;
+            user.service = document.getElementById('edit-user-service').value || 'jour';
+            user.balances.CP = parseInt(cp) || 0;
+            user.balances.RC = parseRCInput(rc);
+
+            if (user.id === currentUser.id) {
+                currentUser = { ...user };
+                updateUIForCurrentUser();
+            }
+
+            showNotification(`Salarié ${name} mis à jour`, 'success');
+            renderUsersList();
+            return true;
+        }
+
+        function deleteUser(id) {
+            id = parseInt(id);
+            if (isNaN(id)) { showNotification('ID invalide', 'error'); return false; }
+            if (id === currentUser.id) {
+                showNotification('Impossible de supprimer l\'utilisateur actuel', 'error'); return false;
+            }
+            const idx = users.findIndex(u => u.id === id);
+            if (idx === -1) { showNotification('Salarié introuvable', 'error'); return false; }
+
+            Object.keys(leaves).forEach(date => {
+                if (leaves[date].userId === id) delete leaves[date];
+            });
+
+            users.splice(idx, 1);
+            showNotification('Salarié supprimé', 'success');
+            renderUsersList();
+            return true;
+        }
+
+        // ========== SÉLECTION DE DATES ==========
+        function resetRangeSelection() {
+            selectedDates = [];
+            isSelectingRange = false;
+            firstSelectedDate = null;
+            document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('selected'));
+            document.getElementById('range-selection-info').classList.remove('active');
+        }
+
+        function handleDateClick(dateStr) {
+            if (!isLoggedIn || isPastDate(dateStr)) return;
+
+            // Vérifier si c'est un congé de l'utilisateur courant
+            if (leaves[dateStr] && leaves[dateStr].userId === currentUser.id) {
+                if (leaves[dateStr].status === 'approved') {
+                    showCancelLeaveModal(dateStr);
+                }
+                return;
+            }
+
+            // Vérifier si c'est un congé à valider (manager)
+            if (isManager() && leaves[dateStr] && leaves[dateStr].status === 'pending') {
+                showValidateLeaveModal(dateStr, leaves[dateStr]);
+                return;
+            }
+
+            // Sélection de plage
+            if (!isSelectingRange) {
+                resetRangeSelection();
+                firstSelectedDate = dateStr;
+                selectedDates = [dateStr];
+                const cell = document.querySelector(`.day-cell[data-date="${dateStr}"]`);
+                if (cell) cell.classList.add('selected');
+                isSelectingRange = true;
+                document.getElementById('range-selection-info').classList.add('active');
+                document.getElementById('selected-range').textContent = formatDate(dateStr) + ' (cliquez sur une 2ème date pour une plage)';
+            } else {
+                let start = firstSelectedDate;
+                let end = dateStr;
+                if (new Date(end) < new Date(start)) [start, end] = [end, start];
+
+                selectedDates = [];
+                const cur = new Date(start);
+                const endDate = new Date(end);
+                while (cur <= endDate) {
+                    const ds = cur.toISOString().split('T')[0];
+                    selectedDates.push(ds);
+                    const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
+                    if (cell) cell.classList.add('selected');
+                    cur.setDate(cur.getDate() + 1);
+                }
+
+                isSelectingRange = false;
+                document.getElementById('selected-range').textContent =
+                    `${formatDate(start)} → ${formatDate(end)} (${selectedDates.length} jours)`;
+                showAddLeaveModal();
+            }
+        }
+
+        // ========== CALENDRIER ==========
+        function generateCalendar(containerId, year) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            for (let month = 0; month < 12; month++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'month-card';
+
+                const header = document.createElement('div');
+                header.className = 'month-header';
+                header.innerHTML = `<span class="month-title">${monthNames[month]} ${year}</span>`;
+                monthDiv.appendChild(header);
+
+                const weekdays = document.createElement('div');
+                weekdays.className = 'weekdays';
+                dayNames.forEach(day => {
+                    const d = document.createElement('div');
+                    d.textContent = day;
+                    weekdays.appendChild(d);
+                });
+                monthDiv.appendChild(weekdays);
+
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'days-grid';
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const firstDayOfWeek = firstDay === 0 ? 6 : firstDay - 1;
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+                // Cases du mois précédent
+                for (let i = 0; i < firstDayOfWeek; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'day-cell other-month';
+                    el.textContent = daysInPrevMonth - firstDayOfWeek + i + 1;
+                    daysGrid.appendChild(el);
+                }
+
+                // Jours du mois
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const dateStr = date.toISOString().split('T')[0];
+                    const el = document.createElement('div');
+                    el.className = 'day-cell';
+                    el.dataset.date = dateStr;
+                    el.textContent = day;
+
+                    if (isToday(dateStr)) el.classList.add('today');
+                    if (isPastDate(dateStr)) el.classList.add('disabled');
+
+                    const leave = leaves[dateStr];
+                    if (leave) {
+                        const indicator = document.createElement('div');
+                        indicator.className = `leave-indicator ${leave.type} ${leave.status === 'pending' ? 'pending' : ''}`;
+                        el.appendChild(indicator);
+                    }
+
+                    if (!isPastDate(dateStr)) {
+                        el.addEventListener('click', () => handleDateClick(dateStr));
+                    }
+
+                    daysGrid.appendChild(el);
+                }
+
+                // Cases du mois suivant
+                const totalCells = firstDayOfWeek + daysInMonth;
+                const remaining = 7 - (totalCells % 7);
+                if (remaining < 7) {
+                    for (let i = 1; i <= remaining; i++) {
+                        const el = document.createElement('div');
+                        el.className = 'day-cell other-month';
+                        el.textContent = i;
+                        daysGrid.appendChild(el);
+                    }
+                }
+
+                monthDiv.appendChild(daysGrid);
+                container.appendChild(monthDiv);
+            }
+        }
+
+        function renderCalendar() {
+            if (!isLoggedIn) return;
+            document.getElementById('current-year').textContent = currentYear;
+            generateCalendar('calendar-months', currentYear);
+        }
+
+        function renderTeamCalendar() {
+            if (!isLoggedIn || !isManager()) return;
+            document.getElementById('team-current-year').textContent = currentYear;
+            generateCalendar('team-calendar', currentYear);
+        }
+
+        function generateLeaveList() {
+            if (!isLoggedIn) return;
+            const tbody = document.getElementById('leave-list-body');
+            tbody.innerHTML = '';
+
+            const year = document.getElementById('filter-year').value;
+            const type = document.getElementById('filter-type').value;
+            const status = document.getElementById('filter-status').value;
+
+            const userLeaves = Object.entries(leaves)
+                .filter(([date, leave]) => leave.userId === currentUser.id)
+                .filter(([date, leave]) => {
+                    if (year !== 'all' && !date.startsWith(year)) return false;
+                    if (type !== 'all' && leave.type !== type) return false;
+                    if (status !== 'all' && leave.status !== status) return false;
+                    return true;
+                })
+                .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+            if (userLeaves.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Aucun congé</td></tr>';
+                return;
+            }
+
+            userLeaves.forEach(([dateStr, leave]) => {
+                const tr = document.createElement('tr');
+                const dur = leave.type === 'RC' && leave.durationMin
+                    ? formatMinutes(leave.durationMin)
+                    : '1 jour';
+                tr.innerHTML = `
+                    <td>${formatDate(dateStr)}</td>
+                    <td>${leave.type}</td>
+                    <td>${dur}</td>
+                    <td>${leave.status}</td>
+                    <td>${leave.comment || '-'}</td>
+                    <td>
+                        ${leave.status === 'approved' && !isPastDate(dateStr)
+                            ? `<button class="btn btn-danger btn-sm" onclick="showCancelLeaveModal('${dateStr}')">Annuler</button>`
+                            : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderUsersList() {
+            if (!isLoggedIn || !isAdmin()) return;
+            const tbody = document.getElementById('users-list-body');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                const manager = getUserById(user.managerId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.service === 'nuit' ? '🌙 Nuit' : '☀️ Jour'}</td>
+                    <td>${user.balances.CP}</td>
+                    <td>${formatMinutes(user.balances.RC)}</td>
+                    <td>${manager ? manager.name : '-'}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showEditUserModal(${user.id})">Éditer</button>
+                        ${user.id !== currentUser.id
+                            ? `<button class="btn btn-danger btn-sm" onclick="confirmDeleteUser(${user.id})">Supprimer</button>`
+                            : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function confirmDeleteUser(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce salarié ?')) deleteUser(id);
+        }
+
+        // ========== MODALS ==========
+        function showAddLeaveModal() {
+            if (!isLoggedIn) return;
+            const datesText = selectedDates.length === 1
+                ? formatDate(selectedDates[0])
+                : `${formatDate(selectedDates[0])} → ${formatDate(selectedDates[selectedDates.length - 1])} (${selectedDates.length} jours)`;
+            document.getElementById('leave-dates').value = datesText;
+            document.getElementById('selected-days-count').textContent = selectedDates.length;
+            document.getElementById('leave-comment').value = '';
+            document.getElementById('leave-type').value = 'CP';
+            document.getElementById('rc-options').style.display = 'none';
+            document.getElementById('rc-duration-mode').value = 'day';
+            document.getElementById('rc-hours-input').style.display = 'none';
+            document.getElementById('rc-hours-input').value = '';
+            document.getElementById('rc-duration-preview').textContent = '';
+            updateBalances();
+            document.getElementById('add-leave-modal').classList.add('active');
+        }
+
+        function showCancelLeaveModal(dateStr) {
+            if (!isLoggedIn) return;
+            const leave = leaves[dateStr];
+            if (!leave) return;
+            document.getElementById('cancel-leave-message').textContent =
+                `Annuler le congé ${leave.type} du ${formatDate(dateStr)} ?`;
+            document.getElementById('cancel-reason').value = '';
+            document.getElementById('cancel-leave-modal').dataset.date = dateStr;
+            document.getElementById('cancel-leave-modal').classList.add('active');
+        }
+
+        function showValidateLeaveModal(dateStr, leave) {
+            if (!isLoggedIn || !isManager()) return;
+            const user = getUserById(leave.userId);
+            document.getElementById('validate-leave-message').textContent =
+                `Valider le congé ${leave.type} de ${user ? user.name : 'inconnu'} pour le ${formatDate(dateStr)} ?`;
+            document.getElementById('validation-comment').value = '';
+            document.getElementById('validate-leave-modal').dataset.date = dateStr;
+            document.getElementById('validate-leave-modal').classList.add('active');
+        }
+
+        function showUserMenuModal() {
+            if (!isLoggedIn) return;
+            document.getElementById('menu-user-initial').textContent = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('menu-user-name').textContent = currentUser.name;
+            document.getElementById('menu-user-role').textContent = currentUser.role;
+            document.getElementById('user-menu-modal').classList.add('active');
+        }
+
+        function showAddUserModal() {
+            if (!isLoggedIn || !isAdmin()) return;
+            const sel = document.getElementById('new-user-manager');
+            sel.innerHTML = '<option value="">Aucun</option>';
+            users.filter(u => u.role === 'manager' || u.role === 'admin').forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id; opt.textContent = m.name;
+                sel.appendChild(opt);
+            });
+            document.getElementById('add-user-modal').classList.add('active');
+        }
+
+        function showEditUserModal(id) {
+            if (!isLoggedIn || !isAdmin()) return;
+            id = parseInt(id);
+            const user = getUserById(id);
+            if (!user) { showNotification('Salarié introuvable', 'error'); return; }
+
+            document.getElementById('edit-user-id').value = user.id;
+            document.getElementById('edit-user-name').value = user.name;
+            document.getElementById('edit-user-email').value = user.email;
+            document.getElementById('edit-user-username').value = user.username;
+            document.getElementById('edit-user-password').value = '';
+            document.getElementById('edit-user-role').value = user.role;
+            document.getElementById('edit-user-service').value = user.service || 'jour';
+            document.getElementById('edit-user-cp').value = user.balances.CP;
+            document.getElementById('edit-user-rc').value = formatMinutes(user.balances.RC);
+
+            const sel = document.getElementById('edit-user-manager');
+            sel.innerHTML = '<option value="">Aucun</option>';
+            users.filter(u => u.role === 'manager' || u.role === 'admin').forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id; opt.textContent = m.name;
+                if (m.id === user.managerId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+
+            document.getElementById('edit-user-modal').classList.add('active');
+        }
+
+        // ========== INITIALISATION ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            // Accumulation mensuelle automatique au chargement
+            runMonthlyAccrual();
+            // Bouton mot de passe oublié
+            document.getElementById('forgot-password-btn').addEventListener('click', () => {
+                document.getElementById('reset-email').value = '';
+                document.getElementById('reset-confirm-msg').style.display = 'none';
+                document.getElementById('reset-password-modal').classList.add('active');
+            });
+            document.getElementById('cancel-reset-password').addEventListener('click', () => {
+                document.getElementById('reset-password-modal').classList.remove('active');
+                const _rbtn = document.getElementById('confirm-reset-password'); _rbtn.style.display = ''; _rbtn.disabled = false; _rbtn.textContent = 'Réinitialiser';
+            });
+            document.getElementById('close-reset-password-modal').addEventListener('click', () => {
+                document.getElementById('reset-password-modal').classList.remove('active');
+                const _rbtn = document.getElementById('confirm-reset-password'); _rbtn.style.display = ''; _rbtn.disabled = false; _rbtn.textContent = 'Réinitialiser';
+            });
+            document.getElementById('confirm-reset-password').addEventListener('click', async () => {
+                const email  = document.getElementById('reset-email').value.trim();
+                const msgEl  = document.getElementById('reset-confirm-msg');
+                const btn    = document.getElementById('confirm-reset-password');
+
+                if (!email) {
+                    showNotification('Veuillez saisir votre email', 'error');
+                    return;
+                }
+
+                // État chargement
+                btn.disabled = true;
+                btn.textContent = '⏳ Envoi en cours…';
+                msgEl.style.display = 'none';
+
+                try {
+                    await resetPassword(email);
+                    // Succès — on affiche toujours le même message (sécurité)
+                    msgEl.style.display = 'block';
+                    msgEl.style.background = '#eafaf1';
+                    msgEl.style.border = '1px solid var(--secondary-color)';
+                    msgEl.style.color = '#27ae60';
+                    msgEl.innerHTML = '✅ Si cet email est connu, un message a été envoyé avec le mot de passe temporaire.<br><strong>Consultez votre boîte mail et reconnectez-vous.</strong>';
+                    btn.style.display = 'none';
+                } catch (err) {
+                    console.error('EmailJS error:', err);
+                    msgEl.style.display = 'block';
+                    msgEl.style.background = '#fdf2f2';
+                    msgEl.style.border = '1px solid var(--danger-color)';
+                    msgEl.style.color = 'var(--danger-color)';
+                    msgEl.innerHTML = "❌ Erreur lors de l'envoi de l'email. Veuillez contacter l'administrateur.";
+                    btn.disabled = false;
+                    btn.textContent = 'Réinitialiser';
+                }
+            });
+
+            // ===== Gestion du type de congé (CP/RC) dans le modal =====
+            document.getElementById('leave-type').addEventListener('change', function() {
+                const isRC = this.value === 'RC';
+                document.getElementById('rc-options').style.display = isRC ? 'block' : 'none';
+                updateRCPreview();
+            });
+
+            document.getElementById('rc-duration-mode').addEventListener('change', function() {
+                const custom = this.value === 'hours';
+                document.getElementById('rc-hours-input').style.display = custom ? 'block' : 'none';
+                updateRCPreview();
+            });
+
+            document.getElementById('rc-hours-input').addEventListener('input', updateRCPreview);
+
+            function updateRCPreview() {
+                const preview = document.getElementById('rc-duration-preview');
+                if (!currentUser) { preview.textContent = ''; return; }
+                const mode = document.getElementById('rc-duration-mode').value;
+                if (mode === 'day') {
+                    const count = selectedDates.length || 1;
+                    const total = rcDayMinutes(currentUser) * count;
+                    const label = currentUser.service === 'nuit' ? '10h' : '7h';
+                    preview.textContent = `= ${label}/jour × ${count} jour(s) = ${formatMinutes(total)} (solde: ${formatMinutes(currentUser.balances.RC)})`;
+                } else {
+                    const raw = document.getElementById('rc-hours-input').value.trim();
+                    const min = raw ? parseHoursMinutes(raw) : null;
+                    if (min && min > 0) {
+                        const ok = min % 15 === 0;
+                        preview.textContent = `= ${formatMinutes(min)}${ok ? '' : ' ⚠️ arrondi au quart d\'heure'} (solde: ${formatMinutes(currentUser.balances.RC)})`;
+                        preview.style.color = ok ? '#2980b9' : '#e67e22';
+                    } else {
+                        preview.textContent = raw ? '⚠️ Format non reconnu. Ex: 1h30, 2h, 45min' : '';
+                        preview.style.color = '#e67e22';
+                    }
+                }
+            }
+
+            // Binding barres de force de mot de passe
+            bindPasswordStrength(
+                'force-new-password', 'force-strength-fill', 'force-strength-label',
+                'rule-length', 'rule-letter', 'rule-digit'
+            );
+            bindPasswordStrength(
+                'new-password', 'change-strength-fill', 'change-strength-label',
+                'change-rule-length', 'change-rule-letter', 'change-rule-digit'
+            );
+
+            // Indicateur de correspondance des mots de passe (modal forcé)
+            document.getElementById('force-confirm-password').addEventListener('input', () => {
+                const pwd  = document.getElementById('force-new-password').value;
+                const conf = document.getElementById('force-confirm-password').value;
+                const msg  = document.getElementById('force-match-msg');
+                if (!conf) { msg.textContent = ''; return; }
+                msg.textContent = pwd === conf ? '✓ Les mots de passe correspondent' : '✗ Les mots de passe ne correspondent pas';
+                msg.style.color = pwd === conf ? 'var(--secondary-color)' : 'var(--danger-color)';
+            });
+
+            // Indicateur de correspondance des mots de passe (modal classique)
+            document.getElementById('confirm-password').addEventListener('input', () => {
+                const pwd  = document.getElementById('new-password').value;
+                const conf = document.getElementById('confirm-password').value;
+                const msg  = document.getElementById('change-match-msg');
+                if (!conf) { msg.textContent = ''; return; }
+                msg.textContent = pwd === conf ? '✓ Les mots de passe correspondent' : '✗ Les mots de passe ne correspondent pas';
+                msg.style.color = pwd === conf ? 'var(--secondary-color)' : 'var(--danger-color)';
+            });
+
+            // Modal: changement de mot de passe FORCÉ
+            document.getElementById('confirm-force-change-password').addEventListener('click', () => {
+                if (!isLoggedIn) return;
+                const newPwd  = document.getElementById('force-new-password').value;
+                const confPwd = document.getElementById('force-confirm-password').value;
+                if (applyNewPassword(newPwd, confPwd)) {
+                    document.getElementById('force-change-password-modal').classList.remove('active');
+                }
+            });
+
+            // Login
+            document.getElementById('login-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value.trim();
+                const password = document.getElementById('login-password').value;
+                if (!username || !password) {
+                    showNotification('Veuillez remplir tous les champs', 'error'); return;
+                }
+                login(username, password);
+            });
+
+            // Boutons header
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) logout();
+            });
+            document.getElementById('logout-btn-modal').addEventListener('click', () => {
+                if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                    document.getElementById('user-menu-modal').classList.remove('active');
+                    logout();
+                }
+            });
+
+            // FIX: bouton avatar maintenant présent dans le DOM
+            document.getElementById('user-menu-btn').addEventListener('click', () => {
+                if (isLoggedIn) showUserMenuModal();
+            });
+
+            // Navigation onglets
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (!isLoggedIn) return;
+                    const view = tab.dataset.view;
+
+                    if ((view === 'team' && !isManager()) || (view === 'admin' && !isAdmin())) {
+                        showNotification('Accès non autorisé', 'error'); return;
+                    }
+
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(`${view}-view`).classList.add('active');
+
+                    if (view === 'calendar') renderCalendar();
+                    else if (view === 'list') generateLeaveList();
+                    else if (view === 'team') renderTeamCalendar();
+                    else if (view === 'admin') renderUsersList();
+                });
+            });
+
+            // Navigation années
+            document.getElementById('prev-year').addEventListener('click', () => {
+                if (!isLoggedIn) return; currentYear--; renderCalendar();
+            });
+            document.getElementById('next-year').addEventListener('click', () => {
+                if (!isLoggedIn) return; currentYear++; renderCalendar();
+            });
+            document.getElementById('team-prev-year').addEventListener('click', () => {
+                if (!isLoggedIn || !isManager()) return; currentYear--; renderTeamCalendar();
+            });
+            document.getElementById('team-next-year').addEventListener('click', () => {
+                if (!isLoggedIn || !isManager()) return; currentYear++; renderTeamCalendar();
+            });
+
+            // Filtres
+            document.getElementById('apply-filters').addEventListener('click', () => {
+                if (isLoggedIn) generateLeaveList();
+            });
+            document.getElementById('reset-filters').addEventListener('click', () => {
+                if (!isLoggedIn) return;
+                document.getElementById('filter-year').value = '2026';
+                document.getElementById('filter-type').value = 'all';
+                document.getElementById('filter-status').value = 'all';
+                generateLeaveList();
+            });
+
+            // Modal: ajouter congé
+            document.getElementById('confirm-add-leave').addEventListener('click', () => {
+                if (!isLoggedIn) return;
+                const type = document.getElementById('leave-type').value;
+                if (addLeave(selectedDates, type)) {
+                    resetLeaveModal();
+                    renderCalendar();
+                    generateLeaveList();
+                }
+            });
+            function resetLeaveModal() {
+                document.getElementById('add-leave-modal').classList.remove('active');
+                document.getElementById('rc-options').style.display = 'none';
+                document.getElementById('rc-duration-mode').value = 'day';
+                document.getElementById('rc-hours-input').style.display = 'none';
+                document.getElementById('rc-hours-input').value = '';
+                document.getElementById('rc-duration-preview').textContent = '';
+                document.getElementById('leave-type').value = 'CP';
+                resetRangeSelection();
+            }
+            document.getElementById('cancel-add-leave').addEventListener('click', resetLeaveModal);
+            document.getElementById('close-add-leave-modal').addEventListener('click', resetLeaveModal);
+
+            // Modal: annuler congé
+            document.getElementById('confirm-cancel-leave').addEventListener('click', () => {
+                if (!isLoggedIn) return;
+                const reason = document.getElementById('cancel-reason').value.trim();
+                if (!reason) { showNotification('Veuillez indiquer une raison', 'error'); return; }
+                const dateStr = document.getElementById('cancel-leave-modal').dataset.date;
+                if (cancelLeave(dateStr)) {
+                    document.getElementById('cancel-leave-modal').classList.remove('active');
+                    renderCalendar();
+                    generateLeaveList();
+                }
+            });
+            document.getElementById('cancel-cancel-leave').addEventListener('click', () => {
+                document.getElementById('cancel-leave-modal').classList.remove('active');
+            });
+            document.getElementById('close-cancel-leave-modal').addEventListener('click', () => {
+                document.getElementById('cancel-leave-modal').classList.remove('active');
+            });
+
+            // Modal: valider congé
+            document.getElementById('approve-leave').addEventListener('click', () => {
+                if (!isLoggedIn || !isManager()) return;
+                const dateStr = document.getElementById('validate-leave-modal').dataset.date;
+                const comment = document.getElementById('validation-comment').value;
+                if (validateLeave(dateStr, 'approved', comment)) {
+                    document.getElementById('validate-leave-modal').classList.remove('active');
+                    renderCalendar();
+                    renderTeamCalendar();
+                    generateLeaveList();
+                }
+            });
+            document.getElementById('reject-leave').addEventListener('click', () => {
+                if (!isLoggedIn || !isManager()) return;
+                const comment = document.getElementById('validation-comment').value.trim();
+                if (!comment) { showNotification('Un commentaire est obligatoire pour un refus', 'error'); return; }
+                const dateStr = document.getElementById('validate-leave-modal').dataset.date;
+                if (validateLeave(dateStr, 'rejected', comment)) {
+                    document.getElementById('validate-leave-modal').classList.remove('active');
+                    renderCalendar();
+                    renderTeamCalendar();
+                    generateLeaveList();
+                }
+            });
+            document.getElementById('cancel-validation').addEventListener('click', () => {
+                document.getElementById('validate-leave-modal').classList.remove('active');
+            });
+            document.getElementById('close-validate-leave-modal').addEventListener('click', () => {
+                document.getElementById('validate-leave-modal').classList.remove('active');
+            });
+
+            // Modal: ajouter salarié
+            document.getElementById('add-user-btn').addEventListener('click', showAddUserModal);
+
+            document.getElementById('confirm-add-user').addEventListener('click', () => {
+                if (!isLoggedIn || !isAdmin()) return;
+                const email = document.getElementById('new-user-email').value.trim();
+                // username = email automatiquement
+                document.getElementById('new-user-username').value = email;
+                document.getElementById('new-user-password').value = email + 'associationsaintemarie';
+                const ok = addUser(
+                    document.getElementById('new-user-name').value.trim(),
+                    email,
+                    email,
+                    email + 'associationsaintemarie',
+                    document.getElementById('new-user-role').value,
+                    document.getElementById('new-user-manager').value,
+                    document.getElementById('new-user-cp').value,
+                    document.getElementById('new-user-rc').value
+                );
+                if (ok) document.getElementById('add-user-modal').classList.remove('active');
+            });
+            document.getElementById('cancel-add-user').addEventListener('click', () => {
+                document.getElementById('add-user-modal').classList.remove('active');
+            });
+            document.getElementById('close-add-user-modal').addEventListener('click', () => {
+                document.getElementById('add-user-modal').classList.remove('active');
+            });
+
+            // Modal: éditer salarié
+            document.getElementById('confirm-edit-user').addEventListener('click', () => {
+                if (!isLoggedIn || !isAdmin()) return;
+                const ok = editUser(
+                    document.getElementById('edit-user-id').value,
+                    document.getElementById('edit-user-name').value.trim(),
+                    document.getElementById('edit-user-email').value.trim(),
+                    document.getElementById('edit-user-username').value.trim(),
+                    document.getElementById('edit-user-password').value,
+                    document.getElementById('edit-user-role').value,
+                    document.getElementById('edit-user-manager').value,
+                    document.getElementById('edit-user-cp').value,
+                    document.getElementById('edit-user-rc').value
+                );
+                if (ok) document.getElementById('edit-user-modal').classList.remove('active');
+            });
+            document.getElementById('cancel-edit-user').addEventListener('click', () => {
+                document.getElementById('edit-user-modal').classList.remove('active');
+            });
+            document.getElementById('close-edit-user-modal').addEventListener('click', () => {
+                document.getElementById('edit-user-modal').classList.remove('active');
+            });
+
+            // Modal: menu utilisateur
+            document.getElementById('close-user-menu-modal').addEventListener('click', () => {
+                document.getElementById('user-menu-modal').classList.remove('active');
+            });
+            document.getElementById('change-password-btn').addEventListener('click', () => {
+                document.getElementById('user-menu-modal').classList.remove('active');
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                document.getElementById('change-password-modal').classList.add('active');
+            });
+
+            // Modal: changer mot de passe
+            document.getElementById('confirm-change-password').addEventListener('click', () => {
+                if (!isLoggedIn) return;
+                const currentPwd = document.getElementById('current-password').value;
+                const newPwd     = document.getElementById('new-password').value;
+                const confPwd    = document.getElementById('confirm-password').value;
+                if (changePassword(currentPwd, newPwd, confPwd)) {
+                    document.getElementById('change-password-modal').classList.remove('active');
+                }
+            });
+            document.getElementById('cancel-change-password').addEventListener('click', () => {
+                document.getElementById('change-password-modal').classList.remove('active');
+            });
+            document.getElementById('close-change-password-modal').addEventListener('click', () => {
+                document.getElementById('change-password-modal').classList.remove('active');
+            });
+
+            // Fermer modal en cliquant à l'extérieur (sauf changement forcé)
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) {
+                        // Ne pas permettre de fermer le modal de changement forcé
+                        if (overlay.id === 'force-change-password-modal') return;
+                        overlay.classList.remove('active');
+                        if (overlay.id === 'add-leave-modal') resetLeaveModal();
+                        // Réafficher le bouton si on referme la modale reset
+                        if (overlay.id === 'reset-password-modal') {
+                            const _rbtn = document.getElementById('confirm-reset-password'); _rbtn.style.display = ''; _rbtn.disabled = false; _rbtn.textContent = 'Réinitialiser';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
