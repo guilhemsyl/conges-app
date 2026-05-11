@@ -97,13 +97,19 @@
         .day-cell.may-first { background: #fdedec; color: #e74c3c; font-weight: bold; }
         .day-cell.may-first::after { content: '★'; position: absolute; top: 0px; right: 1px; font-size: 0.45rem; color: #e74c3c; }
         .day-number { margin-bottom: 2px; }
-        .leave-indicator { width: 100%; height: 4px; border-radius: 2px; margin-top: auto; }
-        .leave-indicator.CP { background: var(--cp-color); }
-        .leave-indicator.RC { background: var(--rc-color); }
-        .leave-indicator.team-CP { background: #9b59b6; }
-        .leave-indicator.team-RC { background: #2ecc71; }
+        .leave-indicator { width: 100%; height: 4px; border-radius: 2px; margin-top: 1px; }
+        /* Mes congés : barre pleine, épaisse */
+        .leave-indicator.CP { background: #1a3a6b; height: 5px; }
+        .leave-indicator.RC { background: #5dade2; height: 5px; }
+        /* Collègues : barre plus fine, couleur distincte */
+        .leave-indicator.team-CP { background: #9b59b6; height: 3px; opacity: 0.75; }
+        .leave-indicator.team-RC { background: #2ecc71; height: 3px; opacity: 0.75; }
+        /* En attente : hachuré */
         .leave-indicator.pending { background: repeating-linear-gradient(45deg, var(--warning-color), var(--warning-color) 3px, #fff3cd 3px, #fff3cd 6px); }
-        .leave-indicator.team-CP.pending, .leave-indicator.team-RC.pending, .leave-indicator.CP.pending, .leave-indicator.RC.pending { background: repeating-linear-gradient(45deg, var(--warning-color), var(--warning-color) 3px, #fff3cd 3px, #fff3cd 6px) !important; }
+        .leave-indicator.team-CP.pending, .leave-indicator.team-RC.pending,
+        .leave-indicator.CP.pending, .leave-indicator.RC.pending {
+            background: repeating-linear-gradient(45deg, var(--warning-color), var(--warning-color) 3px, #fff3cd 3px, #fff3cd 6px) !important;
+        }
 
         .range-selection-info { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none; }
         .range-selection-info.active { display: block; }
@@ -333,7 +339,20 @@
         .status-badge.approved { background: #d4edda; color: #155724; border: 1px solid #2ecc71; }
         .status-badge.rejected { background: #f8d7da; color: #721c24; border: 1px solid #e74c3c; }
 
-        .th-sortable {
+        .leave-popup {
+            position: fixed; z-index: 2000;
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            padding: 12px 14px; min-width: 200px; max-width: 280px;
+            font-size: 0.85rem; color: var(--dark-color);
+            animation: slideIn 0.15s ease;
+        }
+        .leave-popup-title { font-weight: bold; color: #7f8c8d; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .leave-popup-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; }
+        .leave-popup-row:last-child { border-bottom: none; }
+        .leave-popup-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .leave-popup-name { font-weight: bold; }
+        .leave-popup-info { font-size: 0.78rem; color: #7f8c8d; }
             cursor: pointer;
             user-select: none;
             white-space: nowrap;
@@ -469,9 +488,9 @@
     </header>
 
     <nav class="nav-tabs">
-        <button class="nav-tab active" data-view="calendar">Calendrier</button>
+        <button class="nav-tab active" data-view="calendar">Calendrier équipe</button>
         <button class="nav-tab" data-view="list">Mes Congés</button>
-        <button class="nav-tab" data-view="dashboard" id="dashboard-tab">📊 Mes Compteurs</button>
+        <button class="nav-tab" data-view="dashboard" id="dashboard-tab">⏱️ Heures sup & Échanges</button>
         <button class="nav-tab hidden" data-view="team" id="team-tab">Équipe</button>
         <button class="nav-tab hidden" data-view="validation-rc" id="validation-rc-tab">✅ Validation</button>
         <button class="nav-tab hidden" data-view="counters-manager" id="counters-manager-tab">📋 Compteurs équipe</button>
@@ -496,6 +515,9 @@
 
         <!-- Vue Mes Congés -->
         <div id="list-view" class="view-container">
+            <!-- Compteurs légaux -->
+            <div class="counters-grid" id="my-counters-grid" style="margin-bottom:20px;"></div>
+
             <div class="calendar-controls">
                 <div class="year-navigation">
                     <button id="list-prev-year">←</button>
@@ -532,6 +554,28 @@
                     <button id="reset-filters" class="btn btn-secondary">Réinitialiser</button>
                 </div>
             </div>
+            <hr style="margin:20px 0;border-color:#eee;">
+
+            <!-- Historique déclarations -->
+            <div class="dashboard-section">
+                <h3>📝 Historique de mes déclarations</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Type</th><th>Semaine / Date</th><th>Heures déclarées</th><th>RC généré</th><th>Motif</th><th>Statut</th></tr>
+                    </thead>
+                    <tbody id="hs-history-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Champs cachés pour compatibilité JS -->
+            <div style="display:none;">
+                <input type="date" id="hs-week-start">
+                <input type="number" id="hs-hours-total">
+                <input type="text" id="hs-motif">
+                <div id="hs-preview"></div>
+                <button id="submit-hs-btn"></button>
+            </div>
+
             <table class="data-table">
                 <thead>
                     <tr>
@@ -544,7 +588,8 @@
 
         <!-- Vue Tableau de bord Mes Compteurs (salarié) -->
         <div id="dashboard-view" class="view-container">
-            <h2 style="margin-bottom:16px;">📊 Mes compteurs légaux <span style="font-size:0.8rem;color:#7f8c8d;font-weight:normal;">— CCN 51</span></h2>
+            <h2 style="margin-bottom:16px;">⏱️ Heures supplémentaires & Échanges</h2>
+            <p style="color:#7f8c8d;font-size:0.9rem;margin-bottom:20px;">Vos compteurs CP, RC et ancienneté sont disponibles dans l'onglet <strong>Mes Congés</strong>.</p>
 
             <!-- Actions rapides -->
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
@@ -567,9 +612,6 @@
                 </div>
             </div>
 
-            <!-- Compteurs résumé -->
-            <div class="counters-grid" id="my-counters-grid"></div>
-
             <!-- Champs cachés pour compatibilité JS (utilisés par les listeners) -->
             <div style="display:none;">
                 <input type="date" id="hs-week-start">
@@ -579,16 +621,6 @@
                 <button id="submit-hs-btn"></button>
             </div>
 
-            <!-- Historique déclarations -->
-            <div class="dashboard-section">
-                <h3>📝 Historique de mes déclarations</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr><th>Type</th><th>Semaine / Date</th><th>Heures déclarées</th><th>RC généré</th><th>Motif</th><th>Statut</th></tr>
-                    </thead>
-                    <tbody id="hs-history-body"></tbody>
-                </table>
-            </div>
         </div>
 
         <!-- Vue Compteurs équipe (manager/admin) -->
@@ -1703,6 +1735,84 @@ function getUserLeaveOnDate(userId, dateStr) {
         validatedBy:3, validationDate:'2026-05-06' };
     leaves[leaveKey(81, '2026-07-02')] = { id:'rc-martino-pending', userId:81, type:'RC', status:'pending',
         durationMin:600, comment:'Récup nuit', date:'2026-07-02', dateRequested:'2026-05-10' };
+
+    // ===== ACTIVITÉ SIMULÉE =====
+
+    // --- CA approuvés passés (mars-avril 2026) ---
+    ['2026-03-16','2026-03-17','2026-03-18','2026-03-19','2026-03-20'].forEach(d => {
+        leaves[leaveKey(11, d)] = { id:`cp-mosa-mars-${d}`, userId:11, type:'CP', status:'approved',
+            durationMin:null, comment:'Congé printemps', date:d, dateRequested:'2026-02-10',
+            validatedBy:3, validationDate:'2026-02-11' };
+    });
+    ['2026-04-07','2026-04-08','2026-04-09'].forEach(d => {
+        leaves[leaveKey(42, d)] = { id:`cp-djelloul-avr-${d}`, userId:42, type:'CP', status:'approved',
+            durationMin:null, comment:'Vacances Pâques', date:d, dateRequested:'2026-03-01',
+            validatedBy:3, validationDate:'2026-03-02' };
+    });
+    ['2026-04-14','2026-04-15','2026-04-16','2026-04-17'].forEach(d => {
+        leaves[leaveKey(52, d)] = { id:`cp-siksik-avr-${d}`, userId:52, type:'CP', status:'approved',
+            durationMin:null, comment:'', date:d, dateRequested:'2026-03-05',
+            validatedBy:3, validationDate:'2026-03-06' };
+    });
+    ['2026-05-04','2026-05-05','2026-05-06','2026-05-07'].forEach(d => {
+        leaves[leaveKey(61, d)] = { id:`cp-everest-mai-${d}`, userId:61, type:'CP', status:'approved',
+            durationMin:null, comment:'Pont mai', date:d, dateRequested:'2026-04-01',
+            validatedBy:3, validationDate:'2026-04-02' };
+    });
+    // CA refusés passés
+    ['2026-04-20','2026-04-21'].forEach(d => {
+        leaves[leaveKey(33, d)] = { id:`cp-ardouin-ref-${d}`, userId:33, type:'CP', status:'rejected',
+            durationMin:null, comment:'Congé personnel', date:d, dateRequested:'2026-04-10',
+            validatedBy:3, validationDate:'2026-04-11',
+            validationComment:'Effectif insuffisant cette semaine — UV7 déjà en sous-effectif' };
+    });
+
+    // --- RC approuvés passés ---
+    leaves[leaveKey(13, '2026-03-25')] = { id:'rc-giarratana-mars', userId:13, type:'RC', status:'approved',
+        durationMin:315, comment:'Récup heures sup février', date:'2026-03-25', dateRequested:'2026-03-20',
+        validatedBy:3, validationDate:'2026-03-21' };
+    leaves[leaveKey(22, '2026-04-22')] = { id:'rc-leguehennec-avr', userId:22, type:'RC', status:'approved',
+        durationMin:420, comment:'', date:'2026-04-22', dateRequested:'2026-04-15',
+        validatedBy:3, validationDate:'2026-04-16' };
+    leaves[leaveKey(60, '2026-05-02')] = { id:'rc-behague-mai', userId:60, type:'RC', status:'approved',
+        durationMin:315, comment:'Récupération', date:'2026-05-02', dateRequested:'2026-04-28',
+        validatedBy:3, validationDate:'2026-04-29' };
+    leaves[leaveKey(70, '2026-04-30')] = { id:'rc-raty-avr', userId:70, type:'RC', status:'approved',
+        durationMin:210, comment:'', date:'2026-04-30', dateRequested:'2026-04-25',
+        validatedBy:3, validationDate:'2026-04-26' };
+
+    // --- CA à venir (juin-septembre 2026) ---
+    ['2026-06-01','2026-06-02','2026-06-03','2026-06-04','2026-06-05'].forEach(d => {
+        leaves[leaveKey(42, d)] = { id:`cp-djelloul-juin-${d}`, userId:42, type:'CP', status:'approved',
+            durationMin:null, comment:'Congés été', date:d, dateRequested:'2026-04-20',
+            validatedBy:3, validationDate:'2026-04-21' };
+    });
+    ['2026-07-13','2026-07-14','2026-07-15','2026-07-16','2026-07-17'].forEach(d => {
+        leaves[leaveKey(22, d)] = { id:`cp-leguehennec-juil-${d}`, userId:22, type:'CP', status:'approved',
+            durationMin:null, comment:'Vacances', date:d, dateRequested:'2026-05-01',
+            validatedBy:3, validationDate:'2026-05-02' };
+    });
+    ['2026-08-17','2026-08-18','2026-08-19','2026-08-20','2026-08-21'].forEach(d => {
+        leaves[leaveKey(13, d)] = { id:`cp-giarratana-aout-${d}`, userId:13, type:'CP', status:'approved',
+            durationMin:null, comment:'Congés été', date:d, dateRequested:'2026-05-03',
+            validatedBy:3, validationDate:'2026-05-04' };
+    });
+    ['2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11'].forEach(d => {
+        leaves[leaveKey(52, d)] = { id:`cp-siksik-sept-${d}`, userId:52, type:'CP', status:'pending',
+            durationMin:null, comment:'Rentrée décalée', date:d, dateRequested:'2026-05-11' };
+    });
+    ['2026-09-14','2026-09-15','2026-09-16'].forEach(d => {
+        leaves[leaveKey(62, d)] = { id:`cp-tenza-sept-${d}`, userId:62, type:'CP', status:'pending',
+            durationMin:null, comment:'', date:d, dateRequested:'2026-05-11' };
+    });
+
+    // --- RC à venir en attente ---
+    leaves[leaveKey(33, '2026-06-08')] = { id:'rc-ardouin-juin', userId:33, type:'RC', status:'pending',
+        durationMin:630, comment:'Récupération mai', date:'2026-06-08', dateRequested:'2026-05-11' };
+    leaves[leaveKey(41, '2026-06-09')] = { id:'rc-pujol-juin', userId:41, type:'RC', status:'pending',
+        durationMin:420, comment:'', date:'2026-06-09', dateRequested:'2026-05-11' };
+    leaves[leaveKey(82, '2026-06-20')] = { id:'rc-baradi-juin', userId:82, type:'RC', status:'pending',
+        durationMin:600, comment:'Récup nuit supplémentaire', date:'2026-06-20', dateRequested:'2026-05-10' };
 })();
 
 // ========== DEMANDES DE CRÉDIT RC ==========
@@ -1732,6 +1842,26 @@ let rcCreditRequests = [
     { id:'crc-6', userId:80, date:'2026-05-30', startTime:'21:00', endTime:'04:00',
       durationMin:420, motif:'Nuit supplémentaire — effectif insuffisant', mode:'paid',
       status:'pending', dateRequested:'2026-05-30', validatedBy:null, validationDate:null, validationComment:'' },
+    // Activité passée — approuvés
+    { id:'crc-7', userId:13, date:'2026-03-18', startTime:'07:00', endTime:'09:15',
+      durationMin:135, motif:'Remplacement collègue malade', mode:'rc',
+      status:'approved', dateRequested:'2026-03-18', validatedBy:3, validationDate:'2026-03-19', validationComment:'' },
+    { id:'crc-8', userId:22, date:'2026-04-08', startTime:'07:00', endTime:'08:30',
+      durationMin:90, motif:'Réunion exceptionnelle direction', mode:'rc',
+      status:'approved', dateRequested:'2026-04-08', validatedBy:3, validationDate:'2026-04-09', validationComment:'' },
+    { id:'crc-9', userId:60, date:'2026-04-22', startTime:'14:00', endTime:'16:00',
+      durationMin:120, motif:'Astreinte week-end', mode:'paid',
+      status:'approved', dateRequested:'2026-04-22', validatedBy:3, validationDate:'2026-04-23', validationComment:'' },
+    { id:'crc-10', userId:52, date:'2026-04-15', startTime:'07:00', endTime:'09:00',
+      durationMin:120, motif:'Remplacement Siksik UV6', mode:'rc',
+      status:'approved', dateRequested:'2026-04-15', validatedBy:3, validationDate:'2026-04-16', validationComment:'' },
+    // En attente récents
+    { id:'crc-11', userId:62, date:'2026-05-09', startTime:'07:00', endTime:'09:30',
+      durationMin:150, motif:'Remplacement Tenza absent', mode:'rc',
+      status:'pending', dateRequested:'2026-05-09', validatedBy:null, validationDate:null, validationComment:'' },
+    { id:'crc-12', userId:33, date:'2026-05-06', startTime:'14:00', endTime:'16:00',
+      durationMin:120, motif:'Garde supplémentaire UV7', mode:'paid',
+      status:'pending', dateRequested:'2026-05-06', validatedBy:null, validationDate:null, validationComment:'' },
 ];
 
 // ========== DÉCLARATIONS HEURES SUP ==========
@@ -1751,6 +1881,30 @@ let hsDeclarations = [
       hoursWorked:45, hoursSup:10, rcGenerated:roundToQuarter(8*60*1.25 + 2*60*1.5),
       motif:'Nuits supplémentaires — manque effectif', status:'pending',
       dateRequested:'2026-05-09', validatedBy:null, validationDate:null, validationComment:'' },
+    // Activité passée — approuvés
+    { id:'hs-4', userId:12, type:'hs', weekStart:'2026-03-09',
+      hoursWorked:39, hoursSup:4, rcGenerated:roundToQuarter(4*60*1.25),
+      motif:'Semaine chargée UV6', status:'approved',
+      dateRequested:'2026-03-13', validatedBy:3, validationDate:'2026-03-14', validationComment:'' },
+    { id:'hs-5', userId:62, type:'hs', weekStart:'2026-03-23',
+      hoursWorked:40, hoursSup:5, rcGenerated:roundToQuarter(5*60*1.25),
+      motif:'Remplacement Tenza malade 3 jours', status:'approved',
+      dateRequested:'2026-03-27', validatedBy:3, validationDate:'2026-03-28', validationComment:'' },
+    { id:'hs-6', userId:21, type:'hs', weekStart:'2026-04-13',
+      hoursWorked:37, hoursSup:2, rcGenerated:roundToQuarter(2*60*1.25),
+      motif:'Réunion famille résidents hors horaire', status:'approved',
+      dateRequested:'2026-04-17', validatedBy:3, validationDate:'2026-04-18', validationComment:'' },
+    // Refusé
+    { id:'hs-7', userId:70, type:'hs', weekStart:'2026-04-06',
+      hoursWorked:36, hoursSup:1, rcGenerated:roundToQuarter(1*60*1.25),
+      motif:'Heure supplémentaire non planifiée', status:'rejected',
+      dateRequested:'2026-04-10', validatedBy:3, validationDate:'2026-04-11',
+      validationComment:'Heure non justifiée — planning non modifié ce jour' },
+    // En attente récent
+    { id:'hs-8', userId:13, type:'hs', weekStart:'2026-05-04',
+      hoursWorked:38, hoursSup:3, rcGenerated:roundToQuarter(3*60*1.25),
+      motif:'UV7 sous-effectif semaine 19', status:'pending',
+      dateRequested:'2026-05-08', validatedBy:null, validationDate:null, validationComment:'' },
 ];
 
 // ========== ÉCHANGES D'HEURES ==========
@@ -1780,6 +1934,28 @@ let rcExchangeRequests = [
       motif:'Permutation nuit', status:'rejected',
       dateRequested:'2026-05-03', validatedBy:3, validationDate:'2026-05-04',
       validationComment:'Impossibilité — formation obligatoire le 17/06' },
+    // Activité passée — échanges validés
+    { id:'exc-5', userId:11, colleagueId:61, colleagueName:'Everest',
+      dateGive:'2026-03-26', startGive:'07:00', endGive:'14:00', durGive:420,
+      dateReceive:'2026-04-02', startReceive:'07:00', endReceive:'14:00', durReceive:420,
+      motif:'Garde permutée vacances scolaires', status:'approved',
+      dateRequested:'2026-03-15', validatedBy:3, validationDate:'2026-03-16', validationComment:'' },
+    { id:'exc-6', userId:42, colleagueId:22, colleagueName:'Le Guehennec',
+      dateGive:'2026-04-17', startGive:'14:00', endGive:'21:00', durGive:420,
+      dateReceive:'2026-04-24', startReceive:'14:00', endReceive:'21:00', durReceive:420,
+      motif:'Permutation pour mariage', status:'approved',
+      dateRequested:'2026-04-05', validatedBy:3, validationDate:'2026-04-06', validationComment:'' },
+    // En attente récent
+    { id:'exc-7', userId:52, colleagueId:62, colleagueName:'Tenza',
+      dateGive:'2026-06-26', startGive:'07:00', endGive:'14:00', durGive:420,
+      dateReceive:'2026-07-03', startReceive:'07:00', endReceive:'14:00', durReceive:420,
+      motif:'Permutation congé été', status:'pending',
+      dateRequested:'2026-05-10', validatedBy:null, validationDate:null, validationComment:'' },
+    { id:'exc-8', userId:60, colleagueId:40, colleagueName:'Commandeur',
+      dateGive:'2026-06-15', startGive:'07:00', endGive:'14:00', durGive:420,
+      dateReceive:'2026-06-22', startReceive:'07:00', endReceive:'14:00', durReceive:420,
+      motif:'Rendez-vous administratif', status:'pending',
+      dateRequested:'2026-05-11', validatedBy:null, validationDate:null, validationComment:'' },
 ];
 
 // ========== NOTIFICATIONS DE DÉMONSTRATION ==========
@@ -2055,18 +2231,7 @@ function updateValidationRCBadge() {
 }
 
 function updateListTabBadge() {
-    const tab = document.querySelector('[data-view="list"]');
-    if (!tab) return;
-    const unread = (userNotifications[currentUser ? currentUser.id : 0] || [])
-        .filter(n => !n.read).length;
-    const existing = tab.querySelector('.tab-badge-list');
-    if (existing) existing.remove();
-    if (unread > 0) {
-        const badge = document.createElement('span');
-        badge.className = 'tab-badge tab-badge-list';
-        badge.textContent = unread;
-        tab.appendChild(badge);
-    }
+    // Badge supprimé de l'onglet Mes Congés — notifications accessibles via la cloche
 }
 
 // ========== GESTION DES ÉQUIPES ==========
@@ -3990,17 +4155,43 @@ function generateCalendar(containerId, year) {
             }
             const visibleLeaves = getVisibleLeaves();
             const dayLeaves = visibleLeaves[dateStr] || [];
-            dayLeaves.forEach(leave => {
+
+            // Afficher d'abord les congés des collègues (en haut), puis les siens (en bas, plus visibles)
+            const ownLeaves  = dayLeaves.filter(l => l.userId === currentUser.id);
+            const teamLeaves = dayLeaves.filter(l => l.userId !== currentUser.id);
+            const orderedLeaves = [...teamLeaves, ...ownLeaves];
+
+            orderedLeaves.forEach(leave => {
                 const leaveUser = getUserById(leave.userId);
                 const isOwn = leave.userId === currentUser.id;
                 const indicator = document.createElement('div');
                 const typeClass = isOwn ? leave.type : `team-${leave.type}`;
                 const pendingClass = leave.status === 'pending' ? 'pending' : '';
                 indicator.className = `leave-indicator ${typeClass} ${pendingClass}`.trim();
-                if (!isOwn) indicator.title = `${leaveUser ? leaveUser.name : '?'} — ${leave.type}${leave.status === 'pending' ? ' (en attente)' : ''}`;
                 el.appendChild(indicator);
             });
-            if (!isPastDate(dateStr)) el.addEventListener('click', () => handleDateClick(dateStr));
+
+            // Tooltip natif sur la cellule avec tous les congés du jour
+            if (teamLeaves.length > 0) {
+                const lines = teamLeaves.map(l => {
+                    const u = getUserById(l.userId);
+                    const t = getTeamById(u?.teamId);
+                    const svc = u?.service === 'nuit' ? '🌙' : '☀️';
+                    const dur = l.type === 'RC' && l.durationMin ? ' ' + formatMinutes(l.durationMin) : '';
+                    const st = { approved: '✅', pending: '⏳', rejected: '❌' }[l.status] || '';
+                    const typeLabel = l.type === 'CP' ? 'CA' : l.type;
+                    return `${u?.name || '?'} — ${t?.name || '-'} ${svc} — ${typeLabel}${dur} ${st}`;
+                });
+                el.title = lines.join('\n');
+                el.style.cursor = 'help';
+            }
+
+            if (teamLeaves.length > 0) {
+                el.style.cursor = 'help';
+                el.addEventListener('click', (e) => { e.stopPropagation(); });
+            } else if (!isPastDate(dateStr)) {
+                el.addEventListener('click', () => handleDateClick(dateStr));
+            }
             daysGrid.appendChild(el);
         }
         const totalCells = firstDayOfWeek + daysInMonth;
@@ -4087,9 +4278,9 @@ function renderCalendar() {
         const team = getTeamById(currentUser.teamId);
         legendEl.innerHTML = `
             <span style="font-weight:bold;margin-right:5px;">Légende :</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:var(--cp-color);border-radius:2px;"></span> CP (vous)</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CP (${team ? team.name : 'équipe'})</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:var(--rc-color);border-radius:2px;"></span> RC (vous)</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#1a3a6b;border-radius:2px;"></span> CA (vous)</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CA (${team ? team.name : 'équipe'})</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#5dade2;border-radius:2px;"></span> RC (vous)</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#2ecc71;border-radius:2px;"></span> RC (${team ? team.name : 'équipe'})</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:repeating-linear-gradient(45deg,var(--warning-color),var(--warning-color) 3px,#fff3cd 3px,#fff3cd 6px);"></span> En attente</span>`;
     } else if (currentUser && currentUser.teamId && isChefDeService()) {
@@ -4097,7 +4288,7 @@ function renderCalendar() {
         const team = getTeamById(currentUser.teamId);
         legendEl.innerHTML = `
             <span style="font-weight:bold;margin-right:5px;">Légende :</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CP (${team ? team.name : 'équipe'})</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CA (${team ? team.name : 'équipe'})</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#2ecc71;border-radius:2px;"></span> RC (${team ? team.name : 'équipe'})</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:repeating-linear-gradient(45deg,var(--warning-color),var(--warning-color) 3px,#fff3cd 3px,#fff3cd 6px);"></span> En attente</span>`;
     } else if (isAdmin() && !currentUser.teamId) {
@@ -4116,6 +4307,7 @@ function renderTeamCalendar() {
 
 function generateLeaveList() {
     if (!isLoggedIn) return;
+    renderMyCounters();
     renderListCalendar();
     updateHsBannerDesc();
 
@@ -4756,6 +4948,58 @@ function importDataJSON(file) {
 
 // Auto-save après chaque action importante
 function autoSave() { saveToStorage(); }
+
+// ========== POPUP CONGÉS CALENDRIER ==========
+let _popupEl = null;
+
+function showLeavesPopup(event, dateStr, teamLeaves) {
+    event.stopPropagation();
+
+    // Supprimer popup existant
+    if (_popupEl) { _popupEl.remove(); _popupEl = null; }
+
+    const popup = document.createElement('div');
+    popup.className = 'leave-popup';
+
+    popup.innerHTML = `<div class="leave-popup-title">${formatDateShort(dateStr)}</div>`;
+
+    teamLeaves.forEach(leave => {
+        const user = getUserById(leave.userId);
+        if (!user) return;
+        const team = getTeamById(user.teamId);
+        const statusLabel = { approved: '✅', pending: '⏳', rejected: '❌' }[leave.status] || '';
+        const durLabel = leave.type === 'RC' && leave.durationMin ? ` — ${formatMinutes(leave.durationMin)}` : '';
+        const dotColor = leave.type === 'CP' ? '#9b59b6' : '#2ecc71';
+        const serviceLabel = user.service === 'nuit' ? '🌙' : '☀️';
+        popup.innerHTML += `
+            <div class="leave-popup-row">
+                <div class="leave-popup-dot" style="background:${dotColor};"></div>
+                <div style="flex:1;">
+                    <div class="leave-popup-name">${user.name}</div>
+                    <div class="leave-popup-info">${serviceLabel} ${team?.name || '-'} — ${leave.type}${durLabel} ${statusLabel}</div>
+                </div>
+            </div>`;
+    });
+
+    document.body.appendChild(popup);
+    _popupEl = popup;
+
+    // Positionnement simple basé sur clientX/clientY
+    const x = event.clientX;
+    const y = event.clientY;
+    const pw = 260, ph = popup.offsetHeight || 120;
+
+    popup.style.left = `${Math.min(x + 8, window.innerWidth - pw - 10) + window.scrollX}px`;
+    popup.style.top  = `${(y + ph + 10 > window.innerHeight ? y - ph - 8 : y + 8) + window.scrollY}px`;
+
+    // Fermer au prochain clic n'importe où
+    setTimeout(() => {
+        document.addEventListener('click', function _close() {
+            if (_popupEl) { _popupEl.remove(); _popupEl = null; }
+            document.removeEventListener('click', _close);
+        });
+    }, 50);
+}
 
 // ========== TOGGLE MOT DE PASSE ==========
 function togglePassword(inputId, btn) {
