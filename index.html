@@ -741,6 +741,14 @@
                 <button class="btn btn-secondary" id="import-balances-btn">📥 Importer soldes (CSV)</button>
                 <input type="file" id="balances-file-input" accept=".csv" style="display:none;">
             </div>
+            <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#f0f7ff;border:1px solid #b3d4f5;border-radius:8px;padding:12px 16px;">
+                <span style="font-size:0.88rem;color:#1a6fad;font-weight:bold;">💾 Sauvegarde des données :</span>
+                <button class="btn btn-primary btn-sm" id="export-json-btn">📦 Exporter tout (JSON)</button>
+                <button class="btn btn-secondary btn-sm" id="import-json-btn">📂 Importer sauvegarde (JSON)</button>
+                <input type="file" id="json-file-input" accept=".json" style="display:none;">
+                <button class="btn btn-danger btn-sm" id="reset-storage-btn" title="Effacer localStorage et revenir aux données par défaut">🗑 Réinitialiser</button>
+                <span id="storage-status" style="font-size:0.78rem;color:#7f8c8d;"></span>
+            </div>
             <div id="import-format-hint" style="display:none;background:#e8f4fc;border:1px solid #b3d4f5;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:0.85rem;color:#1a6fad;">
                 📋 Format CSV attendu : <code>email;CP;RC</code> (séparateur point-virgule, RC au format <em>1h30</em> ou <em>90</em> minutes)<br>
                 <strong>Exemple :</strong> <code>meldem@monvillage.fr;25;3h30</code>
@@ -2349,6 +2357,7 @@ function addLeave(dates, type) {
 
     if (isChefDeService()) updateValidationRCBadge();
     showNotification(type === 'CP' ? `CP posé : ${totalDays} jour(s)` : `RC posé`, 'success');
+    autoSave();
     return true;
 }
 
@@ -2446,6 +2455,7 @@ function validateLeave(dateStr, status, comment, targetUserId) {
 
     if (isChefDeService()) updateValidationRCBadge();
     showNotification(`Congé ${status === 'approved' ? 'validé ✅' : 'refusé ❌'}`, status === 'approved' ? 'success' : 'info');
+    autoSave();
     return true;
 }
 
@@ -2554,6 +2564,7 @@ function validateRCCredit(requestId, status, comment) {
     if (currentUser && user.id === currentUser.id) {
         updateListTabBadge(); renderRCModalNotifs();
     }
+    autoSave();
     return true;
 }
 
@@ -3074,18 +3085,62 @@ function showHistoryModal(type, status) {
 function getAllHistoryRows(type, status) {
     const rows = [];
     if (type === 'cp') {
-        // CP leaves
+        // Grouper les CP par salarié + statut, puis détecter les plages consécutives
+        const byUser = {};
         Object.values(leaves).filter(l => l.type === 'CP' && l.status === status).forEach(l => {
-            const user = getUserById(l.userId);
-            if (!user) return;
-            rows.push({ userId: l.userId, userName: user.name,
-                team: getTeamById(user.teamId)?.name || '-',
-                type: 'CP', date: l.date,
-                detail: '1 jour',
-                motif: l.comment || l.validationComment || '-',
-                decidedAt: l.validationDate || l.dateRequested,
-                status: l.status });
+            const key = `${l.userId}`;
+            if (!byUser[key]) byUser[key] = [];
+            byUser[key].push(l);
         });
+
+        Object.values(byUser).forEach(userLeaves => {
+            const user = getUserById(userLeaves[0].userId);
+            if (!user) return;
+            // Trier par date
+            userLeaves.sort((a, b) => a.date.localeCompare(b.date));
+            // Regrouper en plages consécutives
+            const ranges = [];
+            let current = null;
+            userLeaves.forEach(l => {
+                if (!current) {
+                    current = { dates: [l.date], comment: l.comment, validationComment: l.validationComment, validationDate: l.validationDate, dateRequested: l.dateRequested };
+                } else {
+                    // Vérifier si date est le lendemain (en jours ouvrés ou calendaires)
+                    const last = new Date(current.dates[current.dates.length - 1]);
+                    const curr = new Date(l.date);
+                    const diff = (curr - last) / (1000 * 3600 * 24);
+                    // Consécutifs si diff ≤ 3 (pour couvrir week-ends)
+                    if (diff <= 3) {
+                        current.dates.push(l.date);
+                    } else {
+                        ranges.push(current);
+                        current = { dates: [l.date], comment: l.comment, validationComment: l.validationComment, validationDate: l.validationDate, dateRequested: l.dateRequested };
+                    }
+                }
+            });
+            if (current) ranges.push(current);
+
+            ranges.forEach(range => {
+                const debut = range.dates[0];
+                const fin   = range.dates[range.dates.length - 1];
+                const duree = range.dates.length;
+                const isMulti = duree >= 2;
+                const detail = isMulti
+                    ? `📅 ${formatDateShort(debut)} → ${formatDateShort(fin)} <strong>(${duree} jours)</strong>`
+                    : `📅 ${formatDateShort(debut)} (1 jour)`;
+                rows.push({
+                    userId: user.id, userName: user.name,
+                    team: getTeamById(user.teamId)?.name || '-',
+                    type: 'CP', date: debut,
+                    detail,
+                    motif: range.comment || range.validationComment || '-',
+                    decidedAt: range.validationDate || range.dateRequested,
+                    status
+                });
+            });
+        });
+        // Trier par date décroissante
+        rows.sort((a, b) => b.date.localeCompare(a.date));
     } else {
         // RC absences
         Object.values(leaves).filter(l => l.type === 'RC' && l.status === status).forEach(l => {
@@ -3185,6 +3240,7 @@ function approveCP(userId, dates) {
     });
     showNotification(`CP validé pour ${user.name} (${dates.length} jour${dates.length > 1 ? 's' : ''}) ✅`, 'success');
     renderValidationRC(); updateValidationRCBadge(); renderCalendar();
+    autoSave();
 }
 
 let cpRejectUserId = null, cpRejectDates = null;
@@ -3363,20 +3419,8 @@ function renderValidationRC() {
     document.getElementById('cp-count-approved').textContent = cpApproved.length;
     document.getElementById('cp-count-rejected').textContent = cpRejected.length;
 
-    // Filtrer par équipe pour chef de service non-admin
-    let cpRows = allCP;
-    if (isChefDeService() && !isAdmin() && currentUser.teamId) {
-        cpRows = cpRows.filter(l => {
-            const u = getUserById(l.userId);
-            return u && u.teamId === currentUser.teamId;
-        });
-    }
-    // Trier : en attente en premier, puis par date
-    cpRows.sort((a, b) => {
-        if (a.status === 'pending' && b.status !== 'pending') return -1;
-        if (a.status !== 'pending' && b.status === 'pending') return 1;
-        return new Date(a.date) - new Date(b.date);
-    });
+    // Uniquement les CP en attente de validation
+    let cpRows = allCP.filter(l => l.status === 'pending');
 
     // Regrouper par salarié + plage de dates consécutives
     const cpGroups = {};
@@ -3844,6 +3888,7 @@ function editUser(id, name, email, username, password, role, managerId, cp, rc) 
     if (user.id === currentUser.id) { currentUser = { ...user }; updateUIForCurrentUser(); }
     showNotification(`Salarié ${name} mis à jour`, 'success');
     renderUsersList();
+    autoSave();
     return true;
 }
 
@@ -4594,6 +4639,124 @@ function populateTestSalarieSelect() {
     });
 }
 
+// ========== PERSISTANCE DONNÉES (localStorage + JSON) ==========
+const STORAGE_KEY = 'monvillage_v1';
+
+function saveToStorage() {
+    try {
+        const data = {
+            version: 1,
+            savedAt: new Date().toISOString(),
+            users: users.map(u => ({ ...u })),
+            teams,
+            leaves,
+            rcCreditRequests,
+            hsDeclarations,
+            rcExchangeRequests,
+            userNotifications
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch(e) {
+        console.warn('Sauvegarde localStorage échouée:', e);
+    }
+}
+
+function loadFromStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!data.version || !data.users) return false;
+        // Restaurer les données
+        users.length = 0;
+        data.users.forEach(u => users.push(u));
+        teams.length = 0;
+        data.teams.forEach(t => teams.push(t));
+        Object.keys(leaves).forEach(k => delete leaves[k]);
+        Object.assign(leaves, data.leaves || {});
+        rcCreditRequests.length = 0;
+        (data.rcCreditRequests || []).forEach(r => rcCreditRequests.push(r));
+        hsDeclarations.length = 0;
+        (data.hsDeclarations || []).forEach(d => hsDeclarations.push(d));
+        rcExchangeRequests.length = 0;
+        (data.rcExchangeRequests || []).forEach(r => rcExchangeRequests.push(r));
+        Object.keys(userNotifications).forEach(k => delete userNotifications[k]);
+        Object.assign(userNotifications, data.userNotifications || {});
+        console.log('✅ Données restaurées depuis localStorage (' + new Date(data.savedAt).toLocaleString('fr-FR') + ')');
+        return true;
+    } catch(e) {
+        console.warn('Chargement localStorage échoué:', e);
+        return false;
+    }
+}
+
+function exportDataJSON() {
+    const data = {
+        version: 1,
+        appName: 'Mon Village — Gestion des Congés',
+        savedAt: new Date().toISOString(),
+        users: users.map(u => ({ ...u })),
+        teams,
+        leaves,
+        rcCreditRequests,
+        hsDeclarations,
+        rcExchangeRequests,
+        userNotifications
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `monvillage_sauvegarde_${todayStr()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('✅ Sauvegarde JSON exportée avec succès', 'success');
+}
+
+function importDataJSON(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.version || !data.users) {
+                showNotification('❌ Fichier invalide — format non reconnu', 'error'); return;
+            }
+            if (!confirm(`Importer les données du ${new Date(data.savedAt).toLocaleString('fr-FR')} ?\n\nCela remplacera TOUTES les données actuelles.`)) return;
+
+            users.length = 0;
+            data.users.forEach(u => users.push(u));
+            teams.length = 0;
+            data.teams.forEach(t => teams.push(t));
+            Object.keys(leaves).forEach(k => delete leaves[k]);
+            Object.assign(leaves, data.leaves || {});
+            rcCreditRequests.length = 0;
+            (data.rcCreditRequests || []).forEach(r => rcCreditRequests.push(r));
+            hsDeclarations.length = 0;
+            (data.hsDeclarations || []).forEach(d => hsDeclarations.push(d));
+            rcExchangeRequests.length = 0;
+            (data.rcExchangeRequests || []).forEach(r => rcExchangeRequests.push(r));
+            Object.keys(userNotifications).forEach(k => delete userNotifications[k]);
+            Object.assign(userNotifications, data.userNotifications || {});
+
+            saveToStorage();
+            populateTestSalarieSelect();
+            if (isLoggedIn) {
+                updateUIForCurrentUser();
+                renderCalendar();
+                generateLeaveList();
+                if (isAdmin()) renderUsersList();
+            }
+            showNotification(`✅ Import réussi — ${data.users.length} salariés restaurés`, 'success');
+        } catch(e) {
+            showNotification('❌ Erreur lors de l\'import : ' + e.message, 'error');
+        }
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+// Auto-save après chaque action importante
+function autoSave() { saveToStorage(); }
+
 // ========== TOGGLE MOT DE PASSE ==========
 function togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
@@ -4605,6 +4768,13 @@ function togglePassword(inputId, btn) {
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {
+    // ---- Chargement depuis localStorage (si données sauvegardées) ----
+    const loaded = loadFromStorage();
+    if (loaded) {
+        const statusEl = document.getElementById('storage-status');
+        if (statusEl) statusEl.textContent = '✅ Données chargées depuis la sauvegarde locale';
+    }
+
     runMonthlyAccrual();
     populateTestSalarieSelect();
 
@@ -5175,6 +5345,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ajouter salarié
     document.getElementById('add-user-btn').addEventListener('click', showAddUserModal);
+
+    // ---- Sauvegarde JSON ----
+    document.getElementById('export-json-btn').addEventListener('click', exportDataJSON);
+
+    document.getElementById('import-json-btn').addEventListener('click', () => {
+        document.getElementById('json-file-input').click();
+    });
+    document.getElementById('json-file-input').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        importDataJSON(file);
+        e.target.value = '';
+    });
+    document.getElementById('reset-storage-btn').addEventListener('click', () => {
+        if (!confirm('⚠️ Réinitialiser toutes les données ?\n\nCela effacera la sauvegarde locale et rechargera les données par défaut.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        showNotification('🔄 Données réinitialisées — rechargement...', 'info');
+        setTimeout(() => location.reload(), 1500);
+    });
 
     // Import / Export soldes
     document.getElementById('export-balances-btn').addEventListener('click', exportBalancesCSV);
