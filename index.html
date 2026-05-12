@@ -1630,6 +1630,7 @@ let firstSelectedDate = null;
 let isLoggedIn = false;
 const ACCRUAL_KEY = 'cp_last_accrual';
 let rcQuickDate = null;
+let rcQuickUserId = null;
 let rcQuickComment = '';
 const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const dayNames = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -2073,22 +2074,41 @@ function addLeave(dates, type) {
 function cancelLeave(dateStr) {
     const leave = getUserLeaveOnDate(currentUser.id, dateStr);
     if (!leave) return false;
-    if (leave.status !== 'approved') { showNotification('Seuls les congés validés peuvent être annulés', 'error'); return false; }
-    const reason = document.getElementById('cancel-reason').value;
-    leave.status = 'cancellation_requested';
-    leave.cancelReason = reason;
-    leave.cancelDate = todayStr();
-    if (leave.type === 'RC') {
-        const refund = leave.durationMin || rcDayMinutes(currentUser);
-        currentUser.balances.RC += refund;
-        const u = getUserById(currentUser.id);
-        if (u) u.balances.RC = currentUser.balances.RC;
+    if (leave.status !== 'approved' && leave.status !== 'pending') {
+        showNotification('Ce congé ne peut pas être annulé', 'error'); return false;
     }
-    const chefId = getChefDeServiceOf(currentUser);
-    sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'cancel_request', {
-        userName: currentUser.name, leaveType: leave.type, date: dateStr
-    });
-    showNotification("Demande d'annulation envoyée", 'success');
+    const reason = document.getElementById('cancel-reason').value;
+
+    if (leave.status === 'pending') {
+        // Congé en attente : suppression directe + remboursement immédiat
+        if (leave.type === 'CP') {
+            currentUser.balances.CP += 1;
+            const u = getUserById(currentUser.id); if (u) u.balances.CP = currentUser.balances.CP;
+        } else if (leave.type === 'RC') {
+            const refund = leave.durationMin || rcDayMinutes(currentUser);
+            currentUser.balances.RC += refund;
+            const u = getUserById(currentUser.id); if (u) u.balances.RC = currentUser.balances.RC;
+        }
+        delete leaves[leaveKey(currentUser.id, dateStr)];
+        updateBalances();
+        showNotification('Congé en attente annulé ✅', 'success');
+    } else {
+        // Congé approuvé : demande d'annulation au chef
+        leave.status = 'cancellation_requested';
+        leave.cancelReason = reason;
+        leave.cancelDate = todayStr();
+        if (leave.type === 'RC') {
+            const refund = leave.durationMin || rcDayMinutes(currentUser);
+            currentUser.balances.RC += refund;
+            const u = getUserById(currentUser.id); if (u) u.balances.RC = currentUser.balances.RC;
+            updateBalances();
+        }
+        const chefId = getChefDeServiceOf(currentUser);
+        sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'cancel_request', {
+            userName: currentUser.name, leaveType: leave.type, date: dateStr
+        });
+        showNotification("Demande d'annulation envoyée au chef de service", 'success');
+    }
     return true;
 }
 
@@ -2100,9 +2120,21 @@ function validateLeave(dateStr, status, comment, targetUserId) {
         leave = getLeavesOnDate(dateStr).find(l => l.status === 'pending' && l.userId !== currentUser.id)
              || getLeavesOnDate(dateStr)[0];
     }
-    if (!leave) return false;
+    if (!leave) { console.log('validateLeave: leave not found for', dateStr, targetUserId); return false; }
     const user = getUserById(leave.userId);
-    if (!isChefDeService() || !user || (user.managerId !== currentUser.id && !isAdmin())) {
+    console.log('validateLeave debug:', {
+        currentUser: currentUser?.id, role: currentUser?.role,
+        leaveUserId: leave.userId, userManagerId: user?.managerId,
+        isChef: isChefDeService(), isAdm: isAdmin()
+    });
+    // Autorisation : admin toujours ok, chef si le salarié lui est rattaché (managerId) ou dans son équipe
+    const canValidate = isAdmin() ||
+        (isChefDeService() && user && (
+            user.managerId === currentUser.id ||
+            (currentUser.teamId && user.teamId === currentUser.teamId) ||
+            user.managerId === null
+        ));
+    if (!canValidate) {
         showNotification('Non autorisé', 'error'); return false;
     }
     leave.status = status;
@@ -3384,17 +3416,20 @@ function rejectRCCredit(requestId) {
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
 function quickValidateRC(dateStr, action) {
-    const leave = leaves[dateStr];
+    // Chercher le congé RC en attente sur cette date (clé userId-date)
+    const leave = Object.values(leaves).find(l => l.date === dateStr && l.type === 'RC' && l.status === 'pending');
     if (!leave) return;
     const user = getUserById(leave.userId);
+    const key = leaveKey(leave.userId, dateStr);
 
     if (action === 'approved') {
-        validateLeave(dateStr, 'approved', '');
+        validateLeave(dateStr, 'approved', '', leave.userId);
         renderValidationRC();
         renderCalendar();
         return;
     }
     rcQuickDate = dateStr;
+    rcQuickUserId = leave.userId;
     document.getElementById('rc-quick-modal-title').textContent = `Refuser la demande RC de ${user ? user.name : '?'}`;
     document.getElementById('rc-quick-modal-body').innerHTML = `
         <p style="margin-bottom:12px;">
@@ -3839,7 +3874,7 @@ function generateLeaveList() {
             <td>${dur}</td>
             <td>${statusHtml}</td>
             <td>${commentHtml}</td>
-            <td>${leave.status === 'approved' && !isPastDate(dateStr)
+            <td>${(leave.status === 'approved' || leave.status === 'pending') && !isPastDate(dateStr)
                 ? `<button class="btn btn-danger btn-sm" onclick="showCancelLeaveModal('${dateStr}')">Annuler</button>`
                 : '-'}</td>`;
         tbody.appendChild(tr);
@@ -4053,9 +4088,16 @@ function dismissRCModalNotif(notifId) {
 
 function showCancelLeaveModal(dateStr) {
     if (!isLoggedIn) return;
-    const leave = leaves[dateStr];
+    const leave = leaves[leaveKey(currentUser.id, dateStr)];
     if (!leave) return;
-    document.getElementById('cancel-leave-message').textContent = `Annuler le congé ${leave.type} du ${formatDate(dateStr)} ?`;
+    const isPending = leave.status === 'pending';
+    document.getElementById('cancel-leave-message').innerHTML = isPending
+        ? `<strong>Annuler la demande</strong> de congé ${leave.type} du ${formatDate(dateStr)} ?<br>
+           <span style="color:#27ae60;font-size:0.9rem;">✅ Votre solde sera immédiatement recrédité.</span>`
+        : `<strong>Demander l'annulation</strong> du congé ${leave.type} du ${formatDate(dateStr)} ?<br>
+           <span style="color:#7f8c8d;font-size:0.9rem;">Une notification sera envoyée au chef de service.</span>`;
+    const reasonGroup = document.getElementById('cancel-reason').closest('.form-group');
+    reasonGroup.style.display = isPending ? 'none' : 'block';
     document.getElementById('cancel-reason').value = '';
     document.getElementById('cancel-leave-modal').dataset.date = dateStr;
     document.getElementById('cancel-leave-modal').classList.add('active');
@@ -4941,20 +4983,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
         document.getElementById('reject-rc-quick').style.display = '';
-        rcQuickDate = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
+        rcQuickDate = null; rcQuickUserId = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
     });
     document.getElementById('cancel-rc-quick').addEventListener('click', () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
         document.getElementById('reject-rc-quick').style.display = '';
-        rcQuickDate = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
+        rcQuickDate = null; rcQuickUserId = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
     });
     document.getElementById('approve-rc-quick').addEventListener('click', () => {
         if (!rcQuickDate) return;
-        validateLeave(rcQuickDate, 'approved', '');
+        validateLeave(rcQuickDate, 'approved', '', rcQuickUserId);
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
-        rcQuickDate = null;
+        rcQuickDate = null; rcQuickUserId = null;
         renderValidationRC(); updateValidationRCBadge(); renderCalendar();
     });
     document.getElementById('reject-rc-quick').addEventListener('click', () => {
@@ -4974,8 +5016,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             validateRCCredit(rcCreditRejectId, 'rejected', comment);
             rcCreditRejectId = null;
         } else if (rcQuickDate) {
-            validateLeave(rcQuickDate, 'rejected', comment);
-            rcQuickDate = null;
+            validateLeave(rcQuickDate, 'rejected', comment, rcQuickUserId);
+            rcQuickDate = null; rcQuickUserId = null;
         }
 
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
