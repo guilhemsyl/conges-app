@@ -2120,23 +2120,9 @@ function validateLeave(dateStr, status, comment, targetUserId) {
         leave = getLeavesOnDate(dateStr).find(l => l.status === 'pending' && l.userId !== currentUser.id)
              || getLeavesOnDate(dateStr)[0];
     }
-    if (!leave) { console.log('validateLeave: leave not found for', dateStr, targetUserId); return false; }
+    if (!leave) return false;
     const user = getUserById(leave.userId);
-    console.log('validateLeave debug:', {
-        currentUser: currentUser?.id, role: currentUser?.role,
-        leaveUserId: leave.userId, userManagerId: user?.managerId,
-        isChef: isChefDeService(), isAdm: isAdmin()
-    });
-    // Autorisation : admin toujours ok, chef si le salarié lui est rattaché (managerId) ou dans son équipe
-    const canValidate = isAdmin() ||
-        (isChefDeService() && user && (
-            user.managerId === currentUser.id ||
-            (currentUser.teamId && user.teamId === currentUser.teamId) ||
-            user.managerId === null
-        ));
-    if (!canValidate) {
-        showNotification('Non autorisé', 'error'); return false;
-    }
+    if (!isChefDeService() || !user) { showNotification('Non autorisé', 'error'); return false; }
     leave.status = status;
     leave.validationComment = comment;
     leave.validatedBy = currentUser.id;
