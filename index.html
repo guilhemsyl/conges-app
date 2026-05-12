@@ -344,6 +344,60 @@
 </style>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script> emailjs.init('-liETNfsHvYCFH6N2'); </script>
+    <!-- Firebase -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDXf5TuZFAAwHnxtgOMApOGMgHoT2zmoy0",
+        authDomain: "gestion-de-conge-asm.firebaseapp.com",
+        projectId: "gestion-de-conge-asm",
+        storageBucket: "gestion-de-conge-asm.firebasestorage.app",
+        messagingSenderId: "570625882631",
+        appId: "1:570625882631:web:a3b7d77e706057607d48a2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const DOC_REF = doc(db, 'app', 'data');
+
+    // Exposer les fonctions Firebase globalement
+    window._fbSave = async function(data) {
+        try {
+            await setDoc(DOC_REF, { payload: JSON.stringify(data) });
+            console.log('✅ Firebase sauvegardé');
+            return true;
+        } catch(e) {
+            console.warn('❌ Firebase save error:', e);
+            return false;
+        }
+    };
+
+    window._fbLoad = async function() {
+        try {
+            const snap = await getDoc(DOC_REF);
+            if (!snap.exists()) return null;
+            return JSON.parse(snap.data().payload);
+        } catch(e) {
+            console.warn('❌ Firebase load error:', e);
+            return null;
+        }
+    };
+
+    window._fbListen = function(callback) {
+        return onSnapshot(DOC_REF, snap => {
+            if (!snap.exists()) return;
+            try {
+                const data = JSON.parse(snap.data().payload);
+                callback(data);
+            } catch(e) { console.warn('Firebase listen error:', e); }
+        });
+    };
+
+    window._fbReady = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+    </script>
 </head>
 <body>
 
@@ -4199,51 +4253,59 @@ function populateTestSalarieSelect() {
 }
 const STORAGE_KEY = 'monvillage_v1';
 
+function buildAppData() {
+    return {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        users: users.map(u => ({ ...u })),
+        teams, leaves, rcCreditRequests,
+        hsDeclarations, rcExchangeRequests, userNotifications
+    };
+}
+
+function applyAppData(data) {
+    if (!data || !data.users) return false;
+    users.length = 0; data.users.forEach(u => users.push(u));
+    teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
+    Object.keys(leaves).forEach(k => delete leaves[k]);
+    Object.assign(leaves, data.leaves || {});
+    rcCreditRequests.length = 0; (data.rcCreditRequests||[]).forEach(r => rcCreditRequests.push(r));
+    hsDeclarations.length = 0; (data.hsDeclarations||[]).forEach(d => hsDeclarations.push(d));
+    rcExchangeRequests.length = 0; (data.rcExchangeRequests||[]).forEach(r => rcExchangeRequests.push(r));
+    Object.keys(userNotifications).forEach(k => delete userNotifications[k]);
+    Object.assign(userNotifications, data.userNotifications || {});
+    return true;
+}
+
 function saveToStorage() {
-    try {
-        const data = {
-            version: 1,
-            savedAt: new Date().toISOString(),
-            users: users.map(u => ({ ...u })),
-            teams,
-            leaves,
-            rcCreditRequests,
-            hsDeclarations,
-            rcExchangeRequests,
-            userNotifications
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch(e) {
-        console.warn('Sauvegarde localStorage échouée:', e);
+    const data = buildAppData();
+    // Sauvegarde locale (fallback)
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    // Sauvegarde Firebase (asynchrone)
+    if (window._fbReady) {
+        window._fbSave(data).catch(e => console.warn('Firebase save failed:', e));
     }
 }
 
-function loadFromStorage() {
+async function loadFromStorage() {
+    // 1. Firebase en priorité
+    if (window._fbReady) {
+        try {
+            const data = await window._fbLoad();
+            if (data && applyAppData(data)) {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+                console.log('✅ Données chargées depuis Firebase');
+                return true;
+            }
+        } catch(e) { console.warn('Firebase load failed, fallback localStorage:', e); }
+    }
+    // 2. Fallback localStorage
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return false;
         const data = JSON.parse(raw);
-        if (!data.version || !data.users) return false;
-        users.length = 0;
-        data.users.forEach(u => users.push(u));
-        teams.length = 0;
-        data.teams.forEach(t => teams.push(t));
-        Object.keys(leaves).forEach(k => delete leaves[k]);
-        Object.assign(leaves, data.leaves || {});
-        rcCreditRequests.length = 0;
-        (data.rcCreditRequests || []).forEach(r => rcCreditRequests.push(r));
-        hsDeclarations.length = 0;
-        (data.hsDeclarations || []).forEach(d => hsDeclarations.push(d));
-        rcExchangeRequests.length = 0;
-        (data.rcExchangeRequests || []).forEach(r => rcExchangeRequests.push(r));
-        Object.keys(userNotifications).forEach(k => delete userNotifications[k]);
-        Object.assign(userNotifications, data.userNotifications || {});
-        console.log('✅ Données restaurées depuis localStorage (' + new Date(data.savedAt).toLocaleString('fr-FR') + ')');
-        return true;
-    } catch(e) {
-        console.warn('Chargement localStorage échoué:', e);
-        return false;
-    }
+        return applyAppData(data);
+    } catch(e) { return false; }
 }
 
 function exportDataJSON() {
@@ -4271,41 +4333,19 @@ function exportDataJSON() {
 
 function importDataJSON(file) {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async e => {
         try {
             const data = JSON.parse(e.target.result);
-            if (!data.version || !data.users) {
-                showNotification('❌ Fichier invalide — format non reconnu', 'error'); return;
-            }
-            if (!confirm(`Importer les données du ${new Date(data.savedAt).toLocaleString('fr-FR')} ?\n\nCela remplacera TOUTES les données actuelles.`)) return;
-
-            users.length = 0;
-            data.users.forEach(u => users.push(u));
-            teams.length = 0;
-            data.teams.forEach(t => teams.push(t));
-            Object.keys(leaves).forEach(k => delete leaves[k]);
-            Object.assign(leaves, data.leaves || {});
-            rcCreditRequests.length = 0;
-            (data.rcCreditRequests || []).forEach(r => rcCreditRequests.push(r));
-            hsDeclarations.length = 0;
-            (data.hsDeclarations || []).forEach(d => hsDeclarations.push(d));
-            rcExchangeRequests.length = 0;
-            (data.rcExchangeRequests || []).forEach(r => rcExchangeRequests.push(r));
-            Object.keys(userNotifications).forEach(k => delete userNotifications[k]);
-            Object.assign(userNotifications, data.userNotifications || {});
-
-            saveToStorage();
+            if (!data.version || !data.users) { showNotification('❌ Fichier invalide', 'error'); return; }
+            if (!confirm(`Importer les données du ${new Date(data.savedAt).toLocaleString('fr-FR')} ?\nCela remplacera TOUTES les données (local + Firebase).`)) return;
+            applyAppData(data);
+            // Sauvegarder partout
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+            if (window._fbSave) await window._fbSave(data);
             populateTestSalarieSelect();
-            if (isLoggedIn) {
-                updateUIForCurrentUser();
-                renderCalendar();
-                generateLeaveList();
-                if (isAdmin()) renderUsersList();
-            }
-            showNotification(`✅ Import réussi — ${data.users.length} salariés restaurés`, 'success');
-        } catch(e) {
-            showNotification('❌ Erreur lors de l\'import : ' + e.message, 'error');
-        }
+            if (isLoggedIn) { updateUIForCurrentUser(); renderCalendar(); generateLeaveList(); if (isAdmin()) renderUsersList(); }
+            showNotification(`✅ Import réussi — ${data.users.length} salariés synchronisés`, 'success');
+        } catch(e) { showNotification('❌ Erreur: ' + e.message, 'error'); }
     };
     reader.readAsText(file, 'UTF-8');
 }
@@ -4361,11 +4401,44 @@ function updateHsBannerDesc() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const loaded = loadFromStorage();
-    if (loaded) {
-        const statusEl = document.getElementById('storage-status');
-        if (statusEl) statusEl.textContent = '✅ Données chargées depuis la sauvegarde locale';
+document.addEventListener('DOMContentLoaded', async () => {
+    // Afficher indicateur de chargement
+    const statusEl = document.getElementById('storage-status');
+    if (statusEl) statusEl.textContent = '⏳ Chargement des données...';
+
+    // Attendre que Firebase soit prêt (max 3 secondes)
+    if (!window._fbReady) {
+        await new Promise(resolve => {
+            const t = setTimeout(resolve, 3000);
+            document.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, {once:true});
+        });
+    }
+
+    const loaded = await loadFromStorage();
+    if (statusEl) {
+        statusEl.textContent = loaded
+            ? '✅ Données synchronisées'
+            : '⚠️ Données locales (hors ligne)';
+    }
+
+    // Écouter les mises à jour en temps réel depuis les autres appareils
+    if (window._fbListen) {
+        window._fbListen(data => {
+            if (!isLoggedIn) return; // Ne pas écraser pendant la connexion
+            applyAppData(data);
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+            // Rafraîchir l'interface si connecté
+            if (currentUser) {
+                const freshUser = getUserById(currentUser.id);
+                if (freshUser) currentUser = freshUser;
+                updateBalances();
+                renderCalendar();
+                if (document.getElementById('list-view').classList.contains('active')) generateLeaveList();
+                if (document.getElementById('validation-rc-view').classList.contains('active')) renderValidationRC();
+                if (isChefDeService()) updateValidationRCBadge();
+                updateBellBadge();
+            }
+        });
     }
 
     runMonthlyAccrual();
@@ -4931,9 +5004,15 @@ document.addEventListener('DOMContentLoaded', () => {
         importDataJSON(file);
         e.target.value = '';
     });
-    document.getElementById('reset-storage-btn').addEventListener('click', () => {
-        if (!confirm('⚠️ Réinitialiser toutes les données ?\n\nCela effacera la sauvegarde locale et rechargera les données par défaut.')) return;
+    document.getElementById('reset-storage-btn').addEventListener('click', async () => {
+        if (!confirm('⚠️ Réinitialiser toutes les données ?\n\nCela effacera la sauvegarde locale ET Firebase, et rechargera les données par défaut.')) return;
         localStorage.removeItem(STORAGE_KEY);
+        // Effacer aussi Firebase
+        if (window._fbSave) {
+            await window._fbSave({ version:1, savedAt: new Date().toISOString(),
+                users:[], teams:[], leaves:{}, rcCreditRequests:[],
+                hsDeclarations:[], rcExchangeRequests:[], userNotifications:{} });
+        }
         showNotification('🔄 Données réinitialisées — rechargement...', 'info');
         setTimeout(() => location.reload(), 1500);
     });
