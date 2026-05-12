@@ -91,7 +91,7 @@
         .day-cell.empty { background: transparent; cursor: default; }
         .day-cell.other-month { color: #bdc3c7; cursor: default; }
         .day-cell.today { background: #e8f4fc; font-weight: bold; }
-        .day-cell.disabled { cursor: not-allowed; opacity: 0.6; }
+        .day-cell.disabled { opacity: 0.5; }
         .day-cell.public-holiday { background: #fef9e7; color: #e67e22; font-weight: bold; }
         .day-cell.public-holiday::after { content: '●'; position: absolute; top: 1px; right: 2px; font-size: 0.4rem; color: #e67e22; }
         .day-cell.may-first { background: #fdedec; color: #e74c3c; font-weight: bold; }
@@ -353,10 +353,7 @@
         .leave-popup-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .leave-popup-name { font-weight: bold; }
         .leave-popup-info { font-size: 0.78rem; color: #7f8c8d; }
-            cursor: pointer;
-            user-select: none;
-            white-space: nowrap;
-        }
+        .th-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
         .th-sortable:hover { background: #dde1e4; }
         .th-sortable .sort-icon { margin-left: 4px; opacity: 0.4; font-size: 0.75rem; }
         .th-sortable.sort-asc .sort-icon::after { content: ' ▲'; opacity: 1; }
@@ -489,7 +486,7 @@
 
     <nav class="nav-tabs">
         <button class="nav-tab active" data-view="calendar">Calendrier équipe</button>
-        <button class="nav-tab" data-view="list">Mes Congés</button>
+        <button class="nav-tab hidden" data-view="list" id="list-tab">Mes Congés</button>
         <button class="nav-tab" data-view="dashboard" id="dashboard-tab">⏱️ Heures sup & Échanges</button>
         <button class="nav-tab hidden" data-view="team" id="team-tab">Équipe</button>
         <button class="nav-tab hidden" data-view="validation-rc" id="validation-rc-tab">✅ Validation</button>
@@ -508,7 +505,10 @@
                 </div>
             </div>
             <div class="range-selection-info" id="range-selection-info">
-                <strong>Sélection:</strong> <span id="selected-range">Aucune</span>
+                <strong>📅 Sélection :</strong> <span id="selected-range">Cliquez sur une date de début</span>
+                &nbsp;
+                <button class="btn btn-primary btn-sm" id="confirm-range-btn" style="display:none;" onclick="if(selectedDates.length>0) showAddLeaveModal();">✓ Confirmer</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetRangeSelection();">✕ Annuler</button>
             </div>
             <div class="months-container" id="calendar-months"></div>
         </div>
@@ -636,6 +636,8 @@
                 </div>
                 <button class="btn btn-primary btn-sm" id="cm-apply-filter">Filtrer</button>
                 <button class="btn btn-secondary btn-sm" id="export-counters-btn">📥 Exporter</button>
+                <button class="btn btn-secondary btn-sm" id="import-balances-counters-btn">📤 Importer soldes (CSV)</button>
+                <input type="file" id="balances-counters-file-input" accept=".csv" style="display:none;">
             </div>
 
             <!-- Tableau compteurs équipe -->
@@ -853,7 +855,18 @@
                         <option value="day">Journée entière</option>
                         <option value="hours">Durée personnalisée</option>
                     </select>
-                    <input type="text" id="rc-hours-input" placeholder="ex: 1h30, 2h, 45min" style="display:none;flex:1;min-width:140px;">
+                </div>
+                <div id="rc-hours-fields" style="display:none;margin-top:10px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rc-time-start">Heure de début :</label>
+                            <input type="time" id="rc-time-start">
+                        </div>
+                        <div class="form-group">
+                            <label for="rc-time-end">Heure de fin :</label>
+                            <input type="time" id="rc-time-end">
+                        </div>
+                    </div>
                 </div>
                 <div id="rc-duration-preview" style="margin-top:8px;font-size:0.85rem;color:#2980b9;"></div>
             </div>
@@ -1572,64 +1585,8 @@ function getUserLeaveOnDate(userId, dateStr) {
 }
 
 // ========== DONNÉES DE TEST ==========
-// Scénario : 3 salariés UV1 (Meldem id:10, Bal id:20, Chavagnat id:30) demandent RC les mêmes jours
-// + des CP approuvés, RC en attente, crédit RC, échanges, HS declarations
+// Les données de démonstration sont chargées par seedDemoData ci-dessous
 
-(function seedTestData() {
-    // --- RC en attente : 3 salariés UV1 demandent les mêmes 2 jours (conflit!) ---
-    const conflictDates = ['2026-06-22', '2026-06-23'];
-    conflictDates.forEach(date => {
-        [10, 20, 30].forEach(uid => {
-            leaves[leaveKey(uid, date)] = {
-                id: `rc-conflict-${uid}-${date}`,
-                userId: uid, type: 'RC', status: 'pending',
-                durationMin: 420, comment: 'Récupération heures supplémentaires',
-                date, dateRequested: '2026-05-10'
-            };
-        });
-    });
-
-    // --- CP approuvé : Meldem (10) semaine du 7 juillet ---
-    ['2026-07-06','2026-07-07','2026-07-08','2026-07-09','2026-07-10'].forEach(date => {
-        leaves[leaveKey(10, date)] = {
-            id: `cp-meldem-${date}`, userId: 10, type: 'CP', status: 'approved',
-            durationMin: null, comment: 'Congés été',
-            date, dateRequested: '2026-04-15', validatedBy: 3, validationDate: '2026-04-16'
-        };
-    });
-
-    // --- RC approuvé : Bal (20) ---
-    leaves[leaveKey(20, '2026-06-15')] = {
-        id: 'rc-bal-approved', userId: 20, type: 'RC', status: 'approved',
-        durationMin: 420, comment: 'RC validé mois dernier',
-        date: '2026-06-15', dateRequested: '2026-05-01', validatedBy: 3, validationDate: '2026-05-02'
-    };
-
-    // --- CP en attente : Gorge (32) ---
-    ['2026-07-20','2026-07-21','2026-07-22'].forEach(date => {
-        leaves[leaveKey(32, date)] = {
-            id: `cp-gorge-${date}`, userId: 32, type: 'CP', status: 'pending',
-            durationMin: null, comment: '',
-            date, dateRequested: '2026-05-10'
-        };
-    });
-
-    // --- CP refusé : Commandeur (40) avec motif ---
-    leaves[leaveKey(40, '2026-08-03')] = {
-        id: 'cp-commandeur-rejected', userId: 40, type: 'CP', status: 'rejected',
-        durationMin: null, comment: 'Congé famille',
-        date: '2026-08-03', dateRequested: '2026-05-05',
-        validatedBy: 3, validationDate: '2026-05-06',
-        validationComment: 'Effectif insuffisant cette semaine'
-    };
-
-    // --- Mise à jour soldes pour les tests ---
-    const soldes = { 10: 420*3, 20: 420*2, 30: 420, 32: 840, 40: 0, 3: 420*5 };
-    Object.entries(soldes).forEach(([id, rc]) => {
-        const u = users.find(x => x.id === parseInt(id));
-        if (u) u.balances.RC = rc;
-    });
-})();
 
 // ========== DONNÉES DE DÉMONSTRATION ==========
 (function seedDemoData() {
@@ -1993,7 +1950,7 @@ let userNotifications = {
           dateGive:'2026-06-10', dateReceive:'2026-06-17',
           motif:'Impossibilité — formation obligatoire le 17/06', createdAt:'2026-05-04', read:false },
     ],
-    // Chef de service test : toutes les demandes en attente
+    // Chef de service test : uniquement les demandes en attente importantes
     3: [
         { id:'n-demo-9', type:'new_leave_request', userName:'Gorge', leaveType:'CP',
           date:'2026-07-20', count:5, createdAt:'2026-05-10', read:false },
@@ -2001,13 +1958,8 @@ let userNotifications = {
           date:'2026-08-03', count:5, createdAt:'2026-05-08', read:false },
         { id:'n-demo-11', type:'new_credit_request', userName:'Mosa', mode:'rc',
           duration:150, date:'2026-05-28', createdAt:'2026-05-28', read:false },
-        { id:'n-demo-12', type:'new_credit_request', userName:'Commandeur', mode:'paid',
-          duration:240, date:'2026-05-27', createdAt:'2026-05-27', read:false },
         { id:'n-demo-13', type:'new_exchange_request', userName:'Meldem',
           colleagueName:'Bal', dateGive:'2026-06-05', dateReceive:'2026-06-12',
-          createdAt:'2026-05-09', read:false },
-        { id:'n-demo-14', type:'new_hs_declaration', userName:'Meldem',
-          declType:'hs', weekStart:'2026-05-04', rcGenerated:roundToQuarter(3.5*60*1.25),
           createdAt:'2026-05-09', read:false },
     ],
 };
@@ -2101,9 +2053,6 @@ function localDateStr(date) {
 function todayStr() { return localDateStr(new Date()); }
 
 function getVisibleLeaves() {
-    // Retourne { date: [leave, ...] } — plusieurs congés possibles par date
-    // Règle : chaque utilisateur voit ses propres congés + ceux de son équipe uniquement
-    // Admin sans équipe = voit tout
     const visible = {};
     Object.values(leaves).forEach(leave => {
         if (leave.isCycleProposal) return;
@@ -2113,7 +2062,9 @@ function getVisibleLeaves() {
         let show = false;
         // Toujours voir ses propres congés
         if (leave.userId === currentUser.id) show = true;
-        // Voir les congés de son équipe (même teamId, non nul)
+        // Chef de service : voit tous les salariés
+        else if (isChefDeService()) show = true;
+        // Salarié : voit les congés de son équipe
         else if (currentUser.teamId && leaveUser.teamId === currentUser.teamId) show = true;
         // Admin sans équipe : voit tout
         else if (isAdmin() && !currentUser.teamId) show = true;
@@ -2387,7 +2338,9 @@ function updateUIForCurrentUser() {
     document.getElementById('current-user-role').textContent = currentUser.role;
     updateBalances();
     document.getElementById('user-menu-btn').textContent = currentUser.name.charAt(0).toUpperCase();
-    document.getElementById('team-tab').classList.toggle('hidden', !isChefDeService());
+    document.getElementById('list-tab').classList.toggle('hidden', isChefDeService());
+    document.getElementById('dashboard-tab').classList.toggle('hidden', isChefDeService());
+    document.getElementById('team-tab').classList.add('hidden'); // jamais visible
     document.getElementById('validation-rc-tab').classList.toggle('hidden', !isChefDeService());
     document.getElementById('counters-manager-tab').classList.toggle('hidden', !isChefDeService());
     document.getElementById('admin-tab').classList.toggle('hidden', !isAdmin());
@@ -2490,10 +2443,14 @@ function addLeave(dates, type) {
         if (rcMode === 'day') {
             durationMin = rcDayMinutes(currentUser) * totalDays;
         } else {
-            const raw = document.getElementById('rc-hours-input').value.trim();
-            durationMin = parseHoursMinutes(raw);
-            if (!durationMin || durationMin <= 0) { showNotification('Durée RC invalide', 'error'); return false; }
-            if (durationMin % 15 !== 0) { showNotification('La durée doit être un multiple de 15 min', 'error'); return false; }
+            const start = document.getElementById('rc-time-start').value;
+            const end   = document.getElementById('rc-time-end').value;
+            if (!start || !end) { showNotification('Veuillez saisir les heures de début et de fin', 'error'); return false; }
+            const [sh,sm] = start.split(':').map(Number);
+            const [eh,em] = end.split(':').map(Number);
+            const totalMin = (eh*60+em) - (sh*60+sm);
+            if (totalMin <= 0) { showNotification('L\'heure de fin doit être après l\'heure de début', 'error'); return false; }
+            durationMin = roundToQuarter(totalMin);
         }
         if (currentUser.balances.RC < durationMin) { showNotification(`Solde RC insuffisant (${formatMinutes(currentUser.balances.RC)})`, 'error'); return false; }
         if (rcMode === 'hours' && dates.length > 1) { showNotification('En mode heures, sélectionnez une seule date', 'error'); return false; }
@@ -3622,6 +3579,23 @@ function renderValidationRC() {
                    <button class="btn btn-danger btn-sm"  onclick='rejectCP(${grp.userId}, ${JSON.stringify(sorted)})'>✗ Refuser</button>`
                 : (grp.validationComment ? `<em style="font-size:0.8rem;color:#7f8c8d;">${grp.validationComment}</em>` : '-');
 
+            // Détecter conflits CP : d'autres salariés en attente sur les mêmes dates
+            const cpConflicts = [];
+            if (isPending) {
+                sorted.forEach(d => {
+                    Object.values(leaves).filter(l =>
+                        l.type === 'CP' && l.status === 'pending' &&
+                        l.userId !== grp.userId && l.date === d
+                    ).forEach(l => {
+                        const cn = getUserById(l.userId)?.name;
+                        if (cn && !cpConflicts.includes(cn)) cpConflicts.push(cn);
+                    });
+                });
+            }
+            const conflictHtml = cpConflicts.length > 0
+                ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${cpConflicts.join(', ')}</span>`
+                : '';
+
             tr.innerHTML = `
                 <td><strong>${user.name}</strong></td>
                 <td>${team ? team.name : '-'}</td>
@@ -3630,7 +3604,7 @@ function renderValidationRC() {
                 <td style="font-weight:bold;color:var(--cp-color);">${duree} jour${duree > 1 ? 's' : ''}</td>
                 <td style="font-size:0.85rem;">${grp.comment || '<em style="color:#bbb;">-</em>'}</td>
                 <td style="font-size:0.85rem;">${formatDateShort(grp.dateRequested)}</td>
-                <td>${statusHtml}</td>
+                <td>${statusHtml}${conflictHtml}</td>
                 <td style="white-space:nowrap;">${actionsHtml}</td>`;
             cpTbody.appendChild(tr);
         });
@@ -4074,44 +4048,80 @@ function deleteUser(id) {
 function resetRangeSelection() {
     selectedDates = []; isSelectingRange = false; firstSelectedDate = null;
     document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('selected'));
-    document.getElementById('range-selection-info').classList.remove('active');
+    document.querySelectorAll('.range-selection-info').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('#selected-range').forEach(el => el.textContent = 'Aucune');
 }
 
 function handleDateClick(dateStr) {
     if (!isLoggedIn || isPastDate(dateStr)) return;
+
+    // Congé existant → annuler ou ignorer
     const myLeave = getUserLeaveOnDate(currentUser.id, dateStr);
     if (myLeave) {
         if (myLeave.status === 'approved') showCancelLeaveModal(dateStr);
+        resetRangeSelection();
         return;
     }
+
+    // Chef : valider un congé en attente au clic
     if (isChefDeService()) {
         const pendingLeaves = getLeavesOnDate(dateStr).filter(l => l.status === 'pending' && l.userId !== currentUser.id);
         if (pendingLeaves.length > 0) { showValidateLeaveModal(dateStr, pendingLeaves[0]); return; }
+        return;
     }
+
+    // ── Sélection multi-dates ──
     if (!isSelectingRange) {
+        // 1er clic : début de plage
         resetRangeSelection();
-        firstSelectedDate = dateStr; selectedDates = [dateStr];
-        const cell = document.querySelector(`.day-cell[data-date="${dateStr}"]`);
-        if (cell) cell.classList.add('selected');
+        firstSelectedDate = dateStr;
+        selectedDates = [dateStr];
         isSelectingRange = true;
-        document.getElementById('range-selection-info').classList.add('active');
-        document.getElementById('selected-range').textContent = formatDate(dateStr) + ' (cliquez sur une 2ème date)';
+        highlightRange(dateStr, dateStr);
+        showRangeInfo(dateStr, null);
     } else {
+        // 2e clic : fin de plage → ouvrir le modal
         let start = firstSelectedDate, end = dateStr;
-        if (new Date(end) < new Date(start)) [start, end] = [end, start];
-        selectedDates = [];
-        const cur = new Date(start), endDate = new Date(end);
-        while (cur <= endDate) {
-            const ds = localDateStr(cur);
-            selectedDates.push(ds);
-            const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
-            if (cell) cell.classList.add('selected');
-            cur.setDate(cur.getDate()+1);
-        }
+        if (end < start) [start, end] = [end, start];
+        selectedDates = buildDateRange(start, end);
         isSelectingRange = false;
-        document.getElementById('selected-range').textContent = `${formatDate(start)} → ${formatDate(end)} (${selectedDates.length} jours)`;
+        highlightRange(start, end);
         showAddLeaveModal();
     }
+}
+
+function buildDateRange(start, end) {
+    const dates = [];
+    const cur = new Date(start + 'T00:00:00');
+    const endDate = new Date(end + 'T00:00:00');
+    while (cur <= endDate) {
+        dates.push(localDateStr(cur));
+        cur.setDate(cur.getDate() + 1);
+    }
+    return dates;
+}
+
+function highlightRange(start, end) {
+    document.querySelectorAll('.day-cell[data-date]').forEach(cell => {
+        const d = cell.dataset.date;
+        if (d >= start && d <= end && !cell.classList.contains('disabled') && !cell.classList.contains('other-month')) {
+            cell.classList.add('selected');
+        } else {
+            cell.classList.remove('selected');
+        }
+    });
+}
+
+function showRangeInfo(start, end) {
+    const confirmBtn = document.getElementById('confirm-range-btn');
+    document.querySelectorAll('.range-selection-info').forEach(el => {
+        el.classList.add('active');
+        const span = el.querySelector('#selected-range') || el.querySelector('span');
+        if (span) span.textContent = end && end !== start
+            ? `${formatDate(start)} → ${formatDate(end)} (${buildDateRange(start,end).length} jours) — cliquez pour valider`
+            : `${formatDate(start)} — cliquez sur une 2ème date`;
+    });
+    if (confirmBtn) confirmBtn.style.display = end && end !== start ? 'inline-block' : 'none';
 }
 
 // ========== CALENDRIER ==========
@@ -4141,6 +4151,7 @@ function generateCalendar(containerId, year) {
             el.textContent = daysInPrevMonth - firstDayOfWeek + i + 1;
             daysGrid.appendChild(el);
         }
+        const visibleLeaves = getVisibleLeaves();
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const dateStr = localDateStr(date);
@@ -4153,16 +4164,13 @@ function generateCalendar(containerId, year) {
                 el.classList.add(dateStr.endsWith('-05-01') ? 'may-first' : 'public-holiday');
                 el.title = holidays[dateStr];
             }
-            const visibleLeaves = getVisibleLeaves();
-            const dayLeaves = visibleLeaves[dateStr] || [];
 
-            // Afficher d'abord les congés des collègues (en haut), puis les siens (en bas, plus visibles)
+            const dayLeaves = visibleLeaves[dateStr] || [];
             const ownLeaves  = dayLeaves.filter(l => l.userId === currentUser.id);
             const teamLeaves = dayLeaves.filter(l => l.userId !== currentUser.id);
             const orderedLeaves = [...teamLeaves, ...ownLeaves];
 
             orderedLeaves.forEach(leave => {
-                const leaveUser = getUserById(leave.userId);
                 const isOwn = leave.userId === currentUser.id;
                 const indicator = document.createElement('div');
                 const typeClass = isOwn ? leave.type : `team-${leave.type}`;
@@ -4171,27 +4179,43 @@ function generateCalendar(containerId, year) {
                 el.appendChild(indicator);
             });
 
-            // Tooltip natif sur la cellule avec tous les congés du jour
-            if (teamLeaves.length > 0) {
-                const lines = teamLeaves.map(l => {
+            // Tooltip : tous les congés du jour (collègues + soi-même)
+            const allForTooltip = [...teamLeaves, ...ownLeaves];
+            if (allForTooltip.length > 0) {
+                const lines = allForTooltip.map(l => {
                     const u = getUserById(l.userId);
                     const t = getTeamById(u?.teamId);
                     const svc = u?.service === 'nuit' ? '🌙' : '☀️';
                     const dur = l.type === 'RC' && l.durationMin ? ' ' + formatMinutes(l.durationMin) : '';
                     const st = { approved: '✅', pending: '⏳', rejected: '❌' }[l.status] || '';
                     const typeLabel = l.type === 'CP' ? 'CA' : l.type;
-                    return `${u?.name || '?'} — ${t?.name || '-'} ${svc} — ${typeLabel}${dur} ${st}`;
+                    const name = l.userId === currentUser.id ? 'Vous' : (u?.name || '?');
+                    return `${name} — ${t?.name || '-'} ${svc} — ${typeLabel}${dur} ${st}`;
                 });
                 el.title = lines.join('\n');
                 el.style.cursor = 'help';
             }
 
-            if (teamLeaves.length > 0) {
-                el.style.cursor = 'help';
-                el.addEventListener('click', (e) => { e.stopPropagation(); });
-            } else if (!isPastDate(dateStr)) {
-                el.addEventListener('click', () => handleDateClick(dateStr));
-            }
+            // Cursor
+            if (allForTooltip.length > 0) el.style.cursor = isPastDate(dateStr) ? 'pointer' : 'pointer';
+            else if (!isPastDate(dateStr)) el.style.cursor = 'pointer';
+
+            // Listener unique
+            el.addEventListener('click', () => {
+                if (isPastDate(dateStr)) {
+                    if (dayLeaves.length > 0) showLeavesInfoModal(dateStr, dayLeaves);
+                } else {
+                    handleDateClick(dateStr);
+                }
+            });
+            // Survol : prévisualiser la plage si sélection en cours
+            el.addEventListener('mouseenter', () => {
+                if (!isSelectingRange || !firstSelectedDate || isPastDate(dateStr)) return;
+                const start = firstSelectedDate < dateStr ? firstSelectedDate : dateStr;
+                const end   = firstSelectedDate < dateStr ? dateStr : firstSelectedDate;
+                highlightRange(start, end);
+                showRangeInfo(firstSelectedDate, dateStr);
+            });
             daysGrid.appendChild(el);
         }
         const totalCells = firstDayOfWeek + daysInMonth;
@@ -4284,12 +4308,11 @@ function renderCalendar() {
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#2ecc71;border-radius:2px;"></span> RC (${team ? team.name : 'équipe'})</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:repeating-linear-gradient(45deg,var(--warning-color),var(--warning-color) 3px,#fff3cd 3px,#fff3cd 6px);"></span> En attente</span>`;
     } else if (currentUser && currentUser.teamId && isChefDeService()) {
-        // Chef de service avec équipe : affiche uniquement les congés de l'équipe
-        const team = getTeamById(currentUser.teamId);
+        // Chef de service : affiche tous les congés de toutes les équipes
         legendEl.innerHTML = `
             <span style="font-weight:bold;margin-right:5px;">Légende :</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CA (${team ? team.name : 'équipe'})</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#2ecc71;border-radius:2px;"></span> RC (${team ? team.name : 'équipe'})</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CA équipes</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#2ecc71;border-radius:2px;"></span> RC équipes</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:repeating-linear-gradient(45deg,var(--warning-color),var(--warning-color) 3px,#fff3cd 3px,#fff3cd 6px);"></span> En attente</span>`;
     } else if (isAdmin() && !currentUser.teamId) {
         legendEl.innerHTML = '<span>👀 Vous voyez tous les congés</span>';
@@ -4482,11 +4505,11 @@ function showAddLeaveModal() {
     document.getElementById('leave-type').value = 'CP';
     document.getElementById('rc-options').style.display = 'none';
     document.getElementById('rc-duration-mode').value = 'day';
-    document.getElementById('rc-hours-input').style.display = 'none';
-    document.getElementById('rc-hours-input').value = '';
+    document.getElementById('rc-hours-fields').style.display = 'none';
+    document.getElementById('rc-time-start').value = '';
+    document.getElementById('rc-time-end').value = '';
     document.getElementById('rc-duration-preview').textContent = '';
     document.getElementById('rc-modal-notifs').style.display = 'none';
-    renderRCModalNotifs();
     updateBalances();
     document.getElementById('add-leave-modal').classList.add('active');
 }
@@ -5011,6 +5034,52 @@ function togglePassword(inputId, btn) {
 }
 
 // ========== INITIALISATION ==========
+// ========== INFO MODAL CONGÉS (clic sur date) ==========
+function showLeavesInfoModal(dateStr, dayLeaves) {
+    // Construire un message simple avec les congés du jour
+    const lines = dayLeaves.map(l => {
+        const u = getUserById(l.userId);
+        const t = getTeamById(u?.teamId);
+        const svc = u?.service === 'nuit' ? '🌙 Nuit' : '☀️ Jour';
+        const typeLabel = l.type === 'CP' ? 'CA' : 'RC';
+        const dur = l.type === 'RC' && l.durationMin ? ` ${formatMinutes(l.durationMin)}` : '';
+        const st = { approved: '✅ Validé', pending: '⏳ En attente', rejected: '❌ Refusé' }[l.status] || '';
+        const name = l.userId === currentUser?.id ? 'Vous' : (u?.name || '?');
+        return `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;display:flex;gap:10px;align-items:center;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${l.type==='CP'?'#1a3a6b':'#5dade2'};display:inline-block;flex-shrink:0;"></span>
+            <div>
+                <strong>${name}</strong> &nbsp;—&nbsp; ${t?.name||'-'} ${svc}<br>
+                <span style="font-size:0.85rem;color:#555;">${typeLabel}${dur} &nbsp; ${st}</span>
+            </div>
+        </div>`;
+    });
+
+    document.getElementById('rc-quick-modal-title').textContent = `📅 ${formatDateShort(dateStr)}`;
+    document.getElementById('rc-quick-modal-body').innerHTML = `
+        <div style="font-size:0.9rem;">${lines.join('')}</div>`;
+    document.getElementById('approve-rc-quick').style.display = 'none';
+    document.getElementById('reject-rc-quick').style.display = 'none';
+    document.getElementById('rc-quick-validate-modal').classList.add('active');
+}
+
+// ========== BANDEAU HS (global) ==========
+function updateHsBannerDesc() {
+    const desc = document.getElementById('hs-banner-desc');
+    const paidBtn = document.getElementById('open-credit-rc-paid-btn');
+    if (!desc || !currentUser) return;
+    const user = getUserById(currentUser.id);
+    const cap = getHsPaidCap(user);
+    const already = getHsPaidThisMonth(currentUser.id);
+    const restant = Math.max(0, cap - already);
+    const capLabel = `Paiement : ${formatMinutes(restant)} restants / ${formatMinutes(cap)} ce mois`;
+    desc.innerHTML = `🕐 RC — soumis à validation. &nbsp;|&nbsp; 💶 ${capLabel}`;
+    if (paidBtn) {
+        paidBtn.disabled = restant <= 0;
+        paidBtn.style.opacity = restant <= 0 ? '0.5' : '1';
+        paidBtn.title = restant <= 0 ? 'Plafond mensuel atteint' : `${formatMinutes(restant)} disponibles ce mois`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // ---- Chargement depuis localStorage (si données sauvegardées) ----
     const loaded = loadFromStorage();
@@ -5085,10 +5154,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRCPreview();
     });
     document.getElementById('rc-duration-mode').addEventListener('change', function() {
-        document.getElementById('rc-hours-input').style.display = this.value === 'hours' ? 'block' : 'none';
+        document.getElementById('rc-hours-fields').style.display = this.value === 'hours' ? 'block' : 'none';
         updateRCPreview();
     });
-    document.getElementById('rc-hours-input').addEventListener('input', updateRCPreview);
+    document.getElementById('rc-time-start').addEventListener('change', updateRCPreview);
+    document.getElementById('rc-time-end').addEventListener('change', updateRCPreview);
 
     function updateRCPreview() {
         const preview = document.getElementById('rc-duration-preview');
@@ -5099,17 +5169,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const total = rcDayMinutes(currentUser) * count;
             const label = currentUser.service === 'nuit' ? '10h' : '7h';
             preview.textContent = `= ${label}/jour × ${count} jour(s) = ${formatMinutes(total)} (solde: ${formatMinutes(currentUser.balances.RC)})`;
+            preview.style.color = '#2980b9';
         } else {
-            const raw = document.getElementById('rc-hours-input').value.trim();
-            const min = raw ? parseHoursMinutes(raw) : null;
-            if (min && min > 0) {
-                const ok = min % 15 === 0;
-                preview.textContent = `= ${formatMinutes(min)}${ok ? '' : " ⚠️ arrondi au quart d'heure"} (solde: ${formatMinutes(currentUser.balances.RC)})`;
-                preview.style.color = ok ? '#2980b9' : '#e67e22';
-            } else {
-                preview.textContent = raw ? '⚠️ Format non reconnu. Ex: 1h30, 2h, 45min' : '';
-                preview.style.color = '#e67e22';
+            const start = document.getElementById('rc-time-start').value;
+            const end   = document.getElementById('rc-time-end').value;
+            if (!start || !end) { preview.textContent = ''; return; }
+            const [sh,sm] = start.split(':').map(Number);
+            const [eh,em] = end.split(':').map(Number);
+            const totalMin = (eh*60+em) - (sh*60+sm);
+            if (totalMin <= 0) {
+                preview.innerHTML = '⚠️ L\'heure de fin doit être après l\'heure de début';
+                preview.style.color = '#e74c3c';
+                return;
             }
+            const rounded = roundToQuarter(totalMin);
+            preview.innerHTML = `= <strong style="color:#1a6fad;">${formatMinutes(rounded)}</strong> (solde: ${formatMinutes(currentUser.balances.RC)})`;
+            preview.style.color = '#2980b9';
         }
     }
 
@@ -5180,9 +5255,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (view === 'calendar') renderCalendar();
             else if (view === 'list') generateLeaveList();
             else if (view === 'team') renderTeamCalendar();
-            else if (view === 'validation-rc') renderValidationRC();
+            else if (view === 'validation-rc') {
+                ['rc-credit-section','rc-exchange-section','rc-conflict-banner',
+                 'rc-validation-table','cp-validation-section','rc-summary','cp-summary'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = '';
+                });
+                const rcTable = document.getElementById('rc-validation-table');
+                if (rcTable && rcTable.parentNode) rcTable.parentNode.style.display = '';
+                renderValidationRC();
+            }
             else if (view === 'dashboard') renderMyCounters();
-            else if (view === 'counters-manager') renderCountersManager();
+            else if (view === 'counters-manager') {
+                // Cacher toutes les sections de validation dynamiques
+                ['rc-credit-section','rc-exchange-section','rc-conflict-banner',
+                 'rc-validation-table','cp-validation-section','rc-summary','cp-summary'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                // Cacher aussi le parent du tableau RC (overflow-x:auto div)
+                const rcTable = document.getElementById('rc-validation-table');
+                if (rcTable && rcTable.parentNode) rcTable.parentNode.style.display = 'none';
+                renderCountersManager();
+            }
             else if (view === 'admin') renderUsersList();
         });
     });
@@ -5220,6 +5315,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmApplyBtn) cmApplyBtn.addEventListener('click', renderCountersManager);
     const exportCountersBtn = document.getElementById('export-counters-btn');
     if (exportCountersBtn) exportCountersBtn.addEventListener('click', exportCountersCSV);
+    const importBalancesCountersBtn = document.getElementById('import-balances-counters-btn');
+    if (importBalancesCountersBtn) importBalancesCountersBtn.addEventListener('click', () => {
+        document.getElementById('balances-counters-file-input').click();
+    });
+    const balancesCountersFileInput = document.getElementById('balances-counters-file-input');
+    if (balancesCountersFileInput) balancesCountersFileInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        importBalancesCSV(file);
+        e.target.value = '';
+    });
 
     document.getElementById('prev-year').addEventListener('click', () => { if (!isLoggedIn) return; currentYear--; renderCalendar(); });
     document.getElementById('next-year').addEventListener('click', () => { if (!isLoggedIn) return; currentYear++; renderCalendar(); });
@@ -5247,23 +5353,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- Modal: déclarer heures RC (crédit) ----
     // ---- Boutons HS dans Mes Congés ----
-    function updateHsBannerDesc() {
-        const desc = document.getElementById('hs-banner-desc');
-        const paidBtn = document.getElementById('open-credit-rc-paid-btn');
-        if (!desc || !currentUser) return;
-        const user = getUserById(currentUser.id);
-        const cap = getHsPaidCap(user);
-        const already = getHsPaidThisMonth(currentUser.id);
-        const restant = Math.max(0, cap - already);
-        const capLabel = `Paiement : ${formatMinutes(restant)} restants / ${formatMinutes(cap)} ce mois`;
-        desc.innerHTML = `🕐 RC — soumis à validation. &nbsp;|&nbsp; 💶 ${capLabel}`;
-        if (paidBtn) {
-            paidBtn.disabled = restant <= 0;
-            paidBtn.style.opacity = restant <= 0 ? '0.5' : '1';
-            paidBtn.title = restant <= 0 ? 'Plafond mensuel atteint' : `${formatMinutes(restant)} disponibles ce mois`;
-        }
-    }
-
     function openCreditModal(mode) {
         if (!isLoggedIn) return;
         const user = getUserById(currentUser.id);
@@ -5485,8 +5574,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('add-leave-modal').classList.remove('active');
         document.getElementById('rc-options').style.display = 'none';
         document.getElementById('rc-duration-mode').value = 'day';
-        document.getElementById('rc-hours-input').style.display = 'none';
-        document.getElementById('rc-hours-input').value = '';
+        document.getElementById('rc-hours-fields').style.display = 'none';
+        document.getElementById('rc-time-start').value = '';
+        document.getElementById('rc-time-end').value = '';
         document.getElementById('rc-duration-preview').textContent = '';
         document.getElementById('leave-type').value = 'CP';
         resetRangeSelection();
@@ -5534,11 +5624,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-rc-quick-modal').addEventListener('click', () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
+        document.getElementById('reject-rc-quick').style.display = '';
         rcQuickDate = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
     });
     document.getElementById('cancel-rc-quick').addEventListener('click', () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
+        document.getElementById('reject-rc-quick').style.display = '';
         rcQuickDate = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
     });
     document.getElementById('approve-rc-quick').addEventListener('click', () => {
