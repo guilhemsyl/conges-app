@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Congés</title>
     <style>
-        :root {
+:root {
             --primary-color: #3498db;
             --secondary-color: #2ecc71;
             --danger-color: #e74c3c;
@@ -15,10 +15,8 @@
             --cp-color: #e74c3c;
             --rc-color: #3498db;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f5f7fa; color: var(--dark-color); line-height: 1.6; padding: 20px; }
-
         .app-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
         .login-container { max-width: 500px; margin: 50px auto; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; }
         .login-header { margin-bottom: 30px; }
@@ -30,7 +28,6 @@
         .form-group textarea { min-height: 80px; resize: vertical; }
         .form-row { display: flex; gap: 15px; }
         .form-row .form-group { flex: 1; }
-
         .app-header { background: linear-gradient(135deg, var(--primary-color), #2980b9); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .header-left h1 { margin: 0; font-size: 1.5rem; }
         .header-right { display: flex; gap: 12px; align-items: center; }
@@ -43,14 +40,12 @@
         .header-buttons { display: flex; gap: 8px; align-items: center; }
         .user-avatar-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.25); color: white; border: 2px solid rgba(255,255,255,0.6); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
         .user-avatar-btn:hover { background: rgba(255,255,255,0.4); }
-
         .nav-tabs { display: flex; background: var(--light-color); border-bottom: 1px solid #ddd; overflow-x: auto; }
         .nav-tab { flex: 1; min-width: 100px; padding: 14px 10px; text-align: center; cursor: pointer; background: transparent; border: none; font-size: 0.92rem; transition: all 0.3s; white-space: nowrap; position: relative; }
         .nav-tab.active { background: white; border-bottom: 3px solid var(--primary-color); font-weight: bold; }
         .nav-tab.hidden { display: none; }
         .nav-tab:hover { background: rgba(255,255,255,0.5); }
-
-        /* Badge notification sur l'onglet */
+        
         .tab-badge {
             display: inline-block;
             background: #e74c3c;
@@ -67,18 +62,15 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.1); }
         }
-
         .main-content { padding: 20px; }
         .view-container { display: none; }
         .view-container.active { display: block; }
-
         .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .filter-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .year-navigation { display: flex; gap: 10px; align-items: center; }
         .year-navigation button { background: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
         .year-navigation button:hover { background: #2980b9; }
         .year-title { font-size: 1.5rem; font-weight: bold; color: var(--dark-color); min-width: 100px; text-align: center; }
-
         .months-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .month-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .month-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
@@ -98,33 +90,28 @@
         .day-cell.may-first::after { content: '★'; position: absolute; top: 0px; right: 1px; font-size: 0.45rem; color: #e74c3c; }
         .day-number { margin-bottom: 2px; }
         .leave-indicator { width: 100%; height: 4px; border-radius: 2px; margin-top: 1px; }
-        /* Mes congés : barre pleine, épaisse */
+        
         .leave-indicator.CP { background: #1a3a6b; height: 5px; }
         .leave-indicator.RC { background: #5dade2; height: 5px; }
-        /* Collègues : barre plus fine, couleur distincte */
+        
         .leave-indicator.team-CP { background: #9b59b6; height: 3px; opacity: 0.75; }
         .leave-indicator.team-RC { background: #2ecc71; height: 3px; opacity: 0.75; }
-        /* En attente : hachuré */
+        
         .leave-indicator.pending { background: repeating-linear-gradient(45deg, var(--warning-color), var(--warning-color) 3px, #fff3cd 3px, #fff3cd 6px); }
         .leave-indicator.team-CP.pending, .leave-indicator.team-RC.pending,
         .leave-indicator.CP.pending, .leave-indicator.RC.pending {
             background: repeating-linear-gradient(45deg, var(--warning-color), var(--warning-color) 3px, #fff3cd 3px, #fff3cd 6px) !important;
         }
-
         .range-selection-info { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none; }
         .range-selection-info.active { display: block; }
-
         .admin-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-
         .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
         .data-table th { background: var(--light-color); font-weight: bold; }
         .data-table tr:hover { background: #f9f9f9; }
-
-        /* Ligne en attente surlignée jaune clair */
+        
         .data-table tr.row-pending { background: #fffde7 !important; }
         .data-table tr.row-pending:hover { background: #fff9c4 !important; }
-
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; transition: all 0.3s; }
         .btn-primary { background: var(--primary-color); color: white; }
         .btn-primary:hover { background: #2980b9; }
@@ -137,7 +124,6 @@
         .btn-warning { background: var(--warning-color); color: white; }
         .btn-warning:hover { background: #e67e22; }
         .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
-
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
         .modal { background: white; border-radius: 8px; width: 90%; max-width: 600px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; overflow-y: auto; }
@@ -147,22 +133,17 @@
         .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7f8c8d; }
         .modal-body { margin-bottom: 20px; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee; }
-
         .notification-container { position: fixed; top: 20px; right: 20px; z-index: 1001; }
         .notification { background: white; border-radius: 5px; padding: 15px; margin-bottom: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out; display: flex; gap: 10px; border-left: 4px solid; min-width: 250px; }
         .notification.success { border-left-color: var(--secondary-color); }
         .notification.error { border-left-color: var(--danger-color); }
         .notification.info { border-left-color: var(--primary-color); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-
         .first-login-banner { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
         .first-login-banner .banner-icon { font-size: 1.3rem; }
-
         .password-strength { margin-top: 8px; font-size: 0.85rem; }
-
-        /* Bouton afficher/masquer mot de passe */
+        
         .pwd-wrapper { position: relative; display: flex; align-items: center; }
         .pwd-wrapper input { flex: 1; padding-right: 42px; }
         .pwd-toggle {
@@ -181,8 +162,7 @@
         .password-rules .rule { display: flex; align-items: center; gap: 5px; }
         .password-rules .rule.ok  { color: var(--secondary-color); }
         .password-rules .rule.nok { color: #bdc3c7; }
-
-        /* ===== CLOCHE NOTIFICATIONS ===== */
+        
         .notif-bell-btn {
             position: relative; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
             color: white; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;
@@ -197,8 +177,7 @@
             min-width: 16px; text-align: center; line-height: 1.4;
             animation: badgePulse 1.5s ease-in-out infinite;
         }
-
-        /* ===== MESSAGERIE INTERNE ===== */
+        
         .inbox-modal { max-width: 680px; }
         .inbox-tabs { display: flex; border-bottom: 2px solid #ecf0f1; margin-bottom: 16px; }
         .inbox-tab { padding: 8px 18px; cursor: pointer; border: none; background: none;
@@ -250,10 +229,8 @@
         .counter-sub   { font-size: 0.78rem; color: #95a5a6; margin-top: 6px; }
         .counter-bar   { height: 5px; background: #ecf0f1; border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .counter-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
-
         .dashboard-section { margin-bottom: 28px; }
         .dashboard-section h3 { font-size: 1rem; color: var(--dark-color); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 8px; }
-
         .heures-sup-form {
             background: #f8f9fa;
             border: 1px solid #e0e0e0;
@@ -261,7 +238,6 @@
             padding: 16px;
             margin-bottom: 16px;
         }
-
         .ferie-badge {
             display: inline-block;
             background: #eafaf1;
@@ -301,7 +277,6 @@
         .summary-card.approved-card .count { color: #27ae60; }
         .summary-card.rejected-card { border-color: #e74c3c; background: #fdedec; }
         .summary-card.rejected-card .count { color: #e74c3c; }
-
         .validation-filters {
             display: flex;
             gap: 10px;
@@ -315,7 +290,6 @@
         }
         .validation-filters label { font-size: 0.9rem; font-weight: bold; }
         .validation-filters select { padding: 7px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; }
-
         .plafonne-badge {
             display: inline-block;
             background: #fff3cd;
@@ -327,7 +301,6 @@
             margin-left: 4px;
             font-weight: bold;
         }
-
         .status-badge {
             display: inline-block;
             border-radius: 20px;
@@ -338,7 +311,6 @@
         .status-badge.pending  { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
         .status-badge.approved { background: #d4edda; color: #155724; border: 1px solid #2ecc71; }
         .status-badge.rejected { background: #f8d7da; color: #721c24; border: 1px solid #e74c3c; }
-
         .leave-popup {
             position: fixed; z-index: 2000;
             background: white; border: 1px solid #ddd; border-radius: 8px;
@@ -359,7 +331,6 @@
         .th-sortable.sort-asc .sort-icon::after { content: ' ▲'; opacity: 1; }
         .th-sortable.sort-desc .sort-icon::after { content: ' ▼'; opacity: 1; }
         .th-sortable:not(.sort-asc):not(.sort-desc) .sort-icon::after { content: ' ⇅'; }
-
         @media (max-width: 600px) {
             .login-container { margin: 20px; padding: 20px; }
             .app-header { flex-direction: column; text-align: center; }
@@ -370,7 +341,7 @@
             .modal { width: 95%; margin: 0 10px; }
             .header-buttons { flex-direction: column; width: 100%; }
         }
-    </style>
+</style>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script> emailjs.init('-liETNfsHvYCFH6N2'); </script>
 </head>
@@ -401,11 +372,11 @@
         </button>
     </div>
 
-    <!-- Boutons de connexion rapide (test) -->
+    
     <div style="margin-top:24px;border-top:1px solid #eee;padding-top:18px;">
         <p style="font-size:0.78rem;color:#bdc3c7;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Accès rapide (test)</p>
 
-        <!-- Salarié avec liste déroulante -->
+        
         <div style="margin-bottom:10px;">
             <div style="display:flex;gap:8px;align-items:center;">
                 <select id="test-salarie-select" style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;color:var(--dark-color);">
@@ -417,7 +388,7 @@
             </div>
         </div>
 
-        <!-- Chef de service + Admin -->
+        
         <div style="display:flex;gap:8px;">
             <button onclick="quickLogin('chef')" class="btn btn-sm" style="flex:1;background:#e67e22;color:white;padding:9px;">
                 🔑 Chef de service
@@ -429,7 +400,6 @@
     </div>
 </div>
 
-<!-- Modal: réinitialisation mot de passe -->
 <div id="reset-password-modal" class="modal-overlay">
     <div class="modal" style="max-width:450px;">
         <div class="modal-header">
@@ -453,7 +423,6 @@
     </div>
 </div>
 
-<!-- Application principale -->
 <div id="app-container" class="app-container" style="display:none;">
     <header class="app-header">
         <div class="header-left">
@@ -495,12 +464,12 @@
     </nav>
 
     <main class="main-content">
-        <!-- Vue Calendrier -->
+        
         <div id="calendar-view" class="view-container active">
             <div class="calendar-controls">
                 <div class="year-navigation">
                     <button id="prev-year">←</button>
-                    <span class="year-title" id="current-year">2026</span>
+                    <span class="year-title" id="current-year" style="min-width:280px;font-size:1.1rem;">2026</span>
                     <button id="next-year">→</button>
                 </div>
             </div>
@@ -513,21 +482,20 @@
             <div class="months-container" id="calendar-months"></div>
         </div>
 
-        <!-- Vue Mes Congés -->
+        
         <div id="list-view" class="view-container">
-            <!-- Compteurs légaux -->
+            
             <div class="counters-grid" id="my-counters-grid" style="margin-bottom:20px;"></div>
 
             <div class="calendar-controls">
                 <div class="year-navigation">
                     <button id="list-prev-year">←</button>
-                    <span class="year-title" id="list-current-year">2026</span>
+                    <span class="year-title" id="list-current-year" style="min-width:280px;font-size:1.1rem;">2026</span>
                     <button id="list-next-year">→</button>
                 </div>
             </div>
             <div class="months-container" id="list-calendar" style="margin-bottom:30px;"></div>
             <hr style="margin-bottom:20px;border-color:#eee;">
-
 
             <div class="calendar-controls">
                 <div class="filter-controls">
@@ -556,7 +524,7 @@
             </div>
             <hr style="margin:20px 0;border-color:#eee;">
 
-            <!-- Historique déclarations -->
+            
             <div class="dashboard-section">
                 <h3>📝 Historique de mes déclarations</h3>
                 <table class="data-table">
@@ -567,7 +535,7 @@
                 </table>
             </div>
 
-            <!-- Champs cachés pour compatibilité JS -->
+            
             <div style="display:none;">
                 <input type="date" id="hs-week-start">
                 <input type="number" id="hs-hours-total">
@@ -586,12 +554,12 @@
             </table>
         </div>
 
-        <!-- Vue Tableau de bord Mes Compteurs (salarié) -->
+        
         <div id="dashboard-view" class="view-container">
             <h2 style="margin-bottom:16px;">⏱️ Heures supplémentaires & Échanges</h2>
             <p style="color:#7f8c8d;font-size:0.9rem;margin-bottom:20px;">Vos compteurs CP, RC et ancienneté sont disponibles dans l'onglet <strong>Mes Congés</strong>.</p>
 
-            <!-- Actions rapides -->
+            
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
                 <div style="flex:1;min-width:240px;min-height:76px;background:#f0f7ff;border:1px solid #b3d4f5;border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
                     <div>
@@ -612,7 +580,7 @@
                 </div>
             </div>
 
-            <!-- Champs cachés pour compatibilité JS (utilisés par les listeners) -->
+            
             <div style="display:none;">
                 <input type="date" id="hs-week-start">
                 <input type="number" id="hs-hours-total">
@@ -623,11 +591,11 @@
 
         </div>
 
-        <!-- Vue Compteurs équipe (manager/admin) -->
+        
         <div id="counters-manager-view" class="view-container">
             <h2 style="margin-bottom:20px;">📋 Compteurs de l'équipe <span style="font-size:0.8rem;color:#7f8c8d;font-weight:normal;">— CCN 51</span></h2>
 
-            <!-- Filtres -->
+            
             <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
                 <div class="form-group" style="margin:0;min-width:180px;">
                     <select id="cm-filter-team" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;">
@@ -640,7 +608,7 @@
                 <input type="file" id="balances-counters-file-input" accept=".csv" style="display:none;">
             </div>
 
-            <!-- Tableau compteurs équipe -->
+            
             <div style="overflow-x:auto;">
                 <table class="data-table" id="counters-team-table">
                     <thead>
@@ -666,11 +634,11 @@
             <div class="months-container" id="team-calendar"></div>
         </div>
 
-        <!-- ===== VUE VALIDATION RC (managers/admins) ===== -->
+        
         <div id="validation-rc-view" class="view-container">
             <h2 style="margin-bottom:18px;color:var(--dark-color);">✅ Validation des demandes</h2>
 
-            <!-- Compteurs résumé RC -->
+            
             <div style="font-size:0.85rem;font-weight:bold;color:#7f8c8d;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Congés RC & Heures</div>
             <div class="validation-summary" id="rc-summary">
                 <div class="summary-card pending-card">
@@ -687,7 +655,7 @@
                 </div>
             </div>
 
-            <!-- Compteurs résumé CP -->
+            
             <div style="font-size:0.85rem;font-weight:bold;color:#7f8c8d;margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">Congés CP (Congés Annuels)</div>
             <div class="validation-summary" id="cp-summary">
                 <div class="summary-card pending-card">
@@ -704,7 +672,7 @@
                 </div>
             </div>
 
-            <!-- Tableau CP -->
+            
             <div id="cp-validation-section">
                 <div style="overflow-x:auto;margin-bottom:8px;">
                     <table class="data-table" id="cp-validation-table">
@@ -721,7 +689,7 @@
 
             <hr style="margin:24px 0 20px;border-color:#ecf0f1;">
 
-            <!-- Filtres RC -->
+            
             <div style="font-size:0.85rem;font-weight:bold;color:#7f8c8d;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Congés RC & Heures supplémentaires</div>
                 <label for="rc-filter-status">Statut :</label>
                 <select id="rc-filter-status">
@@ -738,7 +706,7 @@
                 <button class="btn btn-secondary btn-sm" id="rc-reset-filters">Réinitialiser</button>
             </div>
 
-            <!-- Tableau -->
+            
             <div style="overflow-x:auto;">
                 <table class="data-table" id="rc-validation-table">
                     <thead>
@@ -759,7 +727,7 @@
             </div>
         </div>
 
-        <!-- Vue Administration -->
+        
         <div id="admin-view" class="view-container">
             <div style="margin-bottom:25px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -806,7 +774,6 @@
     </main>
 </div>
 
-<!-- Modal: équipe -->
 <div id="team-modal" class="modal-overlay">
     <div class="modal" style="max-width:420px;">
         <div class="modal-header">
@@ -827,7 +794,6 @@
     </div>
 </div>
 
-<!-- Modal: poser un congé -->
 <div id="add-leave-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
@@ -835,7 +801,7 @@
             <button class="modal-close" id="close-add-leave-modal">×</button>
         </div>
         <div class="modal-body">
-            <!-- Zone notifications RC refusées (visible seulement quand type=RC) -->
+            
             <div id="rc-modal-notifs" style="display:none;margin-bottom:14px;"></div>
             <div class="form-group">
                 <label>Dates:</label>
@@ -886,7 +852,6 @@
     </div>
 </div>
 
-<!-- Modal: échange d'heures RC entre salariés -->
 <div id="exchange-rc-modal" class="modal-overlay">
     <div class="modal" style="max-width:560px;">
         <div class="modal-header">
@@ -898,7 +863,7 @@
                 Le manager devra valider l'échange pour que les heures soient prises en compte.
             </p>
 
-            <!-- Collègue -->
+            
             <div class="form-group">
                 <label for="exchange-colleague">Un échange avec Mr/Mme/Melle :</label>
                 <select id="exchange-colleague" required>
@@ -910,7 +875,7 @@
                 <input type="text" id="exchange-other-name" placeholder="Prénom Nom">
             </div>
 
-            <!-- Ligne 1 : je travaille -->
+            
             <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:14px 16px;margin:16px 0 0;">
                 <div style="font-weight:bold;color:#2c3e50;margin-bottom:10px;font-size:0.95rem;">
                     Le <span style="color:#1a6fad;">je travaille</span> de :
@@ -931,10 +896,10 @@
                 </div>
             </div>
 
-            <!-- Séparateur CONTRE -->
+            
             <div style="text-align:center;margin:10px 0;font-weight:bold;color:#7c3aed;font-size:1rem;letter-spacing:1px;">CONTRE</div>
 
-            <!-- Ligne 2 : le collègue travaille -->
+            
             <div style="background:#f5f0ff;border:1px solid #c4a8f5;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
                 <div style="font-weight:bold;color:#2c3e50;margin-bottom:10px;font-size:0.95rem;">
                     Le <span style="color:#7c3aed;">mon collègue travaille à ma place</span> de :
@@ -969,7 +934,6 @@
     </div>
 </div>
 
-<!-- Modal: déclarer des heures supplémentaires -->
 <div id="credit-rc-modal" class="modal-overlay">
     <div class="modal" style="max-width:520px;">
         <div class="modal-header">
@@ -981,7 +945,7 @@
                 Soumises à validation du chef de service avant traitement.
             </p>
 
-            <!-- Choix du mode -->
+            
             <div class="form-group">
                 <label>Mode de compensation :</label>
                 <div style="display:flex;gap:10px;margin-top:6px;">
@@ -998,7 +962,7 @@
                 </div>
             </div>
 
-            <!-- Alerte plafond paiement -->
+            
             <div id="credit-rc-cap-warning" style="display:none;background:#fff3cd;border:1px solid #f39c12;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:0.85rem;color:#856404;">
                 ⚠️ <strong>Plafond mensuel de paiement :</strong> <span id="credit-rc-cap-text"></span>
             </div>
@@ -1034,7 +998,6 @@
     </div>
 </div>
 
-<!-- Modal: annuler congé -->
 <div id="cancel-leave-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
@@ -1055,7 +1018,6 @@
     </div>
 </div>
 
-<!-- Modal: valider congé (manager) -->
 <div id="validate-leave-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
@@ -1077,7 +1039,6 @@
     </div>
 </div>
 
-<!-- Modal: validation RC rapide (depuis onglet) -->
 <div id="rc-quick-validate-modal" class="modal-overlay">
     <div class="modal" style="max-width:500px;">
         <div class="modal-header">
@@ -1093,7 +1054,6 @@
     </div>
 </div>
 
-<!-- Modal: ajouter salarié -->
 <div id="add-user-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
@@ -1165,7 +1125,6 @@
     </div>
 </div>
 
-<!-- Modal: éditer salarié -->
 <div id="edit-user-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
@@ -1254,7 +1213,6 @@
     </div>
 </div>
 
-<!-- Modal: menu utilisateur -->
 <div id="user-menu-modal" class="modal-overlay">
     <div class="modal" style="max-width:400px;">
         <div class="modal-header">
@@ -1277,7 +1235,6 @@
     </div>
 </div>
 
-<!-- Modal: changement mot de passe forcé -->
 <div id="force-change-password-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header" style="background:linear-gradient(135deg,#f39c12,#e67e22);color:white;margin:-25px -25px 20px;padding:20px 25px;border-radius:8px 8px 0 0;">
@@ -1318,7 +1275,6 @@
     </div>
 </div>
 
-<!-- Modal: changer mot de passe -->
 <div id="change-password-modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
@@ -1365,7 +1321,6 @@
     </div>
 </div>
 
-<!-- Modal: Historique des demandes validées/refusées -->
 <div id="history-modal" class="modal-overlay">
     <div class="modal" style="max-width:780px;">
         <div class="modal-header">
@@ -1373,7 +1328,7 @@
             <button class="modal-close" id="close-history-modal">×</button>
         </div>
         <div class="modal-body" style="padding-top:0;">
-            <!-- Filtres -->
+            
             <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
                 <select id="history-filter-emp" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;">
                     <option value="all">Tous les salariés</option>
@@ -1399,7 +1354,6 @@
     </div>
 </div>
 
-<!-- Modal: Messagerie interne / Centre de notifications -->
 <div id="inbox-modal" class="modal-overlay">
     <div class="modal inbox-modal">
         <div class="modal-header">
@@ -1423,584 +1377,116 @@
 <div class="notification-container" id="notification-container"></div>
 
 <script>
-// ========== DONNÉES ==========
+
+
+
+
 let users = [
-    // ---- Admins / Direction ----
-    { id: 1, username: "admin@monvillage.fr", password: "admin@monvillage.frassociationsaintemarie",
-      name: "Admin Direction", email: "admin@monvillage.fr",
-      role: "admin", managerId: null, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
-    { id: 2, username: "guilhem.syl@gmail.com", password: "guilhem.syl@gmail.comassociationsaintemarie",
-      name: "Sylvain Guilhem", email: "guilhem.syl@gmail.com",
-      role: "admin", managerId: null, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: false },
-
-    // ---- Comptes test ----
-    { id: 3, username: "chef.service.test@monvillage.fr", password: "ChefService1",
-      name: "Chef Service Test", email: "chef.service.test@monvillage.fr",
-      role: "chef(fe) de service", managerId: null, service: "jour", teamId: 1,
-      balances: { CP: 25, RC: 420 }, mustChangePassword: false , dateEntree: "2020-09-01" },
-    { id: 4, username: "salarie.test@monvillage.fr", password: "Salarie1",
-      name: "Salarié Test", email: "salarie.test@monvillage.fr",
-      role: "employé", managerId: 3, service: "jour", teamId: 1,
-      balances: { CP: 25, RC: 420 }, mustChangePassword: false , dateEntree: "2022-03-01" },
-
-    // ---- Cycle 1 ----
-    { id: 10, username: "meldem@monvillage.fr", password: "meldem@monvillage.frassociationsaintemarie",
-      name: "Meldem", email: "meldem@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 1,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2015-06-01" },
-    { id: 11, username: "mosa@monvillage.fr", password: "mosa@monvillage.frassociationsaintemarie",
-      name: "Mosa", email: "mosa@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 3,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2018-03-01" },
-    { id: 12, username: "chamontin@monvillage.fr", password: "chamontin@monvillage.frassociationsaintemarie",
-      name: "Chamontin", email: "chamontin@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 6,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2019-09-01" },
-    { id: 13, username: "giarratana@monvillage.fr", password: "giarratana@monvillage.frassociationsaintemarie",
-      name: "Giarratana", email: "giarratana@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 7,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2021-01-01" },
-
-    // ---- Cycle 2 ----
-    { id: 20, username: "bal@monvillage.fr", password: "bal@monvillage.frassociationsaintemarie",
-      name: "Bal", email: "bal@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 1,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2016-06-01" },
-    { id: 21, username: "gimondo@monvillage.fr", password: "gimondo@monvillage.frassociationsaintemarie",
-      name: "Gimondo", email: "gimondo@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 3,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2020-01-01" },
-    { id: 22, username: "leguehennec@monvillage.fr", password: "leguehennec@monvillage.frassociationsaintemarie",
-      name: "Le Guehennec", email: "leguehennec@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 5,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2017-09-01" },
-    { id: 23, username: "meargarcia@monvillage.fr", password: "meargarcia@monvillage.frassociationsaintemarie",
-      name: "Mear Garcia", email: "meargarcia@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 7,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2022-06-01" },
-
-    // ---- Cycle 3 ----
-    { id: 30, username: "chavagnat@monvillage.fr", password: "chavagnat@monvillage.frassociationsaintemarie",
-      name: "Chavagnat", email: "chavagnat@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 1,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2014-06-01" },
-    { id: 31, username: "dezorzi@monvillage.fr", password: "dezorzi@monvillage.frassociationsaintemarie",
-      name: "De Zorzi", email: "dezorzi@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 4,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2019-01-01" },
-    { id: 32, username: "gorge@monvillage.fr", password: "gorge@monvillage.frassociationsaintemarie",
-      name: "Gorge", email: "gorge@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 5,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2021-06-01" },
-    { id: 33, username: "ardouin@monvillage.fr", password: "ardouin@monvillage.frassociationsaintemarie",
-      name: "Ardouin", email: "ardouin@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 7,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2023-03-01" },
-
-    // ---- Cycle 4 ----
-    { id: 40, username: "commandeur@monvillage.fr", password: "commandeur@monvillage.frassociationsaintemarie",
-      name: "Commandeur", email: "commandeur@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 2,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2016-01-01" },
-    { id: 41, username: "pujol@monvillage.fr", password: "pujol@monvillage.frassociationsaintemarie",
-      name: "Pujol", email: "pujol@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 4,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2020-06-01" },
-    { id: 42, username: "djelloul@monvillage.fr", password: "djelloul@monvillage.frassociationsaintemarie",
-      name: "Djelloul", email: "djelloul@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 5,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2018-09-01" },
-
-    // ---- Cycle 5 ----
-    { id: 50, username: "fortas@monvillage.fr", password: "fortas@monvillage.frassociationsaintemarie",
-      name: "Fortas", email: "fortas@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 2,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2015-01-01" },
-    { id: 51, username: "innoncenti@monvillage.fr", password: "innoncenti@monvillage.frassociationsaintemarie",
-      name: "Innoncenti", email: "innoncenti@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 4,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2021-03-01" },
-    { id: 52, username: "siksik@monvillage.fr", password: "siksik@monvillage.frassociationsaintemarie",
-      name: "Siksik", email: "siksik@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 6,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2019-06-01" },
-
-    // ---- Cycle 6 ----
-    { id: 60, username: "behague@monvillage.fr", password: "behague@monvillage.frassociationsaintemarie",
-      name: "Behague", email: "behague@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 2,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2017-06-01" },
-    { id: 61, username: "everest@monvillage.fr", password: "everest@monvillage.frassociationsaintemarie",
-      name: "Everest", email: "everest@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 3,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2022-09-01" },
-    { id: 62, username: "tenza@monvillage.fr", password: "tenza@monvillage.frassociationsaintemarie",
-      name: "Tenza", email: "tenza@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 6,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2020-03-01" },
-
-    // ---- Externat ----
-    { id: 70, username: "raty@monvillage.fr", password: "raty@monvillage.frassociationsaintemarie",
-      name: "Raty", email: "raty@monvillage.fr",
-      role: "employé", managerId: 1, service: "jour", teamId: 8,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true , dateEntree: "2018-01-01" },
-
-    // ---- Veilleurs de Nuit A (Guilhem + Martino) ----
-    { id: 80, username: "guilhem@monvillage.fr", password: "guilhem@monvillage.frassociationsaintemarie",
-      name: "Guilhem", email: "guilhem@monvillage.fr",
-      role: "employé", managerId: 1, service: "nuit", teamId: 9,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true, dateEntree: "2020-06-01" },
-    { id: 81, username: "martino@monvillage.fr", password: "martino@monvillage.frassociationsaintemarie",
-      name: "Martino", email: "martino@monvillage.fr",
-      role: "employé", managerId: 1, service: "nuit", teamId: 9,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true, dateEntree: "2021-09-01" },
-
-    // ---- Veilleurs de Nuit B (Baradi + Costa) ----
-    { id: 82, username: "baradi@monvillage.fr", password: "baradi@monvillage.frassociationsaintemarie",
-      name: "Baradi", email: "baradi@monvillage.fr",
-      role: "employé", managerId: 1, service: "nuit", teamId: 10,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true, dateEntree: "2019-03-01" },
-    { id: 83, username: "costa@monvillage.fr", password: "costa@monvillage.frassociationsaintemarie",
-      name: "Costa", email: "costa@monvillage.fr",
-      role: "employé", managerId: 1, service: "nuit", teamId: 10,
-      balances: { CP: 25, RC: 0 }, mustChangePassword: true, dateEntree: "2022-01-01" },
+    { id:1, username:"admin@monvillage.fr", password:"Admin2024",
+      name:"Admin Direction", email:"admin@monvillage.fr",
+      role:"admin", managerId:null, service:"jour", teamId:null,
+      balances:{ CP:0, RC:0 }, mustChangePassword:false },
+    { id:2, username:"guilhem.syl@gmail.com", password:"Admin2024",
+      name:"Sylvain Guilhem", email:"guilhem.syl@gmail.com",
+      role:"admin", managerId:null, service:"jour", teamId:null,
+      balances:{ CP:0, RC:0 }, mustChangePassword:false },
+    { id:3, username:"chef.service.test@monvillage.fr", password:"ChefService1",
+      name:"Chef Service Test", email:"chef.service.test@monvillage.fr",
+      role:"chef(fe) de service", managerId:null, service:"jour", teamId:1,
+      balances:{ CP:25, RC:420 }, mustChangePassword:false, dateEntree:"2020-09-01" },
+    { id:4, username:"salarie.test@monvillage.fr", password:"Salarie1",
+      name:"Salarié Test", email:"salarie.test@monvillage.fr",
+      role:"employé", managerId:3, service:"jour", teamId:1,
+      balances:{ CP:25, RC:420 }, mustChangePassword:false, dateEntree:"2022-03-01" },
+    { id:10, username:"meldem@monvillage.fr", password:"meldem@monvillage.frassociationsaintemarie",
+      name:"Meldem", email:"meldem@monvillage.fr",
+      role:"employé", managerId:3, service:"jour", teamId:1,
+      balances:{ CP:25, RC:630 }, mustChangePassword:true, dateEntree:"2015-06-01" },
+    { id:20, username:"bal@monvillage.fr", password:"bal@monvillage.frassociationsaintemarie",
+      name:"Bal", email:"bal@monvillage.fr",
+      role:"employé", managerId:3, service:"jour", teamId:1,
+      balances:{ CP:25, RC:525 }, mustChangePassword:true, dateEntree:"2016-06-01" },
+    { id:30, username:"chavagnat@monvillage.fr", password:"chavagnat@monvillage.frassociationsaintemarie",
+      name:"Chavagnat", email:"chavagnat@monvillage.fr",
+      role:"employé", managerId:3, service:"jour", teamId:2,
+      balances:{ CP:25, RC:735 }, mustChangePassword:true, dateEntree:"2014-06-01" },
+    { id:31, username:"dezorzi@monvillage.fr", password:"dezorzi@monvillage.frassociationsaintemarie",
+      name:"De Zorzi", email:"dezorzi@monvillage.fr",
+      role:"employé", managerId:3, service:"jour", teamId:2,
+      balances:{ CP:25, RC:420 }, mustChangePassword:true, dateEntree:"2019-01-01" },
+    { id:80, username:"guilhem@monvillage.fr", password:"guilhem@monvillage.frassociationsaintemarie",
+      name:"Guilhem", email:"guilhem@monvillage.fr",
+      role:"employé", managerId:3, service:"nuit", teamId:3,
+      balances:{ CP:25, RC:600 }, mustChangePassword:true, dateEntree:"2020-06-01" }
 ];
-
-// Génère les dates d'une semaine ISO à partir de son numéro
 let leaves = {};
-
-// Clé standard pour un congé : userId-date
-function leaveKey(userId, dateStr) { return `${userId}-${dateStr}`; }
-
-// Congés sur une date (tous utilisateurs)
+function leaveKey(u,d) { return `${u}-${d}`; }
 function getLeavesOnDate(dateStr) {
     return Object.values(leaves).filter(l => l.date === dateStr);
 }
-
-// Congé d'un utilisateur sur une date précise
 function getUserLeaveOnDate(userId, dateStr) {
     return leaves[leaveKey(userId, dateStr)] || null;
 }
 
-// ========== DONNÉES DE TEST ==========
-// Les données de démonstration sont chargées par seedDemoData ci-dessous
-
-
-// ========== DONNÉES DE DÉMONSTRATION ==========
-(function seedDemoData() {
-
-    // --- Soldes RC réalistes ---
-    const soldesRC = {
-        10: 630,  // Meldem : 10h30
-        11: 420,  // Mosa : 7h
-        12: 840,  // Chamontin : 14h
-        13: 315,  // Giarratana : 5h15
-        20: 525,  // Bal : 8h45
-        21: 210,  // Gimondo : 3h30
-        22: 420,  // Le Guehennec : 7h
-        23: 0,    // Mear Garcia : 0
-        30: 735,  // Chavagnat : 12h15
-        31: 420,  // De Zorzi : 7h
-        32: 315,  // Gorge : 5h15
-        33: 630,  // Ardouin : 10h30
-        40: 210,  // Commandeur : 3h30
-        41: 840,  // Pujol : 14h
-        42: 420,  // Djelloul : 7h
-        50: 525,  // Fortas : 8h45
-        51: 420,  // Innoncenti : 7h
-        52: 630,  // Siksik : 10h30
-        60: 315,  // Behague : 5h15
-        61: 420,  // Everest : 7h
-        62: 735,  // Tenza : 12h15
-        70: 210,  // Raty : 3h30
-        80: 600,  // Guilhem : 10h (nuit)
-        81: 900,  // Martino : 15h (nuit)
-        82: 450,  // Baradi : 7h30 (nuit)
-        83: 600,  // Costa : 10h (nuit)
-        3:  420,  // Chef service test : 7h
-    };
-    Object.entries(soldesRC).forEach(([id, rc]) => {
-        const u = users.find(x => x.id === parseInt(id));
-        if (u) u.balances.RC = rc;
-    });
-
-    // --- CP approuvés : plusieurs salariés en vacances ---
-    // Meldem : congés été semaine 27
-    ['2026-06-29','2026-06-30','2026-07-01','2026-07-02','2026-07-03'].forEach(d => {
-        leaves[leaveKey(10, d)] = { id:`cp-meldem-${d}`, userId:10, type:'CP', status:'approved',
-            durationMin:null, comment:'Congés été', date:d, dateRequested:'2026-04-15',
-            validatedBy:3, validationDate:'2026-04-16' };
-    });
-    // Bal : semaine 28
-    ['2026-07-06','2026-07-07','2026-07-08','2026-07-09','2026-07-10'].forEach(d => {
-        leaves[leaveKey(20, d)] = { id:`cp-bal-${d}`, userId:20, type:'CP', status:'approved',
-            durationMin:null, comment:'Vacances famille', date:d, dateRequested:'2026-03-20',
-            validatedBy:3, validationDate:'2026-03-21' };
-    });
-    // Chavagnat : semaine 33
-    ['2026-08-10','2026-08-11','2026-08-12','2026-08-13','2026-08-14'].forEach(d => {
-        leaves[leaveKey(30, d)] = { id:`cp-chavagnat-${d}`, userId:30, type:'CP', status:'approved',
-            durationMin:null, comment:'', date:d, dateRequested:'2026-05-02',
-            validatedBy:3, validationDate:'2026-05-03' };
-    });
-
-    // --- CP en attente de validation ---
-    // Gorge : 20-24 juillet
-    ['2026-07-20','2026-07-21','2026-07-22','2026-07-23','2026-07-24'].forEach(d => {
-        leaves[leaveKey(32, d)] = { id:`cp-gorge-${d}`, userId:32, type:'CP', status:'pending',
-            durationMin:null, comment:'Congé annuel', date:d, dateRequested:'2026-05-10' };
-    });
-    // De Zorzi : 3-7 août
-    ['2026-08-03','2026-08-04','2026-08-05','2026-08-06','2026-08-07'].forEach(d => {
-        leaves[leaveKey(31, d)] = { id:`cp-dezorzi-${d}`, userId:31, type:'CP', status:'pending',
-            durationMin:null, comment:'', date:d, dateRequested:'2026-05-08' };
-    });
-    // Innoncenti : 2 jours isolés
-    ['2026-06-18','2026-06-19'].forEach(d => {
-        leaves[leaveKey(51, d)] = { id:`cp-innoncenti-${d}`, userId:51, type:'CP', status:'pending',
-            durationMin:null, comment:'Mariage famille', date:d, dateRequested:'2026-05-11' };
-    });
-
-    // --- CP refusé ---
-    leaves[leaveKey(40, '2026-08-03')] = { id:'cp-commandeur-rejected', userId:40, type:'CP', status:'rejected',
-        durationMin:null, comment:'Congé été', date:'2026-08-03', dateRequested:'2026-05-05',
-        validatedBy:3, validationDate:'2026-05-06',
-        validationComment:'Effectif insuffisant — 3 absences simultanées UV2' };
-
-    // --- RC en attente : conflit UV1 (Meldem, Bal, Chavagnat même jours) ---
-    ['2026-06-22','2026-06-23'].forEach(date => {
-        [10, 20, 30].forEach(uid => {
-            leaves[leaveKey(uid, date)] = { id:`rc-conflict-${uid}-${date}`,
-                userId:uid, type:'RC', status:'pending', durationMin:420,
-                comment:'Récupération heures supplémentaires', date, dateRequested:'2026-05-10' };
-        });
-    });
-
-    // --- RC approuvés ---
-    leaves[leaveKey(20, '2026-06-15')] = { id:'rc-bal-ok', userId:20, type:'RC', status:'approved',
-        durationMin:420, comment:'RC validé', date:'2026-06-15', dateRequested:'2026-05-01',
-        validatedBy:3, validationDate:'2026-05-02' };
-    leaves[leaveKey(12, '2026-07-17')] = { id:'rc-chamontin-ok', userId:12, type:'RC', status:'approved',
-        durationMin:420, comment:'', date:'2026-07-17', dateRequested:'2026-05-03',
-        validatedBy:3, validationDate:'2026-05-04' };
-
-    // --- Veilleurs nuit : RC ---
-    leaves[leaveKey(80, '2026-07-01')] = { id:'rc-guilhem-ok', userId:80, type:'RC', status:'approved',
-        durationMin:600, comment:'Nuit de récupération', date:'2026-07-01', dateRequested:'2026-05-05',
-        validatedBy:3, validationDate:'2026-05-06' };
-    leaves[leaveKey(81, '2026-07-02')] = { id:'rc-martino-pending', userId:81, type:'RC', status:'pending',
-        durationMin:600, comment:'Récup nuit', date:'2026-07-02', dateRequested:'2026-05-10' };
-
-    // ===== ACTIVITÉ SIMULÉE =====
-
-    // --- CA approuvés passés (mars-avril 2026) ---
-    ['2026-03-16','2026-03-17','2026-03-18','2026-03-19','2026-03-20'].forEach(d => {
-        leaves[leaveKey(11, d)] = { id:`cp-mosa-mars-${d}`, userId:11, type:'CP', status:'approved',
-            durationMin:null, comment:'Congé printemps', date:d, dateRequested:'2026-02-10',
-            validatedBy:3, validationDate:'2026-02-11' };
-    });
-    ['2026-04-07','2026-04-08','2026-04-09'].forEach(d => {
-        leaves[leaveKey(42, d)] = { id:`cp-djelloul-avr-${d}`, userId:42, type:'CP', status:'approved',
-            durationMin:null, comment:'Vacances Pâques', date:d, dateRequested:'2026-03-01',
-            validatedBy:3, validationDate:'2026-03-02' };
-    });
-    ['2026-04-14','2026-04-15','2026-04-16','2026-04-17'].forEach(d => {
-        leaves[leaveKey(52, d)] = { id:`cp-siksik-avr-${d}`, userId:52, type:'CP', status:'approved',
-            durationMin:null, comment:'', date:d, dateRequested:'2026-03-05',
-            validatedBy:3, validationDate:'2026-03-06' };
-    });
-    ['2026-05-04','2026-05-05','2026-05-06','2026-05-07'].forEach(d => {
-        leaves[leaveKey(61, d)] = { id:`cp-everest-mai-${d}`, userId:61, type:'CP', status:'approved',
-            durationMin:null, comment:'Pont mai', date:d, dateRequested:'2026-04-01',
-            validatedBy:3, validationDate:'2026-04-02' };
-    });
-    // CA refusés passés
-    ['2026-04-20','2026-04-21'].forEach(d => {
-        leaves[leaveKey(33, d)] = { id:`cp-ardouin-ref-${d}`, userId:33, type:'CP', status:'rejected',
-            durationMin:null, comment:'Congé personnel', date:d, dateRequested:'2026-04-10',
-            validatedBy:3, validationDate:'2026-04-11',
-            validationComment:'Effectif insuffisant cette semaine — UV7 déjà en sous-effectif' };
-    });
-
-    // --- RC approuvés passés ---
-    leaves[leaveKey(13, '2026-03-25')] = { id:'rc-giarratana-mars', userId:13, type:'RC', status:'approved',
-        durationMin:315, comment:'Récup heures sup février', date:'2026-03-25', dateRequested:'2026-03-20',
-        validatedBy:3, validationDate:'2026-03-21' };
-    leaves[leaveKey(22, '2026-04-22')] = { id:'rc-leguehennec-avr', userId:22, type:'RC', status:'approved',
-        durationMin:420, comment:'', date:'2026-04-22', dateRequested:'2026-04-15',
-        validatedBy:3, validationDate:'2026-04-16' };
-    leaves[leaveKey(60, '2026-05-02')] = { id:'rc-behague-mai', userId:60, type:'RC', status:'approved',
-        durationMin:315, comment:'Récupération', date:'2026-05-02', dateRequested:'2026-04-28',
-        validatedBy:3, validationDate:'2026-04-29' };
-    leaves[leaveKey(70, '2026-04-30')] = { id:'rc-raty-avr', userId:70, type:'RC', status:'approved',
-        durationMin:210, comment:'', date:'2026-04-30', dateRequested:'2026-04-25',
-        validatedBy:3, validationDate:'2026-04-26' };
-
-    // --- CA à venir (juin-septembre 2026) ---
-    ['2026-06-01','2026-06-02','2026-06-03','2026-06-04','2026-06-05'].forEach(d => {
-        leaves[leaveKey(42, d)] = { id:`cp-djelloul-juin-${d}`, userId:42, type:'CP', status:'approved',
-            durationMin:null, comment:'Congés été', date:d, dateRequested:'2026-04-20',
-            validatedBy:3, validationDate:'2026-04-21' };
-    });
-    ['2026-07-13','2026-07-14','2026-07-15','2026-07-16','2026-07-17'].forEach(d => {
-        leaves[leaveKey(22, d)] = { id:`cp-leguehennec-juil-${d}`, userId:22, type:'CP', status:'approved',
-            durationMin:null, comment:'Vacances', date:d, dateRequested:'2026-05-01',
-            validatedBy:3, validationDate:'2026-05-02' };
-    });
-    ['2026-08-17','2026-08-18','2026-08-19','2026-08-20','2026-08-21'].forEach(d => {
-        leaves[leaveKey(13, d)] = { id:`cp-giarratana-aout-${d}`, userId:13, type:'CP', status:'approved',
-            durationMin:null, comment:'Congés été', date:d, dateRequested:'2026-05-03',
-            validatedBy:3, validationDate:'2026-05-04' };
-    });
-    ['2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11'].forEach(d => {
-        leaves[leaveKey(52, d)] = { id:`cp-siksik-sept-${d}`, userId:52, type:'CP', status:'pending',
-            durationMin:null, comment:'Rentrée décalée', date:d, dateRequested:'2026-05-11' };
-    });
-    ['2026-09-14','2026-09-15','2026-09-16'].forEach(d => {
-        leaves[leaveKey(62, d)] = { id:`cp-tenza-sept-${d}`, userId:62, type:'CP', status:'pending',
-            durationMin:null, comment:'', date:d, dateRequested:'2026-05-11' };
-    });
-
-    // --- RC à venir en attente ---
-    leaves[leaveKey(33, '2026-06-08')] = { id:'rc-ardouin-juin', userId:33, type:'RC', status:'pending',
-        durationMin:630, comment:'Récupération mai', date:'2026-06-08', dateRequested:'2026-05-11' };
-    leaves[leaveKey(41, '2026-06-09')] = { id:'rc-pujol-juin', userId:41, type:'RC', status:'pending',
-        durationMin:420, comment:'', date:'2026-06-09', dateRequested:'2026-05-11' };
-    leaves[leaveKey(82, '2026-06-20')] = { id:'rc-baradi-juin', userId:82, type:'RC', status:'pending',
-        durationMin:600, comment:'Récup nuit supplémentaire', date:'2026-06-20', dateRequested:'2026-05-10' };
-})();
-
-// ========== DEMANDES DE CRÉDIT RC ==========
 let rcCreditRequests = [
-    // Mosa : heures sup RC — en attente
-    { id:'crc-1', userId:11, date:'2026-05-28', startTime:'07:00', endTime:'09:30',
-      durationMin:150, motif:'Remplacement Chamontin absent', mode:'rc',
-      status:'pending', dateRequested:'2026-05-28', validatedBy:null, validationDate:null, validationComment:'' },
-    // Gimondo : heures sup RC — validé
-    { id:'crc-2', userId:21, date:'2026-05-20', startTime:'14:00', endTime:'16:00',
+    { id:'crc-1', userId:4, date:'2026-06-02', startTime:'07:00', endTime:'09:30',
+      durationMin:150, motif:'Remplacement collègue absent', mode:'rc',
+      status:'pending', dateRequested:'2026-05-20', validatedBy:null, validationDate:null, validationComment:'' },
+    { id:'crc-2', userId:4, date:'2026-05-20', startTime:'14:00', endTime:'16:00',
+      durationMin:120, motif:'Heures supplémentaires', mode:'paid',
+      status:'pending', dateRequested:'2026-05-20', validatedBy:null, validationDate:null, validationComment:'' },
+    { id:'crc-3', userId:4, date:'2026-04-15', startTime:'07:00', endTime:'09:00',
       durationMin:120, motif:'Astreinte supplémentaire', mode:'rc',
-      status:'approved', dateRequested:'2026-05-20', validatedBy:3, validationDate:'2026-05-21', validationComment:'' },
-    // Commandeur : paiement heures sup — en attente
-    { id:'crc-3', userId:40, date:'2026-05-27', startTime:'07:00', endTime:'11:00',
-      durationMin:240, motif:'Renfort urgence résidents', mode:'paid',
-      status:'pending', dateRequested:'2026-05-27', validatedBy:null, validationDate:null, validationComment:'' },
-    // Pujol : paiement — validé
-    { id:'crc-4', userId:41, date:'2026-05-14', startTime:'07:00', endTime:'09:00',
-      durationMin:120, motif:'Remplacement urgence', mode:'paid',
-      status:'approved', dateRequested:'2026-05-14', validatedBy:3, validationDate:'2026-05-15', validationComment:'' },
-    // Chavagnat : heures sup RC — refusé
-    { id:'crc-5', userId:30, date:'2026-05-15', startTime:'06:00', endTime:'08:00',
-      durationMin:120, motif:'Garde nuit prolongée', mode:'rc',
-      status:'rejected', dateRequested:'2026-05-15', validatedBy:3, validationDate:'2026-05-16',
-      validationComment:'Non justifié par le planning' },
-    // Guilhem (nuit) : paiement — en attente
-    { id:'crc-6', userId:80, date:'2026-05-30', startTime:'21:00', endTime:'04:00',
-      durationMin:420, motif:'Nuit supplémentaire — effectif insuffisant', mode:'paid',
-      status:'pending', dateRequested:'2026-05-30', validatedBy:null, validationDate:null, validationComment:'' },
-    // Activité passée — approuvés
-    { id:'crc-7', userId:13, date:'2026-03-18', startTime:'07:00', endTime:'09:15',
-      durationMin:135, motif:'Remplacement collègue malade', mode:'rc',
-      status:'approved', dateRequested:'2026-03-18', validatedBy:3, validationDate:'2026-03-19', validationComment:'' },
-    { id:'crc-8', userId:22, date:'2026-04-08', startTime:'07:00', endTime:'08:30',
-      durationMin:90, motif:'Réunion exceptionnelle direction', mode:'rc',
-      status:'approved', dateRequested:'2026-04-08', validatedBy:3, validationDate:'2026-04-09', validationComment:'' },
-    { id:'crc-9', userId:60, date:'2026-04-22', startTime:'14:00', endTime:'16:00',
-      durationMin:120, motif:'Astreinte week-end', mode:'paid',
-      status:'approved', dateRequested:'2026-04-22', validatedBy:3, validationDate:'2026-04-23', validationComment:'' },
-    { id:'crc-10', userId:52, date:'2026-04-15', startTime:'07:00', endTime:'09:00',
-      durationMin:120, motif:'Remplacement Siksik UV6', mode:'rc',
-      status:'approved', dateRequested:'2026-04-15', validatedBy:3, validationDate:'2026-04-16', validationComment:'' },
-    // En attente récents
-    { id:'crc-11', userId:62, date:'2026-05-09', startTime:'07:00', endTime:'09:30',
-      durationMin:150, motif:'Remplacement Tenza absent', mode:'rc',
-      status:'pending', dateRequested:'2026-05-09', validatedBy:null, validationDate:null, validationComment:'' },
-    { id:'crc-12', userId:33, date:'2026-05-06', startTime:'14:00', endTime:'16:00',
-      durationMin:120, motif:'Garde supplémentaire UV7', mode:'paid',
-      status:'pending', dateRequested:'2026-05-06', validatedBy:null, validationDate:null, validationComment:'' },
+      status:'approved', dateRequested:'2026-04-15', validatedBy:3, validationDate:'2026-04-16', validationComment:'' }
 ];
-
-// ========== DÉCLARATIONS HEURES SUP ==========
 let hsDeclarations = [
-    // Meldem : 38h30 semaine → 3h30 sup → RC
-    { id:'hs-1', userId:10, type:'hs', weekStart:'2026-05-04',
-      hoursWorked:38.5, hoursSup:3.5, rcGenerated:roundToQuarter(3.5*60*1.25),
-      motif:'Remplacement 2 collègues absents', status:'pending',
+    { id:'hs-1', userId:4, type:'hs', weekStart:'2026-05-04',
+      hoursWorked:38.5, hoursSup:3.5, rcGenerated:263,
+      motif:'Remplacement collègue', status:'pending',
       dateRequested:'2026-05-09', validatedBy:null, validationDate:null, validationComment:'' },
-    // Fortas : 43h → 8h sup → RC (max 25%)
-    { id:'hs-2', userId:50, type:'hs', weekStart:'2026-04-27',
-      hoursWorked:43, hoursSup:8, rcGenerated:roundToQuarter(8*60*1.25),
-      motif:'Semaine très chargée, absence chef de nuit', status:'approved',
-      dateRequested:'2026-04-30', validatedBy:3, validationDate:'2026-05-02', validationComment:'' },
-    // Martino (nuit) : 45h → 10h sup → RC dont 2h à 50%
-    { id:'hs-3', userId:81, type:'hs', weekStart:'2026-05-04',
-      hoursWorked:45, hoursSup:10, rcGenerated:roundToQuarter(8*60*1.25 + 2*60*1.5),
-      motif:'Nuits supplémentaires — manque effectif', status:'pending',
-      dateRequested:'2026-05-09', validatedBy:null, validationDate:null, validationComment:'' },
-    // Activité passée — approuvés
-    { id:'hs-4', userId:12, type:'hs', weekStart:'2026-03-09',
-      hoursWorked:39, hoursSup:4, rcGenerated:roundToQuarter(4*60*1.25),
-      motif:'Semaine chargée UV6', status:'approved',
-      dateRequested:'2026-03-13', validatedBy:3, validationDate:'2026-03-14', validationComment:'' },
-    { id:'hs-5', userId:62, type:'hs', weekStart:'2026-03-23',
-      hoursWorked:40, hoursSup:5, rcGenerated:roundToQuarter(5*60*1.25),
-      motif:'Remplacement Tenza malade 3 jours', status:'approved',
-      dateRequested:'2026-03-27', validatedBy:3, validationDate:'2026-03-28', validationComment:'' },
-    { id:'hs-6', userId:21, type:'hs', weekStart:'2026-04-13',
-      hoursWorked:37, hoursSup:2, rcGenerated:roundToQuarter(2*60*1.25),
-      motif:'Réunion famille résidents hors horaire', status:'approved',
-      dateRequested:'2026-04-17', validatedBy:3, validationDate:'2026-04-18', validationComment:'' },
-    // Refusé
-    { id:'hs-7', userId:70, type:'hs', weekStart:'2026-04-06',
-      hoursWorked:36, hoursSup:1, rcGenerated:roundToQuarter(1*60*1.25),
-      motif:'Heure supplémentaire non planifiée', status:'rejected',
-      dateRequested:'2026-04-10', validatedBy:3, validationDate:'2026-04-11',
-      validationComment:'Heure non justifiée — planning non modifié ce jour' },
-    // En attente récent
-    { id:'hs-8', userId:13, type:'hs', weekStart:'2026-05-04',
-      hoursWorked:38, hoursSup:3, rcGenerated:roundToQuarter(3*60*1.25),
-      motif:'UV7 sous-effectif semaine 19', status:'pending',
-      dateRequested:'2026-05-08', validatedBy:null, validationDate:null, validationComment:'' },
+    { id:'hs-2', userId:4, type:'hs', weekStart:'2026-04-27',
+      hoursWorked:43, hoursSup:8, rcGenerated:600,
+      motif:'Semaine chargée', status:'approved',
+      dateRequested:'2026-04-30', validatedBy:3, validationDate:'2026-05-02', validationComment:'' }
 ];
-
-// ========== ÉCHANGES D'HEURES ==========
 let rcExchangeRequests = [
-    // Meldem ↔ Bal : en attente
-    { id:'exc-1', userId:10, colleagueId:20, colleagueName:'Bal',
+    { id:'exc-1', userId:4, colleagueId:null, colleagueName:'Meldem',
       dateGive:'2026-06-05', startGive:'07:00', endGive:'14:00', durGive:420,
       dateReceive:'2026-06-12', startReceive:'07:00', endReceive:'14:00', durReceive:420,
-      motif:'Rendez-vous médical urgent', status:'pending',
+      motif:'Rendez-vous médical', status:'pending',
       dateRequested:'2026-05-09', validatedBy:null, validationDate:null, validationComment:'' },
-    // Chavagnat ↔ Gorge : validé
-    { id:'exc-2', userId:30, colleagueId:32, colleagueName:'Gorge',
+    { id:'exc-2', userId:4, colleagueId:null, colleagueName:'Bal',
       dateGive:'2026-06-18', startGive:'14:00', endGive:'21:00', durGive:420,
       dateReceive:'2026-06-25', startReceive:'14:00', endReceive:'21:00', durReceive:420,
-      motif:'Permutation garde — événement familial', status:'approved',
-      dateRequested:'2026-05-05', validatedBy:3, validationDate:'2026-05-06', validationComment:'' },
-    // De Zorzi ↔ Pujol : en attente
-    { id:'exc-3', userId:31, colleagueId:41, colleagueName:'Pujol',
-      dateGive:'2026-07-13', startGive:'07:00', endGive:'14:00', durGive:420,
-      dateReceive:'2026-07-20', startReceive:'07:00', endReceive:'14:00', durReceive:420,
-      motif:'Départ en vacances décalé', status:'pending',
-      dateRequested:'2026-05-11', validatedBy:null, validationDate:null, validationComment:'' },
-    // Guilhem ↔ Martino (veilleurs nuit) : refusé
-    { id:'exc-4', userId:80, colleagueId:81, colleagueName:'Martino',
-      dateGive:'2026-06-10', startGive:'21:00', endGive:'07:00', durGive:600,
-      dateReceive:'2026-06-17', startReceive:'21:00', endReceive:'07:00', durReceive:600,
-      motif:'Permutation nuit', status:'rejected',
-      dateRequested:'2026-05-03', validatedBy:3, validationDate:'2026-05-04',
-      validationComment:'Impossibilité — formation obligatoire le 17/06' },
-    // Activité passée — échanges validés
-    { id:'exc-5', userId:11, colleagueId:61, colleagueName:'Everest',
-      dateGive:'2026-03-26', startGive:'07:00', endGive:'14:00', durGive:420,
-      dateReceive:'2026-04-02', startReceive:'07:00', endReceive:'14:00', durReceive:420,
-      motif:'Garde permutée vacances scolaires', status:'approved',
-      dateRequested:'2026-03-15', validatedBy:3, validationDate:'2026-03-16', validationComment:'' },
-    { id:'exc-6', userId:42, colleagueId:22, colleagueName:'Le Guehennec',
-      dateGive:'2026-04-17', startGive:'14:00', endGive:'21:00', durGive:420,
-      dateReceive:'2026-04-24', startReceive:'14:00', endReceive:'21:00', durReceive:420,
-      motif:'Permutation pour mariage', status:'approved',
-      dateRequested:'2026-04-05', validatedBy:3, validationDate:'2026-04-06', validationComment:'' },
-    // En attente récent
-    { id:'exc-7', userId:52, colleagueId:62, colleagueName:'Tenza',
-      dateGive:'2026-06-26', startGive:'07:00', endGive:'14:00', durGive:420,
-      dateReceive:'2026-07-03', startReceive:'07:00', endReceive:'14:00', durReceive:420,
-      motif:'Permutation congé été', status:'pending',
-      dateRequested:'2026-05-10', validatedBy:null, validationDate:null, validationComment:'' },
-    { id:'exc-8', userId:60, colleagueId:40, colleagueName:'Commandeur',
-      dateGive:'2026-06-15', startGive:'07:00', endGive:'14:00', durGive:420,
-      dateReceive:'2026-06-22', startReceive:'07:00', endReceive:'14:00', durReceive:420,
-      motif:'Rendez-vous administratif', status:'pending',
-      dateRequested:'2026-05-11', validatedBy:null, validationDate:null, validationComment:'' },
+      motif:'Permutation garde', status:'approved',
+      dateRequested:'2026-05-05', validatedBy:3, validationDate:'2026-05-06', validationComment:'' }
 ];
-
-// ========== NOTIFICATIONS DE DÉMONSTRATION ==========
-let userNotifications = {
-    // Meldem : refus RC + crédit approuvé + échange en attente
-    10: [
-        { id:'n-demo-1', type:'rejection', leaveType:'RC', date:'2026-05-02',
-          duration:'7h', motif:'Trop de demandes simultanées sur UV1', createdAt:'2026-05-03', read:false },
-        { id:'n-demo-2', type:'credit_approved', duration:'2h15', date:'2026-04-28',
-          createdAt:'2026-04-29', read:false },
-        { id:'n-demo-3', type:'new_exchange_request', colleagueName:'Bal',
-          dateGive:'2026-06-05', dateReceive:'2026-06-12', createdAt:'2026-05-09', read:false },
-    ],
-    // Commandeur : CP refusé
-    40: [
-        { id:'n-demo-4', type:'rejection', leaveType:'CP', date:'2026-08-03',
-          duration:'1 jour', motif:'Effectif insuffisant — 3 absences simultanées UV2',
-          createdAt:'2026-05-06', read:false },
-    ],
-    // Chavagnat : échange validé
-    30: [
-        { id:'n-demo-5', type:'exchange_approved', colleagueName:'Gorge',
-          dateGive:'2026-06-18', dateReceive:'2026-06-25', createdAt:'2026-05-06', read:false },
-        { id:'n-demo-6', type:'credit_rejected', duration:'2h', date:'2026-05-15',
-          motif:'Non justifié par le planning', createdAt:'2026-05-16', read:false },
-    ],
-    // Gorge : CP en attente de validation
-    32: [
-        { id:'n-demo-7', type:'new_leave_request', userName:'Gorge', leaveType:'CP',
-          date:'2026-07-20', count:5, createdAt:'2026-05-10', read:false },
-    ],
-    // Guilhem (nuit) : échange refusé
-    80: [
-        { id:'n-demo-8', type:'exchange_rejected', colleagueName:'Martino',
-          dateGive:'2026-06-10', dateReceive:'2026-06-17',
-          motif:'Impossibilité — formation obligatoire le 17/06', createdAt:'2026-05-04', read:false },
-    ],
-    // Chef de service test : uniquement les demandes en attente importantes
-    3: [
-        { id:'n-demo-9', type:'new_leave_request', userName:'Gorge', leaveType:'CP',
-          date:'2026-07-20', count:5, createdAt:'2026-05-10', read:false },
-        { id:'n-demo-10', type:'new_leave_request', userName:'De Zorzi', leaveType:'CP',
-          date:'2026-08-03', count:5, createdAt:'2026-05-08', read:false },
-        { id:'n-demo-11', type:'new_credit_request', userName:'Mosa', mode:'rc',
-          duration:150, date:'2026-05-28', createdAt:'2026-05-28', read:false },
-        { id:'n-demo-13', type:'new_exchange_request', userName:'Meldem',
-          colleagueName:'Bal', dateGive:'2026-06-05', dateReceive:'2026-06-12',
-          createdAt:'2026-05-09', read:false },
-    ],
-};
+let userNotifications = {};
 
 let teams = [
-    { id: 1, name: "UV1" },
-    { id: 2, name: "UV2" },
-    { id: 3, name: "UV3" },
-    { id: 4, name: "UV4" },
-    { id: 5, name: "UV5" },
-    { id: 6, name: "UV6" },
-    { id: 7, name: "UV7" },
-    { id: 8, name: "Externat" },
-    { id: 9,  name: "Veilleurs Nuit A" },
-    { id: 10, name: "Veilleurs Nuit B" },
+    { id:1, name:"UV1" },
+    { id:2, name:"UV2" },
+    { id:3, name:"Veilleurs Nuit" }
 ];
-
-// Plafond mensuel RC en minutes (exemple : 2 journées = 840 min pour service jour)
 const RC_PLAFOND_MENSUEL = { jour: 840, nuit: 1200 };
-
-// ---- Tri tableau salariés ----
 let userSortField = 'name';
-let userSortDir   = 'asc'; // 'asc' | 'desc'
+let userSortDir   = 'asc';
 
 let currentUser = null;
 let currentYear = 2026;
+let calendarOffset = 0;
+let listOffset = 0;
 let selectedDates = [];
 let isSelectingRange = false;
 let firstSelectedDate = null;
 let isLoggedIn = false;
 const ACCRUAL_KEY = 'cp_last_accrual';
-
-// Données modal validation RC rapide
 let rcQuickDate = null;
 let rcQuickComment = '';
-
-// ========== UTILITAIRES ==========
 const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const dayNames = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-function generateId() { return users.length === 0 ? 1 : Math.max(...users.map(u => u.id)) + 1; }
+function generateId() { return users.length ? Math.max(...users.map(u=>u.id))+1 : 1; }
 
 function getEaster(year) {
     const a = year%19, b = Math.floor(year/100), c = year%100, d = Math.floor(b/4), e = b%4;
@@ -2015,7 +1501,6 @@ function getEaster(year) {
 function getFrenchHolidays(year) {
     const easter = getEaster(year);
     const addDays = (date, days) => { const d = new Date(date); d.setDate(d.getDate()+days); return d; };
-    // Formatage local pour éviter le décalage UTC (ex: heure d'été UTC+2)
     const fmt = d => {
         const y = d.getFullYear();
         const m = String(d.getMonth()+1).padStart(2,'0');
@@ -2037,19 +1522,12 @@ function getFrenchHolidays(year) {
     };
 }
 
-function generateTeamId() { return teams.length === 0 ? 1 : Math.max(...teams.map(t => t.id)) + 1; }
-function getTeamById(id) { return teams.find(t => t.id === id) || null; }
-function getTeamMembers(teamId) { return users.filter(u => u.teamId === teamId); }
-
-// Formate une Date en YYYY-MM-DD en heure LOCALE (évite le décalage UTC)
-function localDateStr(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth()+1).padStart(2,'0');
-    const d = String(date.getDate()).padStart(2,'0');
-    return `${y}-${m}-${d}`;
+function generateTeamId() { return teams.length ? Math.max(...teams.map(t=>t.id))+1 : 1; }
+function getTeamById(id) { return teams.find(t=>t.id===id)||null; }
+function getTeamMembers(teamId) { return users.filter(u=>u.teamId===teamId); }
+function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
-// Date du jour en local
 function todayStr() { return localDateStr(new Date()); }
 
 function getVisibleLeaves() {
@@ -2060,13 +1538,9 @@ function getVisibleLeaves() {
         const leaveUser = getUserById(leave.userId);
         if (!leaveUser || !dateStr) return;
         let show = false;
-        // Toujours voir ses propres congés
         if (leave.userId === currentUser.id) show = true;
-        // Chef de service : voit tous les salariés
         else if (isChefDeService()) show = true;
-        // Salarié : voit les congés de son équipe
         else if (currentUser.teamId && leaveUser.teamId === currentUser.teamId) show = true;
-        // Admin sans équipe : voit tout
         else if (isAdmin() && !currentUser.teamId) show = true;
         if (show) {
             if (!visible[dateStr]) visible[dateStr] = [];
@@ -2087,53 +1561,42 @@ function parseRCInput(val) {
 
 function rcDayMinutes(user) { return (user && user.service === 'nuit') ? 600 : 420; }
 
-function formatMinutes(totalMin) {
-    if (!totalMin && totalMin !== 0) return '0h';
-    const h = Math.floor(Math.abs(totalMin)/60);
-    const m = Math.abs(totalMin)%60;
-    const sign = totalMin < 0 ? '-' : '';
-    if (m === 0) return `${sign}${h}h`;
-    return `${sign}${h}h${String(m).padStart(2,'0')}`;
+function formatMinutes(m) {
+    if (!m && m!==0) return '0h';
+    const sign = m<0?'-':'', h=Math.floor(Math.abs(m)/60), mn=Math.abs(m)%60;
+    return `${sign}${h}h${mn?String(mn).padStart(2,'0'):''}`;
 }
 
-function roundToQuarter(minutes) { return Math.round(minutes/15)*15; }
+function roundToQuarter(m) { return Math.round(m/15)*15; }
 
 function parseHoursMinutes(str) {
     str = str.trim().toLowerCase().replace(',','.');
-    const match = str.match(/^(\d+)h(\d+)?(?:min)?$/);
-    if (match) { const h = parseInt(match[1])||0; const m = parseInt(match[2])||0; return roundToQuarter(h*60+m); }
-    const minOnly = str.match(/^(\d+)\s*(?:min)?$/);
-    if (minOnly) return roundToQuarter(parseInt(minOnly[1]));
-    return null;
+    let m = str.match(/^(\d+)h(\d+)?(?:min)?$/);
+    if (m) return roundToQuarter((parseInt(m[1])||0)*60+(parseInt(m[2])||0));
+    m = str.match(/^(\d+)\s*(?:min)?$/);
+    return m ? roundToQuarter(parseInt(m[1])) : null;
 }
 
 function formatDate(dateStr) {
-    // Construire la date en local pour éviter le décalage UTC
     const [y,m,d] = dateStr.split('-').map(Number);
     return new Date(y, m-1, d).toLocaleDateString('fr-FR', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-function formatDateShort(dateStr) {
-    if (!dateStr) return '-';
-    const [y,m,d] = dateStr.split('-').map(Number);
-    return new Date(y, m-1, d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function formatDateShort(s) {
+    if (!s) return '-';
+    const [y,m,d]=s.split('-').map(Number);
+    return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 
-function isToday(dateStr) { return dateStr === todayStr(); }
+const isToday = d => d === todayStr();
 
-function isPastDate(dateStr) { return dateStr < todayStr(); }
+const isPastDate = d => d < todayStr();
 function getUserById(id) {
-    if (id === undefined || id === null || isNaN(id)) return null;
-    const userId = typeof id === 'string' ? parseInt(id) : id;
-    return users.find(u => u.id === userId) || null;
+    const n = parseInt(id); return isNaN(n) ? null : users.find(u=>u.id===n)||null;
 }
-function getUserByUsername(username) {
-    const norm = username.trim().toLowerCase();
-    return users.find(u => u.email.toLowerCase() === norm || u.username.toLowerCase() === norm) || null;
+function getUserByUsername(u) {
+    const n=u.trim().toLowerCase(); return users.find(x=>x.email.toLowerCase()===n||x.username.toLowerCase()===n)||null;
 }
-
-// ========== PLAFOND MENSUEL RC ==========
-// Calcule le RC consommé ce mois-ci par un utilisateur (demandes approved + pending)
 function getRCUsedThisMonth(userId) {
     const now = new Date();
     const yearMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -2144,11 +1607,6 @@ function getRCUsedThisMonth(userId) {
         .reduce((sum, [, l]) => sum + (l.durationMin || 0), 0);
 }
 
-function getRCPlafondRestant(user) {
-    const plafond = RC_PLAFOND_MENSUEL[user.service] || 840;
-    const used = getRCUsedThisMonth(user.id);
-    return Math.max(0, plafond - used);
-}
 
 function isRCPlafonné(leave) {
     const user = getUserById(leave.userId);
@@ -2157,8 +1615,6 @@ function isRCPlafonné(leave) {
     const used = getRCUsedThisMonth(user.id);
     return used >= plafond;
 }
-
-// ========== BADGE NOTIFICATION onglet Validation RC ==========
 function getPendingRCCount() {
     const leavePending    = Object.values(leaves).filter(l => l.type === 'RC' && l.status === 'pending').length;
     const creditPending   = rcCreditRequests.filter(r => r.status === 'pending').length;
@@ -2182,10 +1638,7 @@ function updateValidationRCBadge() {
 }
 
 function updateListTabBadge() {
-    // Badge supprimé de l'onglet Mes Congés — notifications accessibles via la cloche
 }
-
-// ========== GESTION DES ÉQUIPES ==========
 function addTeam(name) {
     if (!name.trim()) { showNotification("Nom d'équipe requis", 'error'); return false; }
     if (teams.some(t => t.name.toLowerCase() === name.trim().toLowerCase())) { showNotification('Équipe déjà existante', 'error'); return false; }
@@ -2256,8 +1709,6 @@ function showTeamModal(teamId = null) {
     }
     modal.classList.add('active');
 }
-
-// ========== RÉINITIALISATION MOT DE PASSE ==========
 async function resetPassword(email) {
     const user = users.find(u => u.email === email.trim().toLowerCase());
     if (!user) return false;
@@ -2270,13 +1721,9 @@ async function resetPassword(email) {
     });
     return true;
 }
-
-// ========== VALIDATION MOT DE PASSE ==========
-function validatePasswordComplexity(pwd) {
-    const len   = pwd.length >= 8 && pwd.length <= 10;
-    const letter = /[a-zA-Z]/.test(pwd);
-    const digit  = /[0-9]/.test(pwd);
-    return { len, letter, digit, valid: len && letter && digit };
+function validatePasswordComplexity(p) {
+    const len=/^.{8,10}$/.test(p), letter=/[a-zA-Z]/.test(p), digit=/[0-9]/.test(p);
+    return {len,letter,digit,valid:len&&letter&&digit};
 }
 
 function getPasswordStrength(pwd) {
@@ -2309,27 +1756,23 @@ function bindPasswordStrength(inputId, fillId, labelId, ruleLenId, ruleLetId, ru
     });
 }
 
-function isChefDeService() { return currentUser && (currentUser.role === 'chef(fe) de service' || currentUser.role === 'admin'); }
-function isAdmin()   { return currentUser && currentUser.role === 'admin'; }
+function isChefDeService() { return currentUser && ['chef(fe) de service','admin'].includes(currentUser.role); }
+function isAdmin() { return currentUser?.role === 'admin'; }
 
-function showNotification(message, type = 'info') {
-    const container = document.getElementById('notification-container');
+function showNotification(message, type='info') {
+    const icons = {success:'✅',error:'❌',info:'ℹ️'};
     const notif = document.createElement('div');
     notif.className = `notification ${type}`;
-    notif.innerHTML = `<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span><span style="flex:1">${message}</span>`;
-    container.appendChild(notif);
+    notif.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span style="flex:1">${message}</span>`;
+    document.getElementById('notification-container').appendChild(notif);
     setTimeout(() => notif.remove(), 5000);
 }
-
-// ========== ACCUMULATION CP ==========
 function runMonthlyAccrual() {
     const now = new Date();
-    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const lastAccrual = localStorage.getItem(ACCRUAL_KEY);
-    if (lastAccrual === currentMonthKey) return;
-    if (now.getDate() !== 1) return;
-    users.forEach(user => { user.balances.CP = Math.round((user.balances.CP + 2.5)*10)/10; });
-    localStorage.setItem(ACCRUAL_KEY, currentMonthKey);
+    const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    if (localStorage.getItem(ACCRUAL_KEY) === key || now.getDate() !== 1) return;
+    users.forEach(u => { u.balances.CP = Math.round((u.balances.CP + 2.5)*10)/10; });
+    localStorage.setItem(ACCRUAL_KEY, key);
 }
 
 function updateUIForCurrentUser() {
@@ -2340,7 +1783,7 @@ function updateUIForCurrentUser() {
     document.getElementById('user-menu-btn').textContent = currentUser.name.charAt(0).toUpperCase();
     document.getElementById('list-tab').classList.toggle('hidden', isChefDeService());
     document.getElementById('dashboard-tab').classList.toggle('hidden', isChefDeService());
-    document.getElementById('team-tab').classList.add('hidden'); // jamais visible
+    document.getElementById('team-tab').classList.add('hidden');
     document.getElementById('validation-rc-tab').classList.toggle('hidden', !isChefDeService());
     document.getElementById('counters-manager-tab').classList.toggle('hidden', !isChefDeService());
     document.getElementById('admin-tab').classList.toggle('hidden', !isAdmin());
@@ -2367,6 +1810,7 @@ function login(username, password) {
     runMonthlyAccrual();
     currentUser = getUserById(currentUser.id) || currentUser;
     updateUIForCurrentUser();
+    calendarOffset = 0; listOffset = 0;
     renderCalendar();
     generateLeaveList();
     if (isAdmin()) renderUsersList();
@@ -2407,14 +1851,11 @@ function applyNewPassword(newPassword, confirmPassword) {
     showNotification('Mot de passe défini avec succès !', 'success');
     return true;
 }
-
-// ========== GESTION DES CONGÉS ==========
 function updateBalances() {
     if (!currentUser) return;
-    document.getElementById('cp-balance').textContent = currentUser.balances.CP;
-    document.getElementById('rc-balance').textContent = formatMinutes(currentUser.balances.RC);
-    document.getElementById('current-cp-balance').textContent = currentUser.balances.CP;
-    document.getElementById('current-rc-balance').textContent = formatMinutes(currentUser.balances.RC);
+    const {CP,RC} = currentUser.balances;
+    ['cp-balance','current-cp-balance'].forEach(id => document.getElementById(id).textContent = CP);
+    ['rc-balance','current-rc-balance'].forEach(id => document.getElementById(id).textContent = formatMinutes(RC));
 }
 
 function updateUserBalances(userId) {
@@ -2469,8 +1910,6 @@ function addLeave(dates, type) {
     const userInArray = getUserById(currentUser.id);
     if (userInArray) userInArray.balances = { ...currentUser.balances };
     updateBalances();
-
-    // Notifier le(s) chef(s) de service
     const chefId = getChefDeServiceOf(currentUser);
     sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'new_leave_request', {
         userName: currentUser.name, leaveType: type,
@@ -2497,7 +1936,6 @@ function cancelLeave(dateStr) {
         const u = getUserById(currentUser.id);
         if (u) u.balances.RC = currentUser.balances.RC;
     }
-    // Notifier le chef de service
     const chefId = getChefDeServiceOf(currentUser);
     sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'cancel_request', {
         userName: currentUser.name, leaveType: leave.type, date: dateStr
@@ -2507,12 +1945,10 @@ function cancelLeave(dateStr) {
 }
 
 function validateLeave(dateStr, status, comment, targetUserId) {
-    // targetUserId optionnel — si fourni, on cherche le congé de cet utilisateur sur cette date
     let leave;
     if (targetUserId) {
         leave = getUserLeaveOnDate(targetUserId, dateStr);
     } else {
-        // Chercher le premier congé pending sur cette date (hors soi-même)
         leave = getLeavesOnDate(dateStr).find(l => l.status === 'pending' && l.userId !== currentUser.id)
              || getLeavesOnDate(dateStr)[0];
     }
@@ -2527,7 +1963,6 @@ function validateLeave(dateStr, status, comment, targetUserId) {
     leave.validationDate = todayStr();
 
     if (status === 'approved') {
-        // Notification de validation au salarié
         if (!userNotifications[user.id]) userNotifications[user.id] = [];
         userNotifications[user.id].push({
             id: 'notif-' + Date.now() + '-' + Math.floor(Math.random()*1000),
@@ -2541,15 +1976,12 @@ function validateLeave(dateStr, status, comment, targetUserId) {
             generateLeaveList(); updateListTabBadge(); renderRCModalNotifs();
         }
     } else if (status === 'rejected') {
-        // Remboursement du solde débité à la soumission
         if (leave.type === 'CP') user.balances.CP += 1;
         else if (leave.type === 'RC') {
             const dur = leave.durationMin || rcDayMinutes(user);
             user.balances.RC += dur;
         }
         updateUserBalances(user.id);
-
-        // Créer une notification persistante pour l'utilisateur concerné
         if (!userNotifications[user.id]) userNotifications[user.id] = [];
         const dur = leave.type === 'RC' ? formatMinutes(leave.durationMin || rcDayMinutes(user)) : '1 jour';
         userNotifications[user.id].push({
@@ -2562,16 +1994,11 @@ function validateLeave(dateStr, status, comment, targetUserId) {
             createdAt: todayStr(),
             read: false
         });
-
-        // Si c'est l'utilisateur courant qui est concerné, rafraîchir "Mes Congés"
         if (currentUser && user.id === currentUser.id) {
             generateLeaveList();
             updateListTabBadge();
-            // Rafraîchir aussi la zone notifs dans le modal RC si ouvert
             renderRCModalNotifs();
         } else {
-            // Mettre à jour le badge même si l'utilisateur visé n'est pas connecté
-            // (impossible en mono-session, mais on garde la cohérence)
         }
     }
 
@@ -2580,14 +2007,9 @@ function validateLeave(dateStr, status, comment, targetUserId) {
     autoSave();
     return true;
 }
-
-// ========== DEMANDES DE CRÉDIT RC ==========
-// Plafond mensuel heures payées (en minutes)
-const HS_PAID_CAP = { jour: 420, nuit: 600 }; // 7h jour, 10h nuit
-
-// Cumul heures payées ce mois pour un user
+const HS_PAID_CAP = { jour: 420, nuit: 600 };
 function getHsPaidThisMonth(userId) {
-    const ym = todayStr().slice(0, 7); // YYYY-MM
+    const ym = todayStr().slice(0, 7);
     return rcCreditRequests
         .filter(r => r.userId === userId && r.mode === 'paid' && r.status === 'approved' && (r.date || '').startsWith(ym))
         .reduce((s, r) => s + (r.durationMin || 0), 0);
@@ -2602,9 +2024,7 @@ function submitRCCreditRequest(date, durationMin, motif, startTime, endTime, mod
     if (!durationMin || durationMin <= 0) { showNotification('Durée invalide', 'error'); return false; }
     if (durationMin % 15 !== 0) { showNotification('La durée doit être un multiple de 15 min', 'error'); return false; }
 
-    const resolvedMode = mode || 'rc'; // 'rc' ou 'paid'
-
-    // Vérification plafond paiement
+    const resolvedMode = mode || 'rc';
     if (resolvedMode === 'paid') {
         const user = getUserById(currentUser.id);
         const cap = getHsPaidCap(user);
@@ -2621,14 +2041,13 @@ function submitRCCreditRequest(date, durationMin, motif, startTime, endTime, mod
         userId: currentUser.id,
         date, startTime: startTime || null, endTime: endTime || null,
         durationMin, motif: motif || '',
-        mode: resolvedMode, // 'rc' | 'paid'
+        mode: resolvedMode,
         status: 'pending',
         dateRequested: todayStr(),
         validatedBy: null, validationDate: null, validationComment: ''
     });
     const modeLabel = resolvedMode === 'paid' ? '💶 paiement' : '🕐 RC';
     showNotification(`Demande d'heures sup (${modeLabel}) envoyée ✅ — en attente de validation`, 'success');
-    // Notifier le chef de service
     const chefId = getChefDeServiceOf(currentUser);
     sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'new_credit_request', {
         userName: currentUser.name, mode: resolvedMode,
@@ -2651,14 +2070,12 @@ function validateRCCredit(requestId, status, comment) {
 
     if (status === 'approved') {
         if (req.mode === 'rc') {
-            // Mode RC : créditer le solde
             user.balances.RC += req.durationMin;
             if (currentUser && user.id === currentUser.id) {
                 currentUser.balances.RC = user.balances.RC;
                 updateBalances();
             }
         }
-        // Mode payé : pas de crédit RC — juste notification
         if (!userNotifications[user.id]) userNotifications[user.id] = [];
         userNotifications[user.id].push({
             id: 'notif-credit-' + Date.now(),
@@ -2690,14 +2107,7 @@ function validateRCCredit(requestId, status, comment) {
     return true;
 }
 
-function getPendingRCCreditCount() {
-    return rcCreditRequests.filter(r => r.status === 'pending').length;
-}
-
-// ========== MESSAGERIE INTERNE ==========
-let inboxTab = 'all'; // 'all' | 'unread'
-
-// Envoyer une notification interne à un ou plusieurs utilisateurs
+let inboxTab = 'all';
 function sendInternalNotif(toUserIds, type, payload) {
     const ids = Array.isArray(toUserIds) ? toUserIds : [toUserIds];
     ids.forEach(uid => {
@@ -2712,29 +2122,18 @@ function sendInternalNotif(toUserIds, type, payload) {
     updateBellBadge();
     updateListTabBadge();
 }
-
-// Trouver le chef de service d'un salarié
 function getChefDeServiceOf(user) {
-    if (!user) return null;
-    // D'abord le managerId direct
-    if (user.managerId) return user.managerId;
-    // Sinon premier chef de service de l'application
-    const chef = users.find(u => u.role === 'chef(fe) de service');
-    return chef ? chef.id : null;
+    return user?.managerId || users.find(u=>u.role==='chef(fe) de service')?.id || null;
 }
-
-// Trouver tous les chefs de service (pour les admins)
 function getAllChefDeService() {
-    return users.filter(u => u.role === 'chef(fe) de service' || u.role === 'admin').map(u => u.id);
+    return users.filter(u=>['chef(fe) de service','admin'].includes(u.role)).map(u=>u.id);
 }
 
 function updateBellBadge() {
-    if (!currentUser) return;
-    const count = (userNotifications[currentUser.id] || []).filter(n => !n.read).length;
     const badge = document.getElementById('notif-bell-badge');
-    if (!badge) return;
-    badge.textContent = count > 9 ? '9+' : count;
-    badge.style.display = count > 0 ? 'block' : 'none';
+    if (!badge||!currentUser) return;
+    const n = (userNotifications[currentUser.id]||[]).filter(x=>!x.read).length;
+    badge.textContent = n>9?'9+':n; badge.style.display = n?'block':'none';
 }
 
 function switchInboxTab(tab) {
@@ -2812,18 +2211,12 @@ function clearAllNotifs() {
     userNotifications[currentUser.id] = [];
     updateBellBadge(); updateListTabBadge(); renderInbox();
 }
-
-// ========== COMPTEURS LÉGAUX CCN 51 ==========
-
-// --- Ancienneté ---
 function getAncienneteYears(user) {
     if (!user || !user.dateEntree) return 0;
     const entree = new Date(user.dateEntree);
     const now = new Date();
     return Math.floor((now - entree) / (365.25 * 24 * 3600 * 1000));
 }
-
-// Jours de congés ancienneté CCN51
 function getCPAnciennete(user) {
     const years = getAncienneteYears(user);
     if (years >= 30) return 6;
@@ -2834,8 +2227,6 @@ function getCPAnciennete(user) {
     if (years >= 5)  return 1;
     return 0;
 }
-
-// --- CP acquis sur la période en cours (1er juin → 31 mai) ---
 function getCPPeriod() {
     const now = new Date();
     const year = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
@@ -2847,9 +2238,8 @@ function getCPAcquisPeriode(user) {
     const period = getCPPeriod();
     const entree = new Date(user.dateEntree);
     const debut = entree > period.start ? entree : period.start;
-    const fin = new Date(); // jusqu'à aujourd'hui
+    const fin = new Date();
     if (fin < debut) return 0;
-    // Nombre de mois complets entre debut et fin
     let months = (fin.getFullYear() - debut.getFullYear()) * 12 + (fin.getMonth() - debut.getMonth());
     if (fin.getDate() >= debut.getDate()) months++;
     months = Math.min(months, 12);
@@ -2864,55 +2254,33 @@ function getCPPris(userId) {
         new Date(l.date) >= period.start && new Date(l.date) <= period.end
     ).length;
 }
-
-// --- RC : calcul majoration CCN51 ---
-// Heures sup 1 à 8 (36h-43h) : +25% → 1h = 1h15
-// Heures sup au-delà de 8 (>43h) : +50% → 1h = 1h30
 function calcRCFromHeureSup(hoursWorked) {
     if (hoursWorked <= 35) return 0;
     const supTotal = hoursWorked - 35;
-    const sup25 = Math.min(supTotal, 8); // 36h à 43h
-    const sup50 = Math.max(0, supTotal - 8); // au-delà de 43h
+    const sup25 = Math.min(supTotal, 8);
+    const sup50 = Math.max(0, supTotal - 8);
     const rcMinutes = Math.round((sup25 * 60 * 1.25) + (sup50 * 60 * 1.5));
     return roundToQuarter(rcMinutes);
 }
-
-// RC généré par un jour férié travaillé (journée complète selon service)
 function calcRCFerie(user, startTime, endTime) {
     if (!startTime || !endTime) return rcDayMinutes(user);
     const [sh,sm] = startTime.split(':').map(Number);
     const [eh,em] = endTime.split(':').map(Number);
     const worked = (eh*60+em) - (sh*60+sm);
     if (worked <= 0) return 0;
-    // Jours fériés CCN51 : majoration 100% → RC = heures travaillées × 2
     return roundToQuarter(worked * 2);
 }
-
-// --- RC total acquis (approuvé) ---
-function getRCApprouve(userId) {
-    return Object.values(leaves).filter(l =>
-        l.userId === userId && l.type === 'RC' && l.status === 'approved'
-    ).reduce((sum, l) => sum + (l.durationMin || 0), 0)
-    + hsDeclarations.filter(d => d.userId === userId && d.status === 'approved')
-        .reduce((sum, d) => sum + (d.rcGenerated || 0), 0);
-}
-
-// RC consommé (absences RC approuvées ou en attente)
 function getRCConsomme(userId) {
     return Object.values(leaves).filter(l =>
         l.userId === userId && l.type === 'RC' &&
         (l.status === 'approved' || l.status === 'pending')
     ).reduce((sum, l) => sum + (l.durationMin || 0), 0);
 }
-
-// --- Jours fériés travaillés approuvés ---
 function getFeriesTravaillesApprouves(userId) {
     return hsDeclarations.filter(d =>
         d.userId === userId && d.type === 'ferie' && d.status === 'approved'
     ).length;
 }
-
-// --- Soumettre déclaration heures sup ---
 function submitHsDeclaration(userId, weekStart, hoursWorked, motif, type = 'hs', dateStr = null, startTime = null, endTime = null) {
     const user = getUserById(userId);
     if (!user) return false;
@@ -2943,12 +2311,9 @@ function submitHsDeclaration(userId, weekStart, hoursWorked, motif, type = 'hs',
         dateRequested: todayStr(),
         validatedBy: null, validationDate: null, validationComment: ''
     });
-
-    // Détecter si la date déclarée est un jour férié → notifier le chef
     const holidays = getFrenchHolidays(new Date(weekStart).getFullYear());
     const holidayName = holidays[weekStart] || (dateStr ? holidays[dateStr] : null);
     if (holidayName && type === 'hs') {
-        // Jour férié travaillé détecté dans une déclaration HS normale
         const chefId2 = getChefDeServiceOf(getUserById(userId));
         sendInternalNotif(chefId2 ? [chefId2] : getAllChefDeService(), 'ferie_travaille', {
             userName: getUserById(userId)?.name || '?',
@@ -2961,7 +2326,6 @@ function submitHsDeclaration(userId, weekStart, hoursWorked, motif, type = 'hs',
     showNotification(type === 'ferie'
         ? `Jour férié déclaré — RC à créditer : ${formatMinutes(rcGenerated)} ✅`
         : `Déclaration envoyée — ${formatMinutes(rcGenerated)} RC à valider ✅`, 'success');
-    // Notifier le chef de service
     const chefId = getChefDeServiceOf(getUserById(userId));
     sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'new_hs_declaration', {
         userName: getUserById(userId)?.name || '?',
@@ -2970,8 +2334,6 @@ function submitHsDeclaration(userId, weekStart, hoursWorked, motif, type = 'hs',
     updateValidationRCBadge();
     return true;
 }
-
-// --- Valider/Refuser une déclaration HS ---
 function validateHsDeclaration(declarationId, status, comment) {
     const decl = hsDeclarations.find(d => d.id === declarationId);
     if (!decl) return false;
@@ -3017,8 +2379,6 @@ function validateHsDeclaration(declarationId, status, comment) {
     updateValidationRCBadge();
     return true;
 }
-
-// --- Rendu Mes Compteurs (salarié) ---
 function renderMyCounters() {
     if (!isLoggedIn || !currentUser) return;
     const user = getUserById(currentUser.id) || currentUser;
@@ -3053,13 +2413,7 @@ function renderMyCounters() {
             <div class="counter-main">${formatMinutes(rcSolde)}</div>
             <div class="counter-sub">Heures de repos compensateur disponibles</div>
         </div>
-        <div class="counter-card anc">
-            <div class="counter-label">Ancienneté</div>
-            <div class="counter-main">${ancYears} ans</div>
-            <div class="counter-sub">Entrée le ${user.dateEntree ? new Date(user.dateEntree).toLocaleDateString('fr-FR') : '-'} • ${cpAnc} j. congés anc.</div>
-        </div>`;
-
-    // Historique déclarations
+        `;
     renderHsHistory(user.id);
 }
 
@@ -3087,12 +2441,8 @@ function renderHsHistory(userId) {
         tbody.appendChild(tr);
     });
 }
-
-// --- Rendu Compteurs équipe (manager) ---
 function renderCountersManager() {
     if (!isChefDeService()) return;
-
-    // Filtre UV
     const uvSel = document.getElementById('cm-filter-team');
     if (uvSel && uvSel.options.length <= 1) {
         teams.forEach(t => {
@@ -3141,12 +2491,6 @@ function renderCountersManager() {
     });
 }
 
-function approveHsDecl(id) {
-    validateHsDeclaration(id, 'approved', '');
-    renderCountersManager();
-    if (currentUser) renderMyCounters();
-    generateLeaveList();
-}
 
 let hsRejectId = null;
 function rejectHsDecl(id) {
@@ -3163,7 +2507,6 @@ function rejectHsDecl(id) {
     document.getElementById('approve-rc-quick').style.display = 'none';
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
-// ========== HISTORIQUE DEMANDES ==========
 let _historyType = 'rc', _historyStatus = 'approved';
 
 function showHistoryModal(type, status) {
@@ -3175,8 +2518,6 @@ function showHistoryModal(type, status) {
         cp_rejected: '❌ Historique — Congés CP refusés',
     };
     document.getElementById('history-modal-title').textContent = titles[`${type}_${status}`] || 'Historique';
-
-    // Remplir filtre salariés
     const empSel = document.getElementById('history-filter-emp');
     empSel.innerHTML = '<option value="all">Tous les salariés</option>';
     users.filter(u => u.role === 'employé').sort((a,b) => a.name.localeCompare(b.name,'fr')).forEach(u => {
@@ -3184,8 +2525,6 @@ function showHistoryModal(type, status) {
         opt.value = u.id; opt.textContent = u.name;
         empSel.appendChild(opt);
     });
-
-    // Remplir filtre mois
     const monthSel = document.getElementById('history-filter-month');
     monthSel.innerHTML = '<option value="all">Tous les mois</option>';
     const months = new Set();
@@ -3207,7 +2546,6 @@ function showHistoryModal(type, status) {
 function getAllHistoryRows(type, status) {
     const rows = [];
     if (type === 'cp') {
-        // Grouper les CP par salarié + statut, puis détecter les plages consécutives
         const byUser = {};
         Object.values(leaves).filter(l => l.type === 'CP' && l.status === status).forEach(l => {
             const key = `${l.userId}`;
@@ -3218,20 +2556,16 @@ function getAllHistoryRows(type, status) {
         Object.values(byUser).forEach(userLeaves => {
             const user = getUserById(userLeaves[0].userId);
             if (!user) return;
-            // Trier par date
             userLeaves.sort((a, b) => a.date.localeCompare(b.date));
-            // Regrouper en plages consécutives
             const ranges = [];
             let current = null;
             userLeaves.forEach(l => {
                 if (!current) {
                     current = { dates: [l.date], comment: l.comment, validationComment: l.validationComment, validationDate: l.validationDate, dateRequested: l.dateRequested };
                 } else {
-                    // Vérifier si date est le lendemain (en jours ouvrés ou calendaires)
                     const last = new Date(current.dates[current.dates.length - 1]);
                     const curr = new Date(l.date);
                     const diff = (curr - last) / (1000 * 3600 * 24);
-                    // Consécutifs si diff ≤ 3 (pour couvrir week-ends)
                     if (diff <= 3) {
                         current.dates.push(l.date);
                     } else {
@@ -3261,10 +2595,8 @@ function getAllHistoryRows(type, status) {
                 });
             });
         });
-        // Trier par date décroissante
         rows.sort((a, b) => b.date.localeCompare(a.date));
     } else {
-        // RC absences
         Object.values(leaves).filter(l => l.type === 'RC' && l.status === status).forEach(l => {
             const user = getUserById(l.userId);
             if (!user) return;
@@ -3276,7 +2608,6 @@ function getAllHistoryRows(type, status) {
                 decidedAt: l.validationDate || l.dateRequested,
                 status: l.status });
         });
-        // Crédit RC
         rcCreditRequests.filter(r => r.status === status).forEach(r => {
             const user = getUserById(r.userId);
             if (!user) return;
@@ -3288,7 +2619,6 @@ function getAllHistoryRows(type, status) {
                 decidedAt: r.validationDate || r.dateRequested,
                 status: r.status });
         });
-        // Échanges
         rcExchangeRequests.filter(r => r.status === status).forEach(r => {
             const user = getUserById(r.userId);
             if (!user) return;
@@ -3300,7 +2630,6 @@ function getAllHistoryRows(type, status) {
                 decidedAt: r.validationDate || r.dateRequested,
                 status: r.status });
         });
-        // Déclarations HS
         hsDeclarations.filter(d => d.status === status).forEach(d => {
             const user = getUserById(d.userId);
             if (!user) return;
@@ -3431,9 +2760,7 @@ function submitRCExchange(colleagueId, colleagueName, dateGive, startGive, endGi
         userId: currentUser.id,
         colleagueId: colleagueId === 'other' ? null : parseInt(colleagueId),
         colleagueName: displayName,
-        // Ligne 1 : je travaille
         dateGive, startGive, endGive, durGive,
-        // Ligne 2 : mon collègue travaille à ma place
         dateReceive, startReceive, endReceive, durReceive,
         motif: motif.trim(),
         status: 'pending',
@@ -3444,7 +2771,6 @@ function submitRCExchange(colleagueId, colleagueName, dateGive, startGive, endGi
     });
 
     showNotification(`Demande d'échange envoyée avec ${displayName} ✅`, 'success');
-    // Notifier le chef de service
     const chefId = getChefDeServiceOf(currentUser);
     sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'new_exchange_request', {
         userName: currentUser.name, colleagueName: displayName,
@@ -3466,7 +2792,6 @@ function validateRCExchange(requestId, status, comment) {
     req.validationDate = todayStr();
 
     if (status === 'approved') {
-        // Échange validé : pas de modification de solde RC (c'est un échange de jours travaillés)
         if (currentUser && user.id === currentUser.id) updateBalances();
         if (!userNotifications[user.id]) userNotifications[user.id] = [];
         userNotifications[user.id].push({
@@ -3501,8 +2826,6 @@ function validateRCExchange(requestId, status, comment) {
     }
     return true;
 }
-
-// Refus d'échange via mini-modal
 let rcExchangeRejectId = null;
 function rejectRCExchange(requestId) {
     const req = rcExchangeRequests.find(r => r.id === requestId);
@@ -3526,12 +2849,8 @@ function rejectRCExchange(requestId) {
     document.getElementById('approve-rc-quick').style.display = 'none';
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
-
-// ========== RENDU ONGLET VALIDATION RC ==========
 function renderValidationRC() {
     if (!isChefDeService()) return;
-
-    // ========== SECTION CP ==========
     const allCP = Object.values(leaves).filter(l => l.type === 'CP');
     const cpPending  = allCP.filter(l => l.status === 'pending');
     const cpApproved = allCP.filter(l => l.status === 'approved');
@@ -3540,11 +2859,7 @@ function renderValidationRC() {
     document.getElementById('cp-count-pending').textContent  = cpPending.length;
     document.getElementById('cp-count-approved').textContent = cpApproved.length;
     document.getElementById('cp-count-rejected').textContent = cpRejected.length;
-
-    // Uniquement les CP en attente de validation
     let cpRows = allCP.filter(l => l.status === 'pending');
-
-    // Regrouper par salarié + plage de dates consécutives
     const cpGroups = {};
     cpRows.forEach(l => {
         const key = `${l.userId}-${l.status}`;
@@ -3571,15 +2886,11 @@ function renderValidationRC() {
             if (isPending) tr.classList.add('row-pending');
             const statusLabels = { pending: '⏳ En attente', approved: '✅ Validé', rejected: '❌ Refusé', cancellation_requested: '🔄 Annulation' };
             const statusHtml = `<span class="status-badge ${grp.status}">${statusLabels[grp.status] || grp.status}</span>`;
-
-            // Actions par groupe de dates
             const datesParam = JSON.stringify(sorted);
             const actionsHtml = isPending
                 ? `<button class="btn btn-success btn-sm" onclick='approveCP(${grp.userId}, ${JSON.stringify(sorted)})' style="margin-right:4px;">✓ Valider</button>
                    <button class="btn btn-danger btn-sm"  onclick='rejectCP(${grp.userId}, ${JSON.stringify(sorted)})'>✗ Refuser</button>`
                 : (grp.validationComment ? `<em style="font-size:0.8rem;color:#7f8c8d;">${grp.validationComment}</em>` : '-');
-
-            // Détecter conflits CP : d'autres salariés en attente sur les mêmes dates
             const cpConflicts = [];
             if (isPending) {
                 sorted.forEach(d => {
@@ -3609,8 +2920,6 @@ function renderValidationRC() {
             cpTbody.appendChild(tr);
         });
     }
-
-    // ---- Détection des conflits : 2+ salariés demandent RC le même jour ----
     let conflictBanner = document.getElementById('rc-conflict-banner');
     if (!conflictBanner) {
         conflictBanner = document.createElement('div');
@@ -3618,8 +2927,6 @@ function renderValidationRC() {
         document.getElementById('rc-summary').after(conflictBanner);
     }
     conflictBanner.innerHTML = '';
-
-    // Grouper les demandes RC en attente par date
     const pendingByDate = {};
     Object.values(leaves).filter(l => l.type === 'RC' && l.status === 'pending').forEach(l => {
         if (!pendingByDate[l.date]) pendingByDate[l.date] = [];
@@ -3689,8 +2996,6 @@ function renderValidationRC() {
     if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7f8c8d;padding:16px;">Aucune demande d\'absence RC</td></tr>';
     }
-
-    // Construire le set des dates en conflit pour les lignes
     const conflictDatesSet = new Set(conflicts.map(([date]) => date));
     const conflictNamesMap = {};
     conflicts.forEach(([date, ls]) => {
@@ -3735,8 +3040,6 @@ function renderValidationRC() {
             <td style="white-space:nowrap;">${actionsHtml}</td>`;
         tbody.appendChild(tr);
     });
-
-    // ---- Section 2 : demandes de crédit RC ----
     let creditSection = document.getElementById('rc-credit-section');
     if (!creditSection) {
         creditSection = document.createElement('div');
@@ -3787,7 +3090,6 @@ function renderValidationRC() {
             const statusHtml = `<span class="status-badge ${req.status}">${statusLabels[req.status] || req.status}</span>`;
             const newBalance = user.balances.RC + req.durationMin;
             const isPaid = req.mode === 'paid';
-            // Alerte plafond paiement
             let capWarningHtml = '';
             if (isPaid && isPending) {
                 const cap = getHsPaidCap(user);
@@ -3834,8 +3136,6 @@ function renderValidationRC() {
             creditTbody.appendChild(tr);
         });
     }
-
-    // ---- Section 3 : échanges d'heures RC ----
     let exchangeSection = document.getElementById('rc-exchange-section');
     if (!exchangeSection) {
         exchangeSection = document.createElement('div');
@@ -3905,22 +3205,16 @@ function renderValidationRC() {
         });
     }
 }
-
-// Validation directe crédit RC (approbation sans commentaire)
 function approveRCCredit(requestId) {
     validateRCCredit(requestId, 'approved', '');
     renderValidationRC();
     generateLeaveList();
 }
-
-// Validation directe échange RC
 function approveRCExchange(requestId) {
     validateRCExchange(requestId, 'approved', '');
     renderValidationRC();
     generateLeaveList();
 }
-
-// Refus crédit RC via mini-modal
 let rcCreditRejectId = null;
 function rejectRCCredit(requestId) {
     const req = rcCreditRequests.find(r => r.id === requestId);
@@ -3941,22 +3235,17 @@ function rejectRCCredit(requestId) {
     document.getElementById('approve-rc-quick').style.display = 'none';
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
-
-// Validation rapide depuis l'onglet (avec modal de commentaire si refus)
 function quickValidateRC(dateStr, action) {
     const leave = leaves[dateStr];
     if (!leave) return;
     const user = getUserById(leave.userId);
 
     if (action === 'approved') {
-        // Validation directe sans commentaire
         validateLeave(dateStr, 'approved', '');
         renderValidationRC();
         renderCalendar();
         return;
     }
-
-    // Pour le refus : ouvrir un mini-modal
     rcQuickDate = dateStr;
     document.getElementById('rc-quick-modal-title').textContent = `Refuser la demande RC de ${user ? user.name : '?'}`;
     document.getElementById('rc-quick-modal-body').innerHTML = `
@@ -3970,12 +3259,9 @@ function quickValidateRC(dateStr, action) {
             <textarea id="rc-quick-comment" placeholder="Indiquez la raison du refus" style="min-height:80px;"></textarea>
         </div>
     `;
-    // Cacher le bouton Valider (on est sur refus)
     document.getElementById('approve-rc-quick').style.display = 'none';
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
-
-// ========== GESTION DES SALARIÉS ==========
 function addUser(name, email, username, password, role, managerId, cp, rc) {
     if (!name || !email || !username || !password) { showNotification('Champs obligatoires manquants', 'error'); return false; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showNotification("Email invalide", 'error'); return false; }
@@ -4021,7 +3307,6 @@ function editUser(id, name, email, username, password, role, managerId, cp, rc) 
     user.teamId = editTeamVal ? parseInt(editTeamVal) : null;
     user.balances.CP = parseInt(cp)||0;
     user.balances.RC = parseRCInput(rc);
-    // Appliquer mustChangePassword depuis la checkbox
     const mustChange = document.getElementById('edit-must-change-pwd');
     if (mustChange) user.mustChangePassword = mustChange.checked;
     if (user.id === currentUser.id) { currentUser = { ...user }; updateUIForCurrentUser(); }
@@ -4043,8 +3328,6 @@ function deleteUser(id) {
     renderUsersList();
     return true;
 }
-
-// ========== SÉLECTION DATES ==========
 function resetRangeSelection() {
     selectedDates = []; isSelectingRange = false; firstSelectedDate = null;
     document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('selected'));
@@ -4054,25 +3337,18 @@ function resetRangeSelection() {
 
 function handleDateClick(dateStr) {
     if (!isLoggedIn || isPastDate(dateStr)) return;
-
-    // Congé existant → annuler ou ignorer
     const myLeave = getUserLeaveOnDate(currentUser.id, dateStr);
     if (myLeave) {
         if (myLeave.status === 'approved') showCancelLeaveModal(dateStr);
         resetRangeSelection();
         return;
     }
-
-    // Chef : valider un congé en attente au clic
     if (isChefDeService()) {
         const pendingLeaves = getLeavesOnDate(dateStr).filter(l => l.status === 'pending' && l.userId !== currentUser.id);
         if (pendingLeaves.length > 0) { showValidateLeaveModal(dateStr, pendingLeaves[0]); return; }
         return;
     }
-
-    // ── Sélection multi-dates ──
     if (!isSelectingRange) {
-        // 1er clic : début de plage
         resetRangeSelection();
         firstSelectedDate = dateStr;
         selectedDates = [dateStr];
@@ -4080,7 +3356,6 @@ function handleDateClick(dateStr) {
         highlightRange(dateStr, dateStr);
         showRangeInfo(dateStr, null);
     } else {
-        // 2e clic : fin de plage → ouvrir le modal
         let start = firstSelectedDate, end = dateStr;
         if (end < start) [start, end] = [end, start];
         selectedDates = buildDateRange(start, end);
@@ -4123,12 +3398,12 @@ function showRangeInfo(start, end) {
     });
     if (confirmBtn) confirmBtn.style.display = end && end !== start ? 'inline-block' : 'none';
 }
-
-// ========== CALENDRIER ==========
-function generateCalendar(containerId, year) {
+function generateCalendar(containerId, startYear, startMonth, count=12) {
     const container = document.getElementById(containerId);
     container.innerHTML = '';
-    for (let month = 0; month < 12; month++) {
+    for (let i = 0; i < count; i++) {
+        const month = (startMonth + i) % 12;
+        const year = startYear + Math.floor((startMonth + i) / 12);
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month-card';
         const header = document.createElement('div');
@@ -4178,8 +3453,6 @@ function generateCalendar(containerId, year) {
                 indicator.className = `leave-indicator ${typeClass} ${pendingClass}`.trim();
                 el.appendChild(indicator);
             });
-
-            // Tooltip : tous les congés du jour (collègues + soi-même)
             const allForTooltip = [...teamLeaves, ...ownLeaves];
             if (allForTooltip.length > 0) {
                 const lines = allForTooltip.map(l => {
@@ -4195,12 +3468,8 @@ function generateCalendar(containerId, year) {
                 el.title = lines.join('\n');
                 el.style.cursor = 'help';
             }
-
-            // Cursor
             if (allForTooltip.length > 0) el.style.cursor = isPastDate(dateStr) ? 'pointer' : 'pointer';
             else if (!isPastDate(dateStr)) el.style.cursor = 'pointer';
-
-            // Listener unique
             el.addEventListener('click', () => {
                 if (isPastDate(dateStr)) {
                     if (dayLeaves.length > 0) showLeavesInfoModal(dateStr, dayLeaves);
@@ -4208,7 +3477,6 @@ function generateCalendar(containerId, year) {
                     handleDateClick(dateStr);
                 }
             });
-            // Survol : prévisualiser la plage si sélection en cours
             el.addEventListener('mouseenter', () => {
                 if (!isSelectingRange || !firstSelectedDate || isPastDate(dateStr)) return;
                 const start = firstSelectedDate < dateStr ? firstSelectedDate : dateStr;
@@ -4231,11 +3499,22 @@ function generateCalendar(containerId, year) {
 
 function renderListCalendar() {
     if (!isLoggedIn) return;
-    const listYear = parseInt(document.getElementById('list-current-year').textContent) || new Date().getFullYear();
+    const now = new Date();
+    const baseMonth = now.getMonth() + listOffset;
+    const listStartYear  = now.getFullYear() + Math.floor(baseMonth / 12);
+    const listStartMonth = ((baseMonth % 12) + 12) % 12;
+    const startDate = new Date(listStartYear, listStartMonth, 1);
+    const endDate   = new Date(listStartYear, listStartMonth + 11, 1);
+    document.getElementById('list-current-year').textContent =
+        `${startDate.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})} — ${endDate.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}`;
+    document.getElementById('list-prev-year').disabled = listOffset <= -12;
+    document.getElementById('list-next-year').disabled = listOffset >= 0;
     const container = document.getElementById('list-calendar');
     container.innerHTML = '';
 
-    for (let month = 0; month < 12; month++) {
+    for (let i = 0; i < 12; i++) {
+        const month = (listStartMonth + i) % 12;
+        const listYear = listStartYear + Math.floor((listStartMonth + i) / 12);
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month-card';
         const header = document.createElement('div');
@@ -4289,7 +3568,18 @@ function renderListCalendar() {
 
 function renderCalendar() {
     if (!isLoggedIn) return;
-    document.getElementById('current-year').textContent = currentYear;
+    const now = new Date();
+    const baseMonth = now.getMonth() + calendarOffset;
+    const startYear  = now.getFullYear() + Math.floor(baseMonth / 12);
+    const startMonth = ((baseMonth % 12) + 12) % 12;
+    const startDate  = new Date(startYear, startMonth, 1);
+    const endDate    = new Date(startYear, startMonth + 11, 1);
+    const labelStart = startDate.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+    const labelEnd   = endDate.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+    document.getElementById('current-year').textContent = `${labelStart} — ${labelEnd}`;
+    // Désactiver "précédent" si on est déjà 12 mois en arrière
+    document.getElementById('prev-year').disabled = calendarOffset <= -12;
+    document.getElementById('next-year').disabled = calendarOffset >= 0;
     let legendEl = document.getElementById('team-calendar-legend');
     if (!legendEl) {
         legendEl = document.createElement('div');
@@ -4298,7 +3588,6 @@ function renderCalendar() {
         document.getElementById('calendar-months').before(legendEl);
     }
     if (currentUser && currentUser.teamId && !isChefDeService()) {
-        // Salarié avec équipe : affiche ses congés + ceux de son équipe
         const team = getTeamById(currentUser.teamId);
         legendEl.innerHTML = `
             <span style="font-weight:bold;margin-right:5px;">Légende :</span>
@@ -4308,7 +3597,6 @@ function renderCalendar() {
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#2ecc71;border-radius:2px;"></span> RC (${team ? team.name : 'équipe'})</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:repeating-linear-gradient(45deg,var(--warning-color),var(--warning-color) 3px,#fff3cd 3px,#fff3cd 6px);"></span> En attente</span>`;
     } else if (currentUser && currentUser.teamId && isChefDeService()) {
-        // Chef de service : affiche tous les congés de toutes les équipes
         legendEl.innerHTML = `
             <span style="font-weight:bold;margin-right:5px;">Légende :</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;height:5px;background:#9b59b6;border-radius:2px;"></span> CA équipes</span>
@@ -4319,7 +3607,7 @@ function renderCalendar() {
     } else {
         legendEl.innerHTML = '';
     }
-    generateCalendar('calendar-months', currentYear);
+    generateCalendar('calendar-months', startYear, startMonth);
 }
 
 function renderTeamCalendar() {
@@ -4333,8 +3621,6 @@ function generateLeaveList() {
     renderMyCounters();
     renderListCalendar();
     updateHsBannerDesc();
-
-    // ---- Bannière notifications RC (refus congé + refus/validation crédit) ----
     let notifBanner = document.getElementById('rc-rejection-banner');
     if (!notifBanner) {
         notifBanner = document.createElement('div');
@@ -4362,8 +3648,6 @@ function generateLeaveList() {
             notifBanner.appendChild(card);
         });
     }
-
-    // ---- Tableau ----
     const tbody = document.getElementById('leave-list-body');
     tbody.innerHTML = '';
     const year = document.getElementById('filter-year').value;
@@ -4438,8 +3722,6 @@ function renderUsersList() {
     renderTeamsList();
     const tbody = document.getElementById('users-list-body');
     tbody.innerHTML = '';
-
-    // Mise à jour des icônes de tri
     document.querySelectorAll('.th-sortable').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
         const onclick = th.getAttribute('onclick') || '';
@@ -4448,8 +3730,6 @@ function renderUsersList() {
             th.classList.add(userSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
         }
     });
-
-    // Trier les utilisateurs
     const getValue = (user, field) => {
         if (field === 'id')   return user.id;
         if (field === 'name') return (user.name || '').toLowerCase();
@@ -4492,8 +3772,6 @@ function renderUsersList() {
 function confirmDeleteUser(id) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce salarié ?')) deleteUser(id);
 }
-
-// ========== MODALS ==========
 function showAddLeaveModal() {
     if (!isLoggedIn) return;
     const datesText = selectedDates.length === 1
@@ -4513,15 +3791,12 @@ function showAddLeaveModal() {
     updateBalances();
     document.getElementById('add-leave-modal').classList.add('active');
 }
-
-// ========== AFFICHAGE UNIFIÉ DES NOTIFICATIONS ==========
 function buildNotifDisplay(notif) {
     const OK  = { bg: '#eafaf1', border: '#2ecc71', color: '#1e8449' };
     const ERR = { bg: '#fdf2f2', border: '#e74c3c', color: '#c0392b' };
     const INF = { bg: '#e8f4fc', border: '#3498db', color: '#1a6fad' };
 
     switch (notif.type) {
-        // --- Congés CP/RC ---
         case 'rejection':
             return { ...ERR, icon: '❌',
                 titre: `Demande ${notif.leaveType} refusée — ${formatDateShort(notif.date)} (${notif.duration})`,
@@ -4530,8 +3805,6 @@ function buildNotifDisplay(notif) {
             return { ...OK, icon: '✅',
                 titre: `Congé ${notif.leaveType} validé — ${formatDateShort(notif.date)}`,
                 corps: 'Votre demande de congé a été acceptée.' };
-
-        // --- Crédit RC ---
         case 'credit_approved':
             return { ...OK, icon: '✅',
                 titre: `Crédit RC validé — ${formatDateShort(notif.date)} — <strong style="color:#1e8449;">${notif.duration} crédités</strong>`,
@@ -4540,8 +3813,6 @@ function buildNotifDisplay(notif) {
             return { ...ERR, icon: '❌',
                 titre: `Crédit RC refusé — ${formatDateShort(notif.date)} (${notif.duration})`,
                 corps: `<strong>Motif :</strong> ${notif.motif}` };
-
-        // --- Heures supplémentaires ---
         case 'hs_approved':
             return { ...OK, icon: '✅',
                 titre: `Heures sup validées — ${notif.declType === 'ferie' ? 'Jour férié' : 'Sem. du'} ${formatDateShort(notif.weekStart)} — <strong style="color:#1e8449;">${notif.rcGenerated} crédités</strong>`,
@@ -4567,8 +3838,6 @@ function buildNotifDisplay(notif) {
             return { ...ERR, icon: '🔄',
                 titre: `Échange refusé avec ${notif.colleagueName}`,
                 corps: `<strong>Motif :</strong> ${notif.motif}` };
-
-        // --- Notifications pour chef de service ---
         case 'new_leave_request':
             return { ...INF, icon: '📋',
                 titre: `Nouvelle demande de congé — ${notif.userName}`,
@@ -4630,7 +3899,6 @@ function dismissRCModalNotif(notifId) {
     if (notif) notif.read = true;
     renderRCModalNotifs();
     updateListTabBadge();
-    // Aussi rafraîchir la bannière dans "Mes Congés" si ouverte
     const listBanner = document.getElementById('rc-rejection-banner');
     if (listBanner) generateLeaveList();
 }
@@ -4691,14 +3959,11 @@ function showEditUserModal(id) {
     document.getElementById('edit-user-service').value = user.service || 'jour';
     document.getElementById('edit-user-cp').value = user.balances.CP;
     document.getElementById('edit-user-rc').value = formatMinutes(user.balances.RC);
-
-    // Bouton réinitialiser mot de passe initial
     const resetBtn = document.getElementById('reset-to-initial-btn');
     resetBtn.onclick = () => {
         const initialPwd = user.email.toLowerCase() + 'associationsaintemarie';
         document.getElementById('edit-user-password').value = initialPwd;
         document.getElementById('edit-must-change-pwd').checked = true;
-        // Rendre visible
         document.getElementById('edit-user-password').type = 'text';
         showNotification(`Mot de passe initial prêt — cliquez Sauvegarder pour confirmer`, 'info');
     };
@@ -4718,8 +3983,6 @@ function showEditUserModal(id) {
     });
     document.getElementById('edit-user-modal').classList.add('active');
 }
-
-// ========== EXPORT COMPTEURS CSV ==========
 function exportCountersCSV() {
     const employees = users.filter(u => u.role === 'employé');
     const rows = [['Nom','UV','Ancienneté (ans)','CP acquis','CP ancienneté','CP pris','CP restant','RC solde (min)','RC solde (h)','J. fériés RC']];
@@ -4745,8 +4008,6 @@ function exportCountersCSV() {
     a.href = url; a.download = `compteurs_${todayStr()}.csv`; a.click();
     URL.revokeObjectURL(url);
 }
-
-// ========== IMPORT / EXPORT SOLDES CP & RC ==========
 function exportBalancesCSV() {
     const rows = [['Email', 'Nom', 'UV', 'CP', 'RC']];
     users.filter(u => u.role === 'employé' || u.role === 'chef(fe) de service').forEach(user => {
@@ -4774,21 +4035,17 @@ function importBalancesCSV(file) {
     const reader = new FileReader();
     reader.onload = e => {
         const lines = e.target.result.replace(/\r/g,'').split('\n').filter(l => l.trim());
-        // Skip header line if it starts with "Email" or "email"
         const dataLines = lines[0].toLowerCase().startsWith('email') ? lines.slice(1) : lines;
         let updated = 0, errors = [];
         dataLines.forEach((line, idx) => {
             const parts = line.split(';').map(s => s.trim());
             if (parts.length < 2) return;
             const [email, ...rest] = parts;
-            // Format: email;CP;RC  OR  email;RC  (detect by checking if 2nd field is a number without h)
             let cp = null, rc = null;
             if (rest.length >= 2) {
-                // email;CP;RC
                 cp = parseInt(rest[0]);
                 rc = parseRCInput(rest[1]);
             } else if (rest.length === 1) {
-                // email;RC only
                 rc = parseRCInput(rest[0]);
             }
             const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -4809,8 +4066,6 @@ function importBalancesCSV(file) {
     };
     reader.readAsText(file, 'UTF-8');
 }
-
-// ========== CONNEXION RAPIDE (TEST) ==========
 function quickLogin(type) {
     let user = null;
     if (type === 'salarie') {
@@ -4823,7 +4078,6 @@ function quickLogin(type) {
         user = users.find(u => u.role === 'admin');
     }
     if (!user) { showNotification('Aucun compte trouvé pour ce rôle', 'error'); return; }
-    // Connexion directe sans vérification de mot de passe
     currentUser = user;
     isLoggedIn = true;
     currentYear = new Date().getFullYear();
@@ -4842,19 +4096,13 @@ function populateTestSalarieSelect() {
     const sel = document.getElementById('test-salarie-select');
     if (!sel) return;
     sel.innerHTML = '<option value="">-- Choisir un salarié --</option>';
-    const employees = users
-        .filter(u => u.role === 'employé' && !u.username.includes('test'))
-        .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-    employees.forEach(u => {
-        const opt = document.createElement('option');
-        opt.value = u.id;
-        const team = getTeamById(u.teamId);
-        opt.textContent = `${u.name}${team ? ' — ' + team.name : ''}`;
-        sel.appendChild(opt);
-    });
+    users.filter(u => u.role === 'employé' && !u.username.includes('test'))
+        .sort((a,b) => a.name.localeCompare(b.name,'fr'))
+        .forEach(u => {
+            const t = getTeamById(u.teamId);
+            sel.innerHTML += `<option value="${u.id}">${u.name}${t?' — '+t.name:''}</option>`;
+        });
 }
-
-// ========== PERSISTANCE DONNÉES (localStorage + JSON) ==========
 const STORAGE_KEY = 'monvillage_v1';
 
 function saveToStorage() {
@@ -4882,7 +4130,6 @@ function loadFromStorage() {
         if (!raw) return false;
         const data = JSON.parse(raw);
         if (!data.version || !data.users) return false;
-        // Restaurer les données
         users.length = 0;
         data.users.forEach(u => users.push(u));
         teams.length = 0;
@@ -4968,63 +4215,9 @@ function importDataJSON(file) {
     };
     reader.readAsText(file, 'UTF-8');
 }
-
-// Auto-save après chaque action importante
 function autoSave() { saveToStorage(); }
-
-// ========== POPUP CONGÉS CALENDRIER ==========
 let _popupEl = null;
 
-function showLeavesPopup(event, dateStr, teamLeaves) {
-    event.stopPropagation();
-
-    // Supprimer popup existant
-    if (_popupEl) { _popupEl.remove(); _popupEl = null; }
-
-    const popup = document.createElement('div');
-    popup.className = 'leave-popup';
-
-    popup.innerHTML = `<div class="leave-popup-title">${formatDateShort(dateStr)}</div>`;
-
-    teamLeaves.forEach(leave => {
-        const user = getUserById(leave.userId);
-        if (!user) return;
-        const team = getTeamById(user.teamId);
-        const statusLabel = { approved: '✅', pending: '⏳', rejected: '❌' }[leave.status] || '';
-        const durLabel = leave.type === 'RC' && leave.durationMin ? ` — ${formatMinutes(leave.durationMin)}` : '';
-        const dotColor = leave.type === 'CP' ? '#9b59b6' : '#2ecc71';
-        const serviceLabel = user.service === 'nuit' ? '🌙' : '☀️';
-        popup.innerHTML += `
-            <div class="leave-popup-row">
-                <div class="leave-popup-dot" style="background:${dotColor};"></div>
-                <div style="flex:1;">
-                    <div class="leave-popup-name">${user.name}</div>
-                    <div class="leave-popup-info">${serviceLabel} ${team?.name || '-'} — ${leave.type}${durLabel} ${statusLabel}</div>
-                </div>
-            </div>`;
-    });
-
-    document.body.appendChild(popup);
-    _popupEl = popup;
-
-    // Positionnement simple basé sur clientX/clientY
-    const x = event.clientX;
-    const y = event.clientY;
-    const pw = 260, ph = popup.offsetHeight || 120;
-
-    popup.style.left = `${Math.min(x + 8, window.innerWidth - pw - 10) + window.scrollX}px`;
-    popup.style.top  = `${(y + ph + 10 > window.innerHeight ? y - ph - 8 : y + 8) + window.scrollY}px`;
-
-    // Fermer au prochain clic n'importe où
-    setTimeout(() => {
-        document.addEventListener('click', function _close() {
-            if (_popupEl) { _popupEl.remove(); _popupEl = null; }
-            document.removeEventListener('click', _close);
-        });
-    }, 50);
-}
-
-// ========== TOGGLE MOT DE PASSE ==========
 function togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -5032,11 +4225,7 @@ function togglePassword(inputId, btn) {
     input.type = isHidden ? 'text' : 'password';
     btn.textContent = isHidden ? '🙈' : '👁';
 }
-
-// ========== INITIALISATION ==========
-// ========== INFO MODAL CONGÉS (clic sur date) ==========
 function showLeavesInfoModal(dateStr, dayLeaves) {
-    // Construire un message simple avec les congés du jour
     const lines = dayLeaves.map(l => {
         const u = getUserById(l.userId);
         const t = getTeamById(u?.teamId);
@@ -5061,8 +4250,6 @@ function showLeavesInfoModal(dateStr, dayLeaves) {
     document.getElementById('reject-rc-quick').style.display = 'none';
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
-
-// ========== BANDEAU HS (global) ==========
 function updateHsBannerDesc() {
     const desc = document.getElementById('hs-banner-desc');
     const paidBtn = document.getElementById('open-credit-rc-paid-btn');
@@ -5081,7 +4268,6 @@ function updateHsBannerDesc() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ---- Chargement depuis localStorage (si données sauvegardées) ----
     const loaded = loadFromStorage();
     if (loaded) {
         const statusEl = document.getElementById('storage-status');
@@ -5094,8 +4280,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-history-modal').addEventListener('click', () => {
         document.getElementById('history-modal').classList.remove('active');
     });
-
-    // Cloche notifications
     document.getElementById('notif-bell-btn').addEventListener('click', () => {
         if (!isLoggedIn) return;
         inboxTab = 'all';
@@ -5143,12 +4327,9 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false; btn.textContent = 'Réinitialiser';
         }
     });
-
-    // Type de congé
     document.getElementById('leave-type').addEventListener('change', function() {
         const isRC = this.value === 'RC';
         document.getElementById('rc-options').style.display = isRC ? 'block' : 'none';
-        // Afficher les notifications refus RC uniquement quand RC est sélectionné
         renderRCModalNotifs();
         if (!isRC) document.getElementById('rc-modal-notifs').style.display = 'none';
         updateRCPreview();
@@ -5233,14 +4414,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     document.getElementById('user-menu-btn').addEventListener('click', () => { if (isLoggedIn) showUserMenuModal(); });
-
-    // Navigation Mes Congés
     let listYear = new Date().getFullYear();
     document.getElementById('list-current-year').textContent = listYear;
-    document.getElementById('list-prev-year').addEventListener('click', () => { if (!isLoggedIn) return; listYear--; document.getElementById('list-current-year').textContent = listYear; renderListCalendar(); });
-    document.getElementById('list-next-year').addEventListener('click', () => { if (!isLoggedIn) return; listYear++; document.getElementById('list-current-year').textContent = listYear; renderListCalendar(); });
-
-    // Navigation onglets
+    document.getElementById('list-prev-year').addEventListener('click', () => { if (!isLoggedIn||listOffset<=-12) return; listOffset--; renderListCalendar(); });
+    document.getElementById('list-next-year').addEventListener('click', () => { if (!isLoggedIn||listOffset>=0) return; listOffset++; renderListCalendar(); });
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             if (!isLoggedIn) return;
@@ -5267,13 +4444,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             else if (view === 'dashboard') renderMyCounters();
             else if (view === 'counters-manager') {
-                // Cacher toutes les sections de validation dynamiques
                 ['rc-credit-section','rc-exchange-section','rc-conflict-banner',
                  'rc-validation-table','cp-validation-section','rc-summary','cp-summary'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'none';
                 });
-                // Cacher aussi le parent du tableau RC (overflow-x:auto div)
                 const rcTable = document.getElementById('rc-validation-table');
                 if (rcTable && rcTable.parentNode) rcTable.parentNode.style.display = 'none';
                 renderCountersManager();
@@ -5281,8 +4456,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (view === 'admin') renderUsersList();
         });
     });
-
-    // ---- Formulaire Heures Supplémentaires ----
     const hsHoursInput = document.getElementById('hs-hours-total');
     if (hsHoursInput) hsHoursInput.addEventListener('input', () => {
         const h = parseFloat(document.getElementById('hs-hours-total').value);
@@ -5309,8 +4482,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderMyCounters();
         }
     });
-
-    // ---- Filtre compteurs équipe ----
     const cmApplyBtn = document.getElementById('cm-apply-filter');
     if (cmApplyBtn) cmApplyBtn.addEventListener('click', renderCountersManager);
     const exportCountersBtn = document.getElementById('export-counters-btn');
@@ -5327,12 +4498,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = '';
     });
 
-    document.getElementById('prev-year').addEventListener('click', () => { if (!isLoggedIn) return; currentYear--; renderCalendar(); });
-    document.getElementById('next-year').addEventListener('click', () => { if (!isLoggedIn) return; currentYear++; renderCalendar(); });
+    document.getElementById('prev-year').addEventListener('click', () => { if (!isLoggedIn||calendarOffset<=-12) return; calendarOffset--; renderCalendar(); });
+    document.getElementById('next-year').addEventListener('click', () => { if (!isLoggedIn||calendarOffset>=0) return; calendarOffset++; renderCalendar(); });
     document.getElementById('team-prev-year').addEventListener('click', () => { if (!isLoggedIn || !isChefDeService()) return; currentYear--; renderTeamCalendar(); });
     document.getElementById('team-next-year').addEventListener('click', () => { if (!isLoggedIn || !isChefDeService()) return; currentYear++; renderTeamCalendar(); });
-
-    // Filtres Mes Congés
     document.getElementById('apply-filters').addEventListener('click', () => { if (isLoggedIn) generateLeaveList(); });
     document.getElementById('reset-filters').addEventListener('click', () => {
         if (!isLoggedIn) return;
@@ -5341,8 +4510,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('filter-status').value = 'all';
         generateLeaveList();
     });
-
-    // Filtres Validation RC
     document.getElementById('rc-apply-filters').addEventListener('click', () => { if (isLoggedIn && isChefDeService()) renderValidationRC(); });
     document.getElementById('rc-reset-filters').addEventListener('click', () => {
         if (!isLoggedIn || !isChefDeService()) return;
@@ -5350,9 +4517,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rc-filter-employee').value = 'all';
         renderValidationRC();
     });
-
-    // ---- Modal: déclarer heures RC (crédit) ----
-    // ---- Boutons HS dans Mes Congés ----
     function openCreditModal(mode) {
         if (!isLoggedIn) return;
         const user = getUserById(currentUser.id);
@@ -5363,7 +4527,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('credit-rc-preview').innerHTML = '';
         document.getElementById('credit-rc-current-balance').textContent = formatMinutes(currentUser.balances.RC);
         document.getElementById('credit-rc-future-balance').textContent = formatMinutes(currentUser.balances.RC);
-        // Pré-sélectionner le mode
         if (mode === 'paid') {
             document.getElementById('hs-mode-paid').checked = true;
         } else {
@@ -5377,8 +4540,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const openPaidBtn = document.getElementById('open-credit-rc-paid-btn');
     if (openRcBtn)   openRcBtn.addEventListener('click',   () => openCreditModal('rc'));
     if (openPaidBtn) openPaidBtn.addEventListener('click', () => openCreditModal('paid'));
-
-    // Aussi garder l'ancien bouton dans Mes Compteurs si présent
     const oldCreditBtn = document.getElementById('open-credit-rc-btn');
     if (oldCreditBtn) oldCreditBtn.addEventListener('click', () => openCreditModal('rc'));
 
@@ -5407,8 +4568,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateCreditRCPreview();
     }
-
-    // Changer mode RC/Payé
     document.querySelectorAll('input[name="hs-mode"]').forEach(radio => {
         radio.addEventListener('change', updateCreditCapWarning);
     });
@@ -5481,8 +4640,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeCreditRC = () => document.getElementById('credit-rc-modal').classList.remove('active');
     document.getElementById('cancel-credit-rc').addEventListener('click', closeCreditRC);
     document.getElementById('close-credit-rc-modal').addEventListener('click', closeCreditRC);
-
-    // ---- Modal: échange d'heures RC ----
     document.getElementById('open-exchange-btn').addEventListener('click', () => {
         if (!isLoggedIn) return;
         const sel = document.getElementById('exchange-colleague');
@@ -5560,8 +4717,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeExchange = () => document.getElementById('exchange-rc-modal').classList.remove('active');
     document.getElementById('cancel-exchange').addEventListener('click', closeExchange);
     document.getElementById('close-exchange-modal').addEventListener('click', closeExchange);
-
-    // Modal: ajouter congé
     document.getElementById('confirm-add-leave').addEventListener('click', () => {
         if (!isLoggedIn) return;
         const type = document.getElementById('leave-type').value;
@@ -5583,8 +4738,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.getElementById('cancel-add-leave').addEventListener('click', resetLeaveModal);
     document.getElementById('close-add-leave-modal').addEventListener('click', resetLeaveModal);
-
-    // Modal: annuler congé
     document.getElementById('confirm-cancel-leave').addEventListener('click', () => {
         if (!isLoggedIn) return;
         const reason = document.getElementById('cancel-reason').value.trim();
@@ -5594,8 +4747,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('cancel-cancel-leave').addEventListener('click', () => { document.getElementById('cancel-leave-modal').classList.remove('active'); });
     document.getElementById('close-cancel-leave-modal').addEventListener('click', () => { document.getElementById('cancel-leave-modal').classList.remove('active'); });
-
-    // Modal: valider congé
     document.getElementById('approve-leave').addEventListener('click', () => {
         if (!isLoggedIn || !isChefDeService()) return;
         const dateStr = document.getElementById('validate-leave-modal').dataset.date;
@@ -5619,8 +4770,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('cancel-validation').addEventListener('click', () => { document.getElementById('validate-leave-modal').classList.remove('active'); });
     document.getElementById('close-validate-leave-modal').addEventListener('click', () => { document.getElementById('validate-leave-modal').classList.remove('active'); });
-
-    // Modal: validation RC rapide (refus)
     document.getElementById('close-rc-quick-modal').addEventListener('click', () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
@@ -5666,8 +4815,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('approve-rc-quick').style.display = '';
         renderValidationRC(); updateValidationRCBadge(); updateListTabBadge(); renderCalendar();
     });
-
-    // Équipes
     renderTeamsList();
     document.getElementById('add-team-btn').addEventListener('click', () => showTeamModal());
     document.getElementById('close-team-modal').addEventListener('click', () => { document.getElementById('team-modal').classList.remove('active'); });
@@ -5678,11 +4825,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ok = id ? renameTeam(parseInt(id), name) : addTeam(name);
         if (ok) document.getElementById('team-modal').classList.remove('active');
     });
-
-    // Ajouter salarié
     document.getElementById('add-user-btn').addEventListener('click', showAddUserModal);
-
-    // ---- Sauvegarde JSON ----
     document.getElementById('export-json-btn').addEventListener('click', exportDataJSON);
 
     document.getElementById('import-json-btn').addEventListener('click', () => {
@@ -5700,8 +4843,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification('🔄 Données réinitialisées — rechargement...', 'info');
         setTimeout(() => location.reload(), 1500);
     });
-
-    // Import / Export soldes
     document.getElementById('export-balances-btn').addEventListener('click', exportBalancesCSV);
 
     document.getElementById('import-balances-btn').addEventListener('click', () => {
@@ -5716,7 +4857,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification('Veuillez sélectionner un fichier .csv', 'error'); return;
         }
         importBalancesCSV(file);
-        e.target.value = ''; // reset input
+        e.target.value = '';
     });
     document.getElementById('confirm-add-user').addEventListener('click', () => {
         if (!isLoggedIn || !isAdmin()) return;
@@ -5735,8 +4876,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('cancel-add-user').addEventListener('click', () => { document.getElementById('add-user-modal').classList.remove('active'); });
     document.getElementById('close-add-user-modal').addEventListener('click', () => { document.getElementById('add-user-modal').classList.remove('active'); });
-
-    // Éditer salarié
     document.getElementById('confirm-edit-user').addEventListener('click', () => {
         if (!isLoggedIn || !isAdmin()) return;
         const ok = editUser(
@@ -5754,8 +4893,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('cancel-edit-user').addEventListener('click', () => { document.getElementById('edit-user-modal').classList.remove('active'); });
     document.getElementById('close-edit-user-modal').addEventListener('click', () => { document.getElementById('edit-user-modal').classList.remove('active'); });
-
-    // Menu utilisateur
     document.getElementById('close-user-menu-modal').addEventListener('click', () => { document.getElementById('user-menu-modal').classList.remove('active'); });
     document.getElementById('change-password-btn').addEventListener('click', () => {
         document.getElementById('user-menu-modal').classList.remove('active');
@@ -5764,8 +4901,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('confirm-password').value = '';
         document.getElementById('change-password-modal').classList.add('active');
     });
-
-    // Changer mot de passe
     document.getElementById('confirm-change-password').addEventListener('click', () => {
         if (!isLoggedIn) return;
         const cp = document.getElementById('current-password').value;
@@ -5775,8 +4910,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('cancel-change-password').addEventListener('click', () => { document.getElementById('change-password-modal').classList.remove('active'); });
     document.getElementById('close-change-password-modal').addEventListener('click', () => { document.getElementById('change-password-modal').classList.remove('active'); });
-
-    // Fermer modals en cliquant à l'extérieur
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', e => {
             if (e.target === overlay) {
@@ -5795,6 +4928,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+
+
 </script>
 </body>
 </html>
