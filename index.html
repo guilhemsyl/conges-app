@@ -3070,7 +3070,7 @@ function renderValidationRC() {
                 });
             }
             const conflictHtml = cpConflicts.length > 0
-                ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${cpConflicts.join(', ')}</span>`
+                ? `<br><span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${cpConflicts.join(', ')}<button onclick="this.closest('span').remove()" style="background:none;border:none;color:white;cursor:pointer;font-size:0.9rem;line-height:1;padding:0 0 0 4px;" title="Fermer">×</button></span>`
                 : '';
 
             tr.innerHTML = `
@@ -3102,8 +3102,9 @@ function renderValidationRC() {
     const conflicts = Object.entries(pendingByDate).filter(([, ls]) => ls.length >= 2);
     if (conflicts.length > 0) {
         const alertDiv = document.createElement('div');
-        alertDiv.style.cssText = 'background:#fff3cd;border:1.5px solid #f39c12;border-radius:8px;padding:14px 16px;margin-bottom:18px;';
-        let html = `<div style="font-weight:bold;color:#856404;margin-bottom:8px;font-size:0.95rem;">
+        alertDiv.style.cssText = 'background:#fff3cd;border:1.5px solid #f39c12;border-radius:8px;padding:14px 16px;margin-bottom:18px;position:relative;';
+        let html = `<button onclick="this.closest('div').remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#856404;line-height:1;" title="Fermer">×</button>
+            <div style="font-weight:bold;color:#856404;margin-bottom:8px;font-size:0.95rem;">
             ⚠️ ${conflicts.length} conflit(s) détecté(s) — plusieurs salariés demandent RC les mêmes jours
         </div><ul style="margin:0;padding-left:18px;font-size:0.88rem;color:#664d03;">`;
         conflicts.sort((a,b) => a[0].localeCompare(b[0])).forEach(([date, ls]) => {
@@ -3184,9 +3185,7 @@ function renderValidationRC() {
         const volumeHtml = `${formatMinutes(dur)}${plafonne ? ' <span class="plafonne-badge">⚠️ plafonné</span>' : ''}`;
         const statusLabel = { pending: '⏳ En attente', approved: '✅ Validé', rejected: '❌ Refusé' };
         const conflictBadge = isConflict
-            ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">
-                ⚠️ Conflit — ${conflictNamesMap[dateStr]}
-               </span>`
+            ? `<br><span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${conflictNamesMap[dateStr]}<button onclick="this.closest('span').remove()" style="background:none;border:none;color:white;cursor:pointer;font-size:0.9rem;line-height:1;padding:0 0 0 4px;" title="Fermer">×</button></span>`
             : '';
         const statusHtml = `<span class="status-badge ${leave.status}">${statusLabel[leave.status] || leave.status}</span>${conflictBadge}`;
         let actionsHtml = '-';
