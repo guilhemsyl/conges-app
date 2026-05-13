@@ -4310,6 +4310,7 @@ function quickLogin(type) {
     if (!user) { showNotification('Aucun compte trouvé pour ce rôle', 'error'); return; }
     currentUser = user;
     isLoggedIn = true;
+    window._isLoggedIn = true;
     currentYear = new Date().getFullYear();
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-container').style.display = 'block';
