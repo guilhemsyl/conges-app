@@ -3017,6 +3017,32 @@ function rejectRCExchange(requestId) {
     document.getElementById('approve-rc-quick').style.display = 'none';
     document.getElementById('rc-quick-validate-modal').classList.add('active');
 }
+
+function confirmRejectRCExchange(requestId, comment) {
+    const req = rcExchangeRequests.find(r => r.id === requestId);
+    if (!req) return;
+    const user = getUserById(req.userId);
+    req.status = 'rejected';
+    req.validationComment = comment;
+    req.validatedBy = currentUser.id;
+    req.validationDate = todayStr();
+    if (!userNotifications[user.id]) userNotifications[user.id] = [];
+    userNotifications[user.id].push({
+        id: 'notif-exc-reject-' + Date.now(),
+        type: 'exchange_rejected',
+        colleagueName: req.colleagueName,
+        dateGive: req.dateGive,
+        dateReceive: req.dateReceive,
+        motif: comment || 'Aucun motif précisé',
+        createdAt: req.validationDate,
+        read: false
+    });
+    showNotification(`Échange refusé`, 'info');
+    updateValidationRCBadge();
+    autoSave();
+    renderValidationRC();
+    generateLeaveList();
+}
 function renderValidationRC() {
     if (!isChefDeService()) return;
     const allCP = Object.values(leaves).filter(l => l.type === 'CP');
@@ -3378,7 +3404,27 @@ function approveRCCredit(requestId) {
     generateLeaveList();
 }
 function approveRCExchange(requestId) {
-    validateRCExchange(requestId, 'approved', '');
+    const req = rcExchangeRequests.find(r => r.id === requestId);
+    if (!req) return;
+    const user = getUserById(req.userId);
+    if (!isChefDeService() || !user) { showNotification('Non autorisé', 'error'); return; }
+    req.status = 'approved';
+    req.validationComment = '';
+    req.validatedBy = currentUser.id;
+    req.validationDate = todayStr();
+    if (!userNotifications[user.id]) userNotifications[user.id] = [];
+    userNotifications[user.id].push({
+        id: 'notif-exc-' + Date.now(),
+        type: 'exchange_approved',
+        colleagueName: req.colleagueName,
+        dateGive: req.dateGive,
+        dateReceive: req.dateReceive,
+        createdAt: req.validationDate,
+        read: false
+    });
+    showNotification(`Échange validé ✅`, 'success');
+    updateValidationRCBadge();
+    autoSave();
     renderValidationRC();
     generateLeaveList();
 }
@@ -5003,7 +5049,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             hsRejectId = null;
             renderCountersManager();
         } else if (rcExchangeRejectId) {
-            validateRCExchange(rcExchangeRejectId, 'rejected', comment);
+            confirmRejectRCExchange(rcExchangeRejectId, comment);
             rcExchangeRejectId = null;
         } else if (rcCreditRejectId) {
             validateRCCredit(rcCreditRejectId, 'rejected', comment);
