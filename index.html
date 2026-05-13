@@ -4320,22 +4320,22 @@ function saveToStorage() {
 }
 
 async function loadFromStorage() {
-    // 1. Firebase en priorité
     if (window._fbReady) {
         try {
             const data = await window._fbLoad();
             if (data && applyAppData(data)) {
                 try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-                console.log('✅ Données chargées depuis Firebase');
+                window._lastSavedAt = data.savedAt;
+                console.log('✅ Données chargées depuis Firebase, savedAt:', data.savedAt);
                 return true;
             }
-        } catch(e) { console.warn('Firebase load failed, fallback localStorage:', e); }
+        } catch(e) { console.warn('Firebase load failed:', e); }
     }
-    // 2. Fallback localStorage
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return false;
         const data = JSON.parse(raw);
+        if (data.savedAt) window._lastSavedAt = data.savedAt;
         return applyAppData(data);
     } catch(e) { return false; }
 }
@@ -4451,12 +4451,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusEl.textContent = loaded
             ? '✅ Données synchronisées'
             : '⚠️ Données locales (hors ligne)';
-    }
-    // Mémoriser le savedAt initial pour le polling
-    if (window._fbLoad) {
-        window._fbLoad().then(data => {
-            if (data) window._lastSavedAt = data.savedAt;
-        });
     }
 
     // Écouter les mises à jour en temps réel depuis les autres appareils
