@@ -2108,6 +2108,7 @@ function cancelLeave(dateStr) {
         });
         showNotification("Demande d'annulation envoyée au chef de service", 'success');
     }
+    autoSave();
     return true;
 }
 
@@ -2542,6 +2543,7 @@ function validateHsDeclaration(declarationId, status, comment) {
         showNotification(`Déclaration refusée`, 'info');
     }
     updateValidationRCBadge();
+    autoSave();
     return true;
 }
 function renderMyCounters() {
@@ -2989,6 +2991,7 @@ function validateRCExchange(requestId, status, comment) {
         updateListTabBadge();
         renderRCModalNotifs();
     }
+    autoSave();
     return true;
 }
 let rcExchangeRejectId = null;
@@ -3448,6 +3451,7 @@ function addUser(name, email, username, password, role, managerId, cp, rc) {
     });
     showNotification(`Salarié ${name} ajouté`, 'success');
     renderUsersList();
+    autoSave();
     return true;
 }
 
@@ -3493,6 +3497,7 @@ function deleteUser(id) {
     users.splice(idx, 1);
     showNotification('Salarié supprimé', 'success');
     renderUsersList();
+    autoSave();
     return true;
 }
 function resetRangeSelection() {
