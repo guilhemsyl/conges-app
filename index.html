@@ -4452,6 +4452,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? '✅ Données synchronisées'
             : '⚠️ Données locales (hors ligne)';
     }
+    // Mémoriser le savedAt initial pour le polling
+    if (window._fbLoad) {
+        window._fbLoad().then(data => {
+            if (data) window._lastSavedAt = data.savedAt;
+        });
+    }
 
     // Écouter les mises à jour en temps réel depuis les autres appareils
     // (le vrai listener est dans le module Firebase — voir plus haut)
