@@ -4280,15 +4280,7 @@ function populateTestSalarieSelect() {
 }
 const STORAGE_KEY = 'monvillage_v1';
 
-function buildAppData() {
-    return {
-        version: 1,
-        savedAt: new Date().toISOString(),
-        users: users.map(u => ({ ...u })),
-        teams, leaves, rcCreditRequests,
-        hsDeclarations, rcExchangeRequests, userNotifications
-    };
-}
+
 
 function applyAppData(data) {
     if (!data || !data.users) return false;
@@ -4304,13 +4296,25 @@ function applyAppData(data) {
     return true;
 }
 
+const _SESSION_ID = Math.random().toString(36).slice(2);
 let _fbIgnoreUntil = 0;
+
+function buildAppData() {
+    return {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        savedBy: _SESSION_ID,
+        users: users.map(u => ({ ...u })),
+        teams, leaves, rcCreditRequests,
+        hsDeclarations, rcExchangeRequests, userNotifications
+    };
+}
 
 function saveToStorage() {
     const data = buildAppData();
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
     if (window._fbReady) {
-        _fbIgnoreUntil = Date.now() + 3000; // ignorer le listener pendant 3s
+        _fbIgnoreUntil = Date.now() + 3000;
         window._fbSave(data).catch(e => console.warn('Firebase save failed:', e));
     }
 }
@@ -4453,7 +4457,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window._fbListen) {
         window._fbListen(data => {
             if (!isLoggedIn) return;
-            if (Date.now() < _fbIgnoreUntil) return; // on vient de sauvegarder, ignorer
+            // Ignorer si c'est cette session qui vient de sauvegarder
+            if (data.savedBy === _SESSION_ID && Date.now() < _fbIgnoreUntil) return;
             applyAppData(data);
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
             // Rafraîchir l'interface si connecté
