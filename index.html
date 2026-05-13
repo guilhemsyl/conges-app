@@ -4304,12 +4304,13 @@ function applyAppData(data) {
     return true;
 }
 
+let _fbIgnoreUntil = 0;
+
 function saveToStorage() {
     const data = buildAppData();
-    // Sauvegarde locale (fallback)
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-    // Sauvegarde Firebase (asynchrone)
     if (window._fbReady) {
+        _fbIgnoreUntil = Date.now() + 3000; // ignorer le listener pendant 3s
         window._fbSave(data).catch(e => console.warn('Firebase save failed:', e));
     }
 }
@@ -4451,7 +4452,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Écouter les mises à jour en temps réel depuis les autres appareils
     if (window._fbListen) {
         window._fbListen(data => {
-            if (!isLoggedIn) return; // Ne pas écraser pendant la connexion
+            if (!isLoggedIn) return;
+            if (Date.now() < _fbIgnoreUntil) return; // on vient de sauvegarder, ignorer
             applyAppData(data);
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
             // Rafraîchir l'interface si connecté
