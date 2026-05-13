@@ -1791,6 +1791,7 @@ function addTeam(name) {
     teams.push({ id: generateTeamId(), name: name.trim() });
     showNotification(`Équipe "${name}" créée`, 'success');
     renderTeamsList();
+    autoSave();
     return true;
 }
 
@@ -1800,7 +1801,7 @@ function renameTeam(id, name) {
     if (!team) { showNotification('Équipe introuvable', 'error'); return false; }
     team.name = name.trim();
     showNotification(`Équipe renommée en "${name}"`, 'success');
-    renderTeamsList(); renderUsersList(); return true;
+    renderTeamsList(); renderUsersList(); autoSave(); return true;
 }
 
 function deleteTeam(id) {
@@ -1809,7 +1810,7 @@ function deleteTeam(id) {
     users.forEach(u => { if (u.teamId === id) u.teamId = null; });
     teams.splice(idx, 1);
     showNotification('Équipe supprimée', 'success');
-    renderTeamsList(); renderUsersList(); return true;
+    renderTeamsList(); renderUsersList(); autoSave(); return true;
 }
 
 function renderTeamsList() {
@@ -2219,6 +2220,7 @@ function submitRCCreditRequest(date, durationMin, motif, startTime, endTime, mod
         duration: durationMin, date
     });
     updateValidationRCBadge();
+    autoSave();
     return true;
 }
 
@@ -2497,6 +2499,7 @@ function submitHsDeclaration(userId, weekStart, hoursWorked, motif, type = 'hs',
         declType: type, weekStart, rcGenerated
     });
     updateValidationRCBadge();
+    autoSave();
     return true;
 }
 function validateHsDeclaration(declarationId, status, comment) {
@@ -2901,6 +2904,7 @@ function confirmCPReject(comment) {
     showNotification(`CP refusé pour ${user.name}`, 'info');
     cpRejectUserId = null; cpRejectDates = null;
     renderValidationRC(); updateValidationRCBadge(); renderCalendar(); generateLeaveList();
+    autoSave();
 }
 
 function submitRCExchange(colleagueId, colleagueName, dateGive, startGive, endGive, dateReceive, startReceive, endReceive, motif) {
@@ -2943,6 +2947,7 @@ function submitRCExchange(colleagueId, colleagueName, dateGive, startGive, endGi
         dateGive, dateReceive
     });
     updateValidationRCBadge();
+    autoSave();
     return true;
 }
 
@@ -3401,6 +3406,7 @@ function approveRCCredit(requestId) {
     validateRCCredit(requestId, 'approved', '');
     renderValidationRC();
     generateLeaveList();
+    autoSave();
 }
 function approveRCExchange(requestId) {
     const req = rcExchangeRequests.find(r => r.id === requestId);
