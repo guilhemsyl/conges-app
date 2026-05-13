@@ -397,6 +397,22 @@
 
     window._fbReady = true;
     document.dispatchEvent(new Event('firebase-ready'));
+
+    // Listener temps réel — enregistré ici directement dans le module
+    onSnapshot(DOC_REF, snap => {
+        if (!snap.exists()) return;
+        try {
+            const data = JSON.parse(snap.data().payload);
+            // Ignorer si c'est cette session qui vient de sauvegarder
+            if (typeof _SESSION_ID !== 'undefined' && data.savedBy === _SESSION_ID && Date.now() < _fbIgnoreUntil) {
+                console.log('Firebase: ignoré (même session)');
+                return;
+            }
+            if (!window._isLoggedIn) return;
+            console.log('Firebase: mise à jour reçue — application...');
+            if (window._applyAndRefresh) window._applyAndRefresh(data);
+        } catch(e) { console.warn('Firebase listener error:', e); }
+    });
     </script>
 </head>
 <body>
@@ -1953,6 +1969,7 @@ function login(username, password) {
     if (!passwordMatch) { showNotification('Mot de passe incorrect', 'error'); return false; }
     currentUser = user;
     isLoggedIn = true;
+    window._isLoggedIn = true;
     currentYear = new Date().getFullYear();
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-container').style.display = 'block';
@@ -1973,7 +1990,7 @@ function login(username, password) {
 }
 
 function logout() {
-    currentUser = null; isLoggedIn = false;
+    currentUser = null; isLoggedIn = false; window._isLoggedIn = false;
     document.getElementById('app-container').style.display = 'none';
     document.getElementById('login-page').style.display = 'block';
     document.getElementById('login-username').value = '';
@@ -4454,26 +4471,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Écouter les mises à jour en temps réel depuis les autres appareils
-    if (window._fbListen) {
-        window._fbListen(data => {
-            if (!isLoggedIn) return;
-            // Ignorer si c'est cette session qui vient de sauvegarder
-            if (data.savedBy === _SESSION_ID && Date.now() < _fbIgnoreUntil) return;
-            applyAppData(data);
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-            // Rafraîchir l'interface si connecté
-            if (currentUser) {
-                const freshUser = getUserById(currentUser.id);
-                if (freshUser) currentUser = freshUser;
-                updateBalances();
-                renderCalendar();
-                if (document.getElementById('list-view').classList.contains('active')) generateLeaveList();
-                if (document.getElementById('validation-rc-view').classList.contains('active')) renderValidationRC();
-                if (isChefDeService()) updateValidationRCBadge();
-                updateBellBadge();
-            }
-        });
-    }
+    // (le vrai listener est dans le module Firebase — voir plus haut)
+    // On expose les fonctions nécessaires globalement
+    window._applyAndRefresh = function(data) {
+        applyAppData(data);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        if (currentUser) {
+            const freshUser = getUserById(currentUser.id);
+            if (freshUser) currentUser = freshUser;
+            updateBalances();
+            renderCalendar();
+            if (document.getElementById('list-view').classList.contains('active')) generateLeaveList();
+            if (document.getElementById('validation-rc-view').classList.contains('active')) renderValidationRC();
+            if (isChefDeService()) updateValidationRCBadge();
+            updateBellBadge();
+        }
+    };
 
     runMonthlyAccrual();
     populateTestSalarieSelect();
