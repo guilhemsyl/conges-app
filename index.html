@@ -347,7 +347,7 @@
     <!-- Firebase -->
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDXf5TuZFAAwHnxtgOMApOGMgHoT2zmoy0",
@@ -362,16 +362,11 @@
     const db = getFirestore(app);
     const DOC_REF = doc(db, 'app', 'data');
 
-    // Exposer les fonctions Firebase globalement
     window._fbSave = async function(data) {
         try {
             await setDoc(DOC_REF, { payload: JSON.stringify(data) });
-            console.log('✅ Firebase sauvegardé');
             return true;
-        } catch(e) {
-            console.warn('❌ Firebase save error:', e);
-            return false;
-        }
+        } catch(e) { console.warn('❌ Firebase save error:', e); return false; }
     };
 
     window._fbLoad = async function() {
@@ -379,40 +374,27 @@
             const snap = await getDoc(DOC_REF);
             if (!snap.exists()) return null;
             return JSON.parse(snap.data().payload);
-        } catch(e) {
-            console.warn('❌ Firebase load error:', e);
-            return null;
-        }
+        } catch(e) { console.warn('❌ Firebase load error:', e); return null; }
     };
 
-    window._fbListen = function(callback) {
-        return onSnapshot(DOC_REF, snap => {
+    // Polling toutes les 5 secondes
+    setInterval(async () => {
+        if (!window._isLoggedIn) return;
+        if (Date.now() < (window._fbIgnoreUntil || 0)) return;
+        try {
+            const snap = await getDoc(DOC_REF);
             if (!snap.exists()) return;
-            try {
-                const data = JSON.parse(snap.data().payload);
-                callback(data);
-            } catch(e) { console.warn('Firebase listen error:', e); }
-        });
-    };
+            const data = JSON.parse(snap.data().payload);
+            // N'appliquer que si les données sont plus récentes
+            if (data.savedAt === window._lastSavedAt) return;
+            window._lastSavedAt = data.savedAt;
+            console.log('Firebase: nouvelles données détectées');
+            if (window._applyAndRefresh) window._applyAndRefresh(data);
+        } catch(e) {}
+    }, 5000);
 
     window._fbReady = true;
     document.dispatchEvent(new Event('firebase-ready'));
-
-    // Listener temps réel — enregistré ici directement dans le module
-    onSnapshot(DOC_REF, snap => {
-        if (!snap.exists()) return;
-        try {
-            const data = JSON.parse(snap.data().payload);
-            // Ignorer si c'est cette session qui vient de sauvegarder
-            if (typeof _SESSION_ID !== 'undefined' && data.savedBy === _SESSION_ID && Date.now() < _fbIgnoreUntil) {
-                console.log('Firebase: ignoré (même session)');
-                return;
-            }
-            if (!window._isLoggedIn) return;
-            console.log('Firebase: mise à jour reçue — application...');
-            if (window._applyAndRefresh) window._applyAndRefresh(data);
-        } catch(e) { console.warn('Firebase listener error:', e); }
-    });
     </script>
 </head>
 <body>
@@ -4331,7 +4313,8 @@ function saveToStorage() {
     const data = buildAppData();
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
     if (window._fbReady) {
-        _fbIgnoreUntil = Date.now() + 3000;
+        window._fbIgnoreUntil = Date.now() + 6000;
+        window._lastSavedAt = data.savedAt;
         window._fbSave(data).catch(e => console.warn('Firebase save failed:', e));
     }
 }
