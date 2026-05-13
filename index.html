@@ -380,7 +380,6 @@
     // Polling toutes les 5 secondes
     setInterval(async () => {
         if (!window._isLoggedIn) return;
-        if (Date.now() < (window._fbIgnoreUntil || 0)) return;
         try {
             const snap = await getDoc(DOC_REF);
             if (!snap.exists()) return;
@@ -4347,8 +4346,6 @@ function applyAppData(data) {
 }
 
 const _SESSION_ID = Math.random().toString(36).slice(2);
-let _fbIgnoreUntil = 0;
-
 function buildAppData() {
     return {
         version: 1,
@@ -4364,7 +4361,6 @@ function saveToStorage() {
     const data = buildAppData();
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
     if (window._fbReady) {
-        window._fbIgnoreUntil = Date.now() + 6000;
         window._lastSavedAt = data.savedAt;
         window._fbSave(data).catch(e => console.warn('Firebase save failed:', e));
     }
