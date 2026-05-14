@@ -508,6 +508,7 @@
         <button class="nav-tab active" data-view="calendar">Calendrier équipe</button>
         <button class="nav-tab hidden" data-view="list" id="list-tab">Mes Congés</button>
         <button class="nav-tab" data-view="dashboard" id="dashboard-tab">⏱️ Heures sup & Échanges</button>
+        <button class="nav-tab" data-view="historique" id="historique-tab">📜 Historique</button>
         <button class="nav-tab hidden" data-view="team" id="team-tab">Équipe</button>
         <button class="nav-tab hidden" data-view="validation-rc" id="validation-rc-tab">✅ Validation</button>
         <button class="nav-tab hidden" data-view="counters-manager" id="counters-manager-tab">📋 Compteurs équipe</button>
@@ -666,8 +667,7 @@
                         <tr>
                             <th>Salarié</th><th>UV</th>
                             <th>CP acquis</th><th>CP pris</th><th>CP restant</th>
-                            <th>RC total</th><th>RC pris</th><th>RC restant</th>
-                            <th>Ancienneté</th>
+                            <th>RC solde</th>
                         </tr>
                     </thead>
                     <tbody id="counters-team-body"></tbody>
@@ -694,15 +694,15 @@
             <div class="validation-summary" id="rc-summary">
                 <div class="summary-card pending-card">
                     <span class="count" id="rc-count-pending">0</span>
-                    <span class="label">⏳ En attente</span>
+                    <span class="label">⏳ RC en attente</span>
                 </div>
-                <div class="summary-card approved-card" onclick="showHistoryModal('rc','approved')" style="cursor:pointer;" title="Voir l'historique des demandes validées">
-                    <span class="count" id="rc-count-approved">0</span>
-                    <span class="label">✅ Validées <span style="font-size:0.75rem;opacity:0.7;">🔍</span></span>
+                <div class="summary-card pending-card">
+                    <span class="count" id="hs-count-pending">0</span>
+                    <span class="label">⏳ Heures sup en attente</span>
                 </div>
-                <div class="summary-card rejected-card" onclick="showHistoryModal('rc','rejected')" style="cursor:pointer;" title="Voir l'historique des demandes refusées">
-                    <span class="count" id="rc-count-rejected">0</span>
-                    <span class="label">❌ Refusées <span style="font-size:0.75rem;opacity:0.7;">🔍</span></span>
+                <div class="summary-card pending-card">
+                    <span class="count" id="exchange-count-pending">0</span>
+                    <span class="label">⏳ Échanges en attente</span>
                 </div>
             </div>
 
@@ -712,14 +712,6 @@
                 <div class="summary-card pending-card">
                     <span class="count" id="cp-count-pending">0</span>
                     <span class="label">⏳ En attente</span>
-                </div>
-                <div class="summary-card approved-card" onclick="showHistoryModal('cp','approved')" style="cursor:pointer;" title="Voir l'historique des CP validés">
-                    <span class="count" id="cp-count-approved">0</span>
-                    <span class="label">✅ Validées <span style="font-size:0.75rem;opacity:0.7;">🔍</span></span>
-                </div>
-                <div class="summary-card rejected-card" onclick="showHistoryModal('cp','rejected')" style="cursor:pointer;" title="Voir l'historique des CP refusés">
-                    <span class="count" id="cp-count-rejected">0</span>
-                    <span class="label">❌ Refusées <span style="font-size:0.75rem;opacity:0.7;">🔍</span></span>
                 </div>
             </div>
 
@@ -778,7 +770,58 @@
             </div>
         </div>
 
-        
+        <!-- Vue Historique -->
+        <div id="historique-view" class="view-container">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h2 style="margin:0;">📜 Historique des demandes</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="historique-export-btns"></div>
+            </div>
+            <div id="historique-summary"></div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #eee;">
+                <div id="historique-manager-filter" style="display:none;">
+                    <select id="hist-filter-emp" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;">
+                        <option value="all">Tous les salariés</option>
+                    </select>
+                </div>
+                <select id="hist-filter-type" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;">
+                    <option value="all">Tous les types</option>
+                    <option value="CP">Congés CP</option>
+                    <option value="RC">Congés RC</option>
+                    <option value="credit">Heures sup</option>
+                    <option value="exchange">Échanges</option>
+                </select>
+                <select id="hist-filter-status" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;">
+                    <option value="all">Tous les statuts</option>
+                    <option value="pending">⏳ En attente</option>
+                    <option value="approved">✅ Validé</option>
+                    <option value="rejected">❌ Refusé</option>
+                </select>
+                <select id="hist-filter-month" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;">
+                    <option value="all">Tous les mois</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="renderHistorique()">Filtrer</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetHistoriqueFilters()">Réinitialiser</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th id="hist-col-salarie">Salarié</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Détail</th>
+                            <th>Demandé le</th>
+                            <th>Statut</th>
+                            <th>Décidé le</th>
+                            <th id="hist-col-actions">Actions</th>
+                            <th></th>
+                            <th>Actions</th>
+                    </thead>
+                    <tbody id="historique-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="admin-view" class="view-container">
             <div style="margin-bottom:25px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -1763,10 +1806,11 @@ function isRCPlafonné(leave) {
 }
 function getPendingRCCount() {
     const leavePending    = Object.values(leaves).filter(l => l.type === 'RC' && l.status === 'pending').length;
+    const cancelPending   = Object.values(leaves).filter(l => l.status === 'cancellation_requested').length;
     const creditPending   = rcCreditRequests.filter(r => r.status === 'pending').length;
     const exchangePending = rcExchangeRequests.filter(r => r.status === 'pending').length;
     const hsPending       = hsDeclarations.filter(d => d.status === 'pending').length;
-    return leavePending + creditPending + exchangePending + hsPending;
+    return leavePending + cancelPending + creditPending + exchangePending + hsPending;
 }
 
 function updateValidationRCBadge() {
@@ -1930,6 +1974,7 @@ function updateUIForCurrentUser() {
     document.getElementById('user-menu-btn').textContent = currentUser.name.charAt(0).toUpperCase();
     document.getElementById('list-tab').classList.toggle('hidden', isChefDeService());
     document.getElementById('dashboard-tab').classList.toggle('hidden', isChefDeService());
+    document.getElementById('historique-tab').classList.remove('hidden');
     document.getElementById('team-tab').classList.add('hidden');
     document.getElementById('validation-rc-tab').classList.toggle('hidden', !isChefDeService());
     document.getElementById('counters-manager-tab').classList.toggle('hidden', !isChefDeService());
@@ -2637,13 +2682,10 @@ function renderCountersManager() {
         const cpTotal   = cpAcquis + cpAnc;
         const cpPris    = getCPPris(user.id);
         const cpRestant = Math.max(0, cpTotal - cpPris);
-        const rcTotal   = user.balances.RC;
-        const rcPris    = getRCConsomme(user.id);
-        const ancYears  = getAncienneteYears(user);
-        const feriesTravailles = getFeriesTravaillesApprouves(user.id);
+        const rcSolde   = user.balances.RC;
         const team      = getTeamById(user.teamId);
         const cpColor   = cpRestant < 5 ? '#e74c3c' : cpRestant < 10 ? '#f39c12' : '#27ae60';
-        const rcColor   = rcTotal < 420 ? '#e74c3c' : '#27ae60';
+        const rcColor   = rcSolde < 0 ? '#e74c3c' : '#27ae60';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -2652,10 +2694,7 @@ function renderCountersManager() {
             <td>${cpAcquis}</td>
             <td>${cpPris}</td>
             <td style="font-weight:bold;color:${cpColor};">${cpRestant}</td>
-            <td>${formatMinutes(rcTotal + rcPris)}</td>
-            <td>${formatMinutes(rcPris)}</td>
-            <td style="font-weight:bold;color:${rcColor};">${formatMinutes(rcTotal)}</td>
-            <td>${ancYears} ans <small style="color:#7f8c8d;">(+${cpAnc}j)</small></td>`;
+            <td style="font-weight:bold;color:${rcColor};">${formatMinutes(rcSolde)}</td>`;
         tbody.appendChild(tr);
     });
 }
@@ -3157,6 +3196,12 @@ function renderValidationRC() {
     const creditRejected = rcCreditRequests.filter(r => r.status === 'rejected').length;
 
     document.getElementById('rc-count-pending').textContent  = pending.length + creditPending;
+    const hsPendingCount = hsDeclarations.filter(d => d.status === 'pending').length;
+    const exchPendingCount = rcExchangeRequests.filter(r => r.status === 'pending').length;
+    const hsBadge = document.getElementById('hs-count-pending');
+    const exchBadge = document.getElementById('exchange-count-pending');
+    if (hsBadge) hsBadge.textContent = hsPendingCount;
+    if (exchBadge) exchBadge.textContent = exchPendingCount;
     document.getElementById('rc-count-approved').textContent = approved.length + creditApproved;
     document.getElementById('rc-count-rejected').textContent = rejected.length + creditRejected;
 
@@ -3210,11 +3255,13 @@ function renderValidationRC() {
         const tr = document.createElement('tr');
         if (isPending) tr.classList.add('row-pending');
         if (isConflict) tr.style.cssText = 'background:#fff8e1 !important;border-left:4px solid #f39c12;';
+        if (isPending && rcNegatif) tr.style.cssText = 'background:#fdf2f2 !important;border-left:4px solid #e74c3c;';
         const serviceLabel = user.service === 'nuit' ? '🌙 Nuit' : '☀️ Jour';
         const serviceHours = user.service === 'nuit' ? '21h→7h' : '7h→14h';
         const dur = leave.durationMin || rcDayMinutes(user);
         const plafonne = isRCPlafonné(leave);
-        const volumeHtml = `${formatMinutes(dur)}${plafonne ? ' <span class="plafonne-badge">⚠️ plafonné</span>' : ''}`;
+        const rcNegatif = user.balances.RC < dur;
+        const volumeHtml = `${formatMinutes(dur)}${plafonne ? ' <span class="plafonne-badge">⚠️ plafonné</span>' : ''}${rcNegatif ? ` <span style="display:inline-block;background:#e74c3c;color:white;border-radius:4px;font-size:0.72rem;padding:2px 6px;font-weight:bold;margin-left:4px;">⚠️ Solde négatif — solde: ${formatMinutes(user.balances.RC)}</span>` : ''}`;
         const statusLabel = { pending: '⏳ En attente', approved: '✅ Validé', rejected: '❌ Refusé' };
         const conflictBadge = isConflict
             ? `<br><span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${conflictNamesMap[dateStr]}<button onclick="this.closest('span').remove()" style="background:none;border:none;color:white;cursor:pointer;font-size:0.9rem;line-height:1;padding:0 0 0 4px;" title="Fermer">×</button></span>`
@@ -3401,7 +3448,89 @@ function renderValidationRC() {
             exchangeTbody.appendChild(tr);
         });
     }
+
+    // ── Section : Demandes d'annulation ──
+    const cancelRequests = Object.values(leaves).filter(l => l.status === 'cancellation_requested');
+    let cancelSection = document.getElementById('cancel-requests-section');
+    if (!cancelSection) {
+        cancelSection = document.createElement('div');
+        cancelSection.id = 'cancel-requests-section';
+        exchangeSection.insertAdjacentElement('afterend', cancelSection);
+    }
+    cancelSection.innerHTML = '';
+    if (cancelRequests.length > 0) {
+        cancelSection.innerHTML = `
+            <h3 style="margin:28px 0 12px;color:var(--dark-color);font-size:1.05rem;display:flex;align-items:center;gap:8px;">
+                🔄 Demandes d'annulation
+                <span class="tab-badge" style="animation:none;">${cancelRequests.length}</span>
+            </h3>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Salarié</th><th>UV</th><th>Type</th><th>Date</th><th>Motif annulation</th><th>Demandé le</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="cancel-requests-tbody"></tbody>
+                </table>
+            </div>`;
+        const tbody = document.getElementById('cancel-requests-tbody');
+        cancelRequests.forEach(leave => {
+            const user = getUserById(leave.userId);
+            if (!user) return;
+            const team = getTeamById(user.teamId);
+            const tr = document.createElement('tr');
+            tr.classList.add('row-pending');
+            const dur = leave.type === 'RC' && leave.durationMin ? formatMinutes(leave.durationMin) : '1 jour';
+            tr.innerHTML = `
+                <td><strong>${user.name}</strong></td>
+                <td>${team ? team.name : '-'}</td>
+                <td>${leave.type} — ${dur}</td>
+                <td>${formatDateShort(leave.date)}</td>
+                <td style="font-size:0.85rem;">${leave.cancelReason || '-'}</td>
+                <td>${formatDateShort(leave.cancelDate)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn btn-success btn-sm" style="margin-right:4px;" onclick="approveCancellation('${leave.userId}','${leave.date}')">✓ Valider</button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectCancellation('${leave.userId}','${leave.date}')">✗ Refuser</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
 }
+function approveCancellation(userId, dateStr) {
+    userId = parseInt(userId);
+    const leave = getUserLeaveOnDate(userId, dateStr);
+    if (!leave) return;
+    const user = getUserById(userId);
+    // Rembourser le CP si pas déjà remboursé
+    if (leave.type === 'CP') {
+        user.balances.CP += 1;
+        if (userId === currentUser?.id) { currentUser.balances.CP = user.balances.CP; updateBalances(); }
+    }
+    delete leaves[leaveKey(userId, dateStr)];
+    sendInternalNotif([userId], 'leave_cancel_approved', { leaveType: leave.type, date: dateStr });
+    showNotification(`Annulation de ${user.name} validée ✅`, 'success');
+    renderValidationRC(); updateValidationRCBadge(); renderCalendar(); autoSave();
+}
+
+function rejectCancellation(userId, dateStr) {
+    userId = parseInt(userId);
+    const leave = getUserLeaveOnDate(userId, dateStr);
+    if (!leave) return;
+    const user = getUserById(userId);
+    // Remettre le congé en approuvé
+    leave.status = 'approved';
+    delete leave.cancelReason;
+    delete leave.cancelDate;
+    // Rembourser RC si on l'avait crédité à tort
+    if (leave.type === 'RC') {
+        const refund = leave.durationMin || rcDayMinutes(user);
+        user.balances.RC -= refund;
+        if (userId === currentUser?.id) { currentUser.balances.RC = user.balances.RC; updateBalances(); }
+    }
+    sendInternalNotif([userId], 'leave_cancel_rejected', { leaveType: leave.type, date: dateStr });
+    showNotification(`Annulation de ${user.name} refusée — congé maintenu`, 'info');
+    renderValidationRC(); updateValidationRCBadge(); renderCalendar(); autoSave();
+}
+
 function approveRCCredit(requestId) {
     validateRCCredit(requestId, 'approved', '');
     renderValidationRC();
@@ -3461,6 +3590,27 @@ function quickValidateRC(dateStr, action) {
     const key = leaveKey(leave.userId, dateStr);
 
     if (action === 'approved') {
+        if (leave.durationMin > user.balances.RC) {
+            // Solde négatif : afficher une confirmation
+            rcQuickDate = dateStr;
+            rcQuickUserId = leave.userId;
+            document.getElementById('rc-quick-modal-title').textContent = `⚠️ Solde RC insuffisant — Valider quand même ?`;
+            document.getElementById('rc-quick-modal-body').innerHTML = `
+                <div style="background:#fdf2f2;border:1.5px solid #e74c3c;border-radius:8px;padding:14px;margin-bottom:12px;">
+                    <strong style="color:#c0392b;">⚠️ Attention — Solde RC négatif</strong><br>
+                    <span style="font-size:0.9rem;color:#555;">
+                        <strong>${user.name}</strong> demande <strong>${formatMinutes(leave.durationMin)}</strong>
+                        mais son solde est de <strong style="color:#e74c3c;">${formatMinutes(user.balances.RC)}</strong>.<br>
+                        Après validation : <strong style="color:#e74c3c;">${formatMinutes(user.balances.RC - leave.durationMin)}</strong>
+                    </span>
+                </div>
+                <p style="font-size:0.9rem;color:#555;">Voulez-vous valider cette demande malgré le solde insuffisant ?</p>`;
+            document.getElementById('approve-rc-quick').textContent = '✓ Valider quand même';
+            document.getElementById('approve-rc-quick').style.display = '';
+            document.getElementById('reject-rc-quick').style.display = 'none';
+            document.getElementById('rc-quick-validate-modal').classList.add('active');
+            return;
+        }
         validateLeave(dateStr, 'approved', '', leave.userId);
         renderValidationRC();
         renderCalendar();
@@ -4085,6 +4235,14 @@ function buildNotifDisplay(notif) {
             return { bg: '#fff3cd', border: '#f39c12', color: '#856404', icon: '🔄',
                 titre: `Demande d'annulation — ${notif.userName}`,
                 corps: `Congé ${notif.leaveType} du ${formatDateShort(notif.date)}` };
+        case 'leave_cancel_approved':
+            return { ...OK, icon: '✅',
+                titre: `Annulation validée — congé ${notif.leaveType} du ${formatDateShort(notif.date)}`,
+                corps: 'Votre demande d\'annulation a été acceptée.' };
+        case 'leave_cancel_rejected':
+            return { ...ERR, icon: '❌',
+                titre: `Annulation refusée — congé ${notif.leaveType} du ${formatDateShort(notif.date)} maintenu`,
+                corps: 'Votre congé reste confirmé.' };
 
         default:
             return { ...INF, icon: 'ℹ️', titre: 'Notification', corps: '' };
@@ -4264,33 +4422,86 @@ function exportBalancesCSV() {
 function importBalancesCSV(file) {
     const reader = new FileReader();
     reader.onload = e => {
-        const lines = e.target.result.replace(/\r/g,'').split('\n').filter(l => l.trim());
-        const dataLines = lines[0].toLowerCase().startsWith('email') ? lines.slice(1) : lines;
-        let updated = 0, errors = [];
+        let raw = e.target.result;
+        // Supprimer BOM de toutes formes
+        if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
+        raw = raw.replace(/\r/g, '');
+        const allLines = raw.split('\n').filter(l => l.trim());
+        if (allLines.length === 0) { showNotification('Fichier vide', 'error'); return; }
+
+        // Détecter le séparateur (; ou , ou tab)
+        const firstLine = allLines[0];
+        const sep = firstLine.includes('\t') ? '\t' : firstLine.includes(';') ? ';' : ',';
+        const parseLine = line => line.split(sep).map(s => s.trim().replace(/^"|"$/g, ''));
+
+        // DEBUG - afficher les 2 premières lignes
+        console.log('CSV ligne 1:', JSON.stringify(allLines[0]));
+        console.log('CSV ligne 2:', JSON.stringify(allLines[1]));
+        console.log('sep:', JSON.stringify(sep));
+
+        // Détecter l'en-tête et les indices de colonnes
+        const header = parseLine(firstLine);
+        const isHeader = header.some(h => /^(email|nom|uv|cp|rc|solde)$/i.test(h));
+        const dataLines = isHeader ? allLines.slice(1) : allLines;
+
+        let colEmail = -1, colCP = -1, colRC = -1;
+        if (isHeader) {
+            header.forEach((h, i) => {
+                const hl = h.toLowerCase();
+                if (hl === 'email') colEmail = i;
+                else if (hl === 'cp') colCP = i;
+                else if (hl === 'rc') colRC = i;
+            });
+        }
+
+        let updated = 0;
+        const errors = [];
+
         dataLines.forEach((line, idx) => {
-            const parts = line.split(';').map(s => s.trim());
+            const parts = parseLine(line);
             if (parts.length < 2) return;
-            const [email, ...rest] = parts;
+
+            // Trouver l'email en cherchant @ dans toutes les cellules
+            let emailIdx = colEmail >= 0 ? colEmail : parts.findIndex(p => p.includes('@'));
+            if (emailIdx === -1) { errors.push(`Ligne ${idx+2} : aucun email trouvé`); return; }
+
+            const email = parts[emailIdx].trim().toLowerCase();
+            if (!email.includes('@')) { errors.push(`Ligne ${idx+2} : pas d'email valide ("${parts[emailIdx]}")`); return; }
+
             let cp = null, rc = null;
-            if (rest.length >= 2) {
-                cp = parseInt(rest[0]);
-                rc = parseRCInput(rest[1]);
-            } else if (rest.length === 1) {
-                rc = parseRCInput(rest[0]);
+
+            if (colCP >= 0 && colRC >= 0) {
+                if (parts[colCP] !== undefined) cp = parseInt(parts[colCP]);
+                if (parts[colRC] !== undefined) rc = parseRCInput(parts[colRC]);
+            } else {
+                // Positions selon nombre de colonnes
+                const n = parts.length;
+                if (n >= 5) { cp = parseInt(parts[3]); rc = parseRCInput(parts[4]); }
+                else if (n === 4) { cp = parseInt(parts[2]); rc = parseRCInput(parts[3]); }
+                else if (n === 3) { cp = parseInt(parts[1]); rc = parseRCInput(parts[2]); }
+                else if (n === 2) { rc = parseRCInput(parts[1]); }
             }
-            const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+            const user = users.find(u => u.email.toLowerCase() === email);
             if (!user) { errors.push(`Ligne ${idx+2} : "${email}" introuvable`); return; }
-            if (cp !== null && !isNaN(cp)) user.balances.CP = cp;
-            if (rc !== null && !isNaN(rc)) user.balances.RC = rc;
+            if (cp !== null && !isNaN(cp) && cp >= 0) user.balances.CP = cp;
+            if (rc !== null && !isNaN(rc) && rc >= 0) user.balances.RC = rc;
             if (user.id === currentUser?.id) { currentUser.balances = { ...user.balances }; updateBalances(); }
             updated++;
         });
+
         renderUsersList();
-        if (errors.length) {
-            showNotification(`${updated} soldes importés. ${errors.length} erreur(s) — voir console`, 'error');
-            errors.forEach(e => console.warn(e));
+        renderCountersManager();
+        autoSave();
+
+        if (errors.length === 0) {
+            showNotification(`✅ ${updated} solde(s) importé(s) avec succès`, 'success');
+        } else if (updated > 0) {
+            showNotification(`⚠️ ${updated} importé(s), ${errors.length} ignoré(s)`, 'error');
         } else {
-            showNotification(`${updated} soldes importés avec succès ✅`, 'success');
+            showNotification(`❌ Aucun solde importé — vérifiez le format`, 'error');
+            const errMsg = errors.slice(0, 5).join('\n') + (errors.length > 5 ? `\n...et ${errors.length - 5} autres` : '');
+            setTimeout(() => alert('Erreurs :\n' + errMsg), 300);
         }
         document.getElementById('import-format-hint').style.display = 'none';
     };
@@ -4437,6 +4648,377 @@ function importDataJSON(file) {
 }
 function autoSave() { saveToStorage(); }
 let _popupEl = null;
+
+function renderHistorique() {
+    if (!isLoggedIn) return;
+    const isManager = isChefDeService();
+
+    // Boutons export selon le rôle
+    const btnsDiv = document.getElementById('historique-export-btns');
+    if (btnsDiv) {
+        btnsDiv.innerHTML = `<button class="btn btn-primary btn-sm" onclick="exportHistoriqueCSV()">📥 Exporter CSV</button>`
+            + (isManager ? `
+                <button class="btn btn-secondary btn-sm" onclick="exportDataJSON()">📦 Exporter tout (JSON)</button>
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('json-file-input-hist').click()">📂 Importer (JSON)</button>
+                <input type="file" id="json-file-input-hist" accept=".json" style="display:none;" onchange="importDataJSON(this.files[0]);this.value='';">` : '');
+    }
+
+    // Résumé des compteurs (manager uniquement)
+    let summaryDiv = document.getElementById('historique-summary');
+    if (!summaryDiv) {
+        summaryDiv = document.createElement('div');
+        summaryDiv.id = 'historique-summary';
+        const filtersDiv = document.querySelector('#historique-view .filter-bar');
+        document.getElementById('historique-view').insertBefore(summaryDiv, document.getElementById('historique-view').querySelector('div:nth-child(2)'));
+    }
+    if (isManager) {
+        summaryDiv.innerHTML = '';
+    } else {
+        summaryDiv.innerHTML = '';
+    }
+
+    // Afficher/masquer filtre salarié
+    const managerFilter = document.getElementById('historique-manager-filter');
+    if (managerFilter) managerFilter.style.display = isManager ? 'block' : 'none';
+
+    // Cacher colonne salarié pour les salariés
+    const colSal = document.getElementById('hist-col-salarie');
+    if (colSal) colSal.style.display = isManager ? '' : 'none';
+
+    // Remplir filtre salarié
+    const empSel = document.getElementById('hist-filter-emp');
+    if (isManager && empSel && empSel.options.length <= 1) {
+        users.filter(u => u.role === 'employé').sort((a,b) => a.name.localeCompare(b.name,'fr')).forEach(u => {
+            const o = document.createElement('option'); o.value = u.id; o.textContent = u.name;
+            empSel.appendChild(o);
+        });
+    }
+
+    // Remplir filtre mois
+    const monthSel = document.getElementById('hist-filter-month');
+    const allRows = buildHistoriqueRows(isManager);
+    const months = new Set(allRows.map(r => (r.dateRequested||'').slice(0,7)).filter(Boolean));
+    if (monthSel.options.length <= 1) {
+        [...months].sort().reverse().forEach(ym => {
+            const [y,m] = ym.split('-');
+            const o = document.createElement('option'); o.value = ym;
+            o.textContent = new Date(parseInt(y),parseInt(m)-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+            monthSel.appendChild(o);
+        });
+    }
+
+    // Appliquer filtres
+    const empFilter    = empSel?.value || 'all';
+    const typeFilter   = document.getElementById('hist-filter-type').value;
+    const statusFilter = document.getElementById('hist-filter-status').value;
+    const monthFilter  = monthSel.value;
+
+    let rows = allRows;
+    if (empFilter !== 'all')    rows = rows.filter(r => r.userId === parseInt(empFilter));
+    if (typeFilter !== 'all')   rows = rows.filter(r => r.typeKey === typeFilter);
+    if (statusFilter !== 'all') rows = rows.filter(r => r.status === statusFilter);
+    if (monthFilter !== 'all')  rows = rows.filter(r => (r.dateRequested||'').startsWith(monthFilter));
+
+    const tbody = document.getElementById('historique-tbody');
+    tbody.innerHTML = '';
+
+    if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#7f8c8d;padding:20px;">Aucune entrée</td></tr>`;
+        return;
+    }
+
+    const statusBadge = {
+        pending:  '<span class="status-badge pending">⏳ En attente</span>',
+        approved: '<span class="status-badge approved">✅ Validé</span>',
+        rejected: '<span class="status-badge rejected">❌ Refusé</span>',
+        cancellation_requested: '<span class="status-badge pending">🔄 Annulation dem.</span>'
+    };
+
+    rows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.status === 'pending' || r.status === 'cancellation_requested') tr.classList.add('row-pending');
+
+        // Boutons d'action selon statut et rôle
+        let actionHtml = '';
+        if (isManager && (r.status === 'approved' || r.status === 'rejected')) {
+            actionHtml = `
+                <button class="btn btn-success btn-sm" style="margin-right:4px;" onclick="requalifyHistorique('${r.rowId}','approved')">✓ Validé</button>
+                <button class="btn btn-danger btn-sm" onclick="requalifyHistorique('${r.rowId}','rejected')">✗ Refusé</button>`;
+        } else {
+            actionHtml = statusBadge[r.status] || r.status;
+        }
+
+        tr.innerHTML = `
+            <td style="${isManager ? '' : 'display:none'}">${r.userName}</td>
+            <td style="white-space:nowrap;">${r.typeLabel}</td>
+            <td>${formatDateShort(r.date)}</td>
+            <td style="font-size:0.85rem;">${r.detail}</td>
+            <td style="font-size:0.85rem;">${formatDateShort(r.dateRequested)}</td>
+            <td>${statusBadge[r.status] || r.status}</td>
+            <td style="font-size:0.85rem;">${r.decidedAt ? formatDateShort(r.decidedAt) + (r.comment ? `<br><em style="color:#7f8c8d;font-size:0.8rem;">${r.comment}</em>` : '') : '-'}</td>
+            <td style="white-space:nowrap;">${actionHtml}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteHistoriqueRow('${r.rowId}')" title="Supprimer">🗑</button></td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function buildHistoriqueRows(isManager) {
+    const rows = [];
+    const targetUserId = isManager ? null : currentUser.id;
+
+    // Congés CP et RC
+    Object.values(leaves).forEach(l => {
+        if (targetUserId && l.userId !== targetUserId) return;
+        const u = getUserById(l.userId);
+        if (!u) return;
+        rows.push({
+            userId: l.userId, userName: u.name,
+            typeKey: l.type, typeLabel: l.type === 'CP' ? '📅 Congé CP' : '🔵 Congé RC',
+            date: l.date,
+            detail: l.type === 'RC' && l.durationMin ? formatMinutes(l.durationMin) : '1 jour',
+            dateRequested: l.dateRequested,
+            status: l.status,
+            decidedAt: l.validationDate || null,
+            comment: l.validationComment || l.cancelReason || '',
+            rowId: `leave:${l.userId}:${l.date}`
+        });
+    });
+
+    // Crédits heures sup
+    rcCreditRequests.forEach(r => {
+        if (targetUserId && r.userId !== targetUserId) return;
+        const u = getUserById(r.userId);
+        if (!u) return;
+        rows.push({
+            userId: r.userId, userName: u.name,
+            typeKey: 'credit', typeLabel: r.mode === 'paid' ? '💶 HS Paiement' : '⏱️ HS RC',
+            date: r.date,
+            detail: `${formatMinutes(r.durationMin)} — ${r.motif || '-'}`,
+            dateRequested: r.dateRequested,
+            status: r.status,
+            decidedAt: r.validationDate || null,
+            comment: r.validationComment || '',
+            rowId: `credit:${r.id}`
+        });
+    });
+
+    // Déclarations heures sup
+    hsDeclarations.forEach(d => {
+        if (targetUserId && d.userId !== targetUserId) return;
+        const u = getUserById(d.userId);
+        if (!u) return;
+        rows.push({
+            userId: d.userId, userName: u.name,
+            typeKey: 'credit', typeLabel: '📊 Décl. HS',
+            date: d.weekStart,
+            detail: `${d.hoursWorked ? d.hoursWorked + 'h' : 'Jour férié'} → ${formatMinutes(d.rcGenerated)} RC`,
+            dateRequested: d.dateRequested,
+            status: d.status,
+            decidedAt: d.validationDate || null,
+            comment: d.validationComment || '',
+            rowId: `hs:${d.id}`
+        });
+    });
+
+    // Échanges
+    rcExchangeRequests.forEach(r => {
+        if (targetUserId && r.userId !== targetUserId) return;
+        const u = getUserById(r.userId);
+        if (!u) return;
+        rows.push({
+            userId: r.userId, userName: u.name,
+            typeKey: 'exchange', typeLabel: '🔄 Échange',
+            date: r.dateGive,
+            detail: `Avec ${r.colleagueName} — ${formatDateShort(r.dateGive)} ↔ ${formatDateShort(r.dateReceive)}`,
+            dateRequested: r.dateRequested,
+            status: r.status,
+            decidedAt: r.validationDate || null,
+            comment: r.validationComment || '',
+            rowId: `exchange:${r.id}`
+        });
+    });
+
+    // Trier par date de demande décroissante
+    return rows.sort((a,b) => (b.dateRequested||'').localeCompare(a.dateRequested||''));
+}
+
+function filterHistorique(type, status) {
+    const typeEl = document.getElementById('hist-filter-type');
+    const statusEl = document.getElementById('hist-filter-status');
+    const monthSel = document.getElementById('hist-filter-month');
+    if (typeEl) typeEl.value = type === 'RC' ? 'RC' : type;
+    if (statusEl) statusEl.value = status;
+    if (monthSel) { monthSel.innerHTML = '<option value="all">Tous les mois</option>'; }
+    const empSel = document.getElementById('hist-filter-emp');
+    if (empSel) empSel.value = 'all';
+    renderHistorique();
+}
+
+function goToHistorique(type, status) {
+    // Naviguer vers l'onglet Historique
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+    const tab = document.getElementById('historique-tab');
+    if (tab) tab.classList.add('active');
+    const view = document.getElementById('historique-view');
+    if (view) view.classList.add('active');
+
+    // Appliquer les filtres
+    const typeMap = { 'CP': 'CP', 'RC': 'RC' };
+    const typeEl = document.getElementById('hist-filter-type');
+    const statusEl = document.getElementById('hist-filter-status');
+    if (typeEl) typeEl.value = typeMap[type] || 'all';
+    if (statusEl) statusEl.value = status;
+
+    // Réinitialiser filtre mois pour forcer le rechargement
+    const monthSel = document.getElementById('hist-filter-month');
+    if (monthSel) { monthSel.innerHTML = '<option value="all">Tous les mois</option>'; }
+
+    renderHistorique();
+}
+
+function requalifyHistorique(rowId, newStatus) {
+    const [type, ...rest] = rowId.split(':');
+    const label = newStatus === 'approved' ? 'validé ✅' : 'refusé ❌';
+    if (!confirm(`Requalifier en "${newStatus === 'approved' ? 'Validé' : 'Refusé'}" ?`)) return;
+
+    if (type === 'leave') {
+        const userId = parseInt(rest[0]), date = rest[1];
+        const leave = getUserLeaveOnDate(userId, date);
+        if (!leave) return;
+        const user = getUserById(userId);
+        const oldStatus = leave.status;
+        // Ajuster les soldes si changement de statut
+        if (oldStatus === 'approved' && newStatus === 'rejected') {
+            if (leave.type === 'CP') { user.balances.CP += 1; }
+            else if (leave.type === 'RC') { user.balances.RC += leave.durationMin || rcDayMinutes(user); }
+            if (user.id === currentUser?.id) { currentUser.balances = {...user.balances}; updateBalances(); }
+        } else if (oldStatus === 'rejected' && newStatus === 'approved') {
+            if (leave.type === 'CP') { user.balances.CP -= 1; }
+            else if (leave.type === 'RC') { user.balances.RC -= leave.durationMin || rcDayMinutes(user); }
+            if (user.id === currentUser?.id) { currentUser.balances = {...user.balances}; updateBalances(); }
+        }
+        leave.status = newStatus;
+        leave.validatedBy = currentUser.id;
+        leave.validationDate = todayStr();
+        sendInternalNotif([userId], newStatus === 'approved' ? 'leave_approved' : 'rejection', {
+            leaveType: leave.type, date, duration: '1 jour', motif: 'Décision révisée'
+        });
+    } else if (type === 'credit') {
+        const req = rcCreditRequests.find(r => r.id === rest[0]);
+        if (!req) return;
+        const user = getUserById(req.userId);
+        if (req.status === 'approved' && newStatus === 'rejected' && req.mode === 'rc') {
+            user.balances.RC -= req.durationMin;
+            if (user.id === currentUser?.id) { currentUser.balances.RC = user.balances.RC; updateBalances(); }
+        } else if (req.status === 'rejected' && newStatus === 'approved' && req.mode === 'rc') {
+            user.balances.RC += req.durationMin;
+            if (user.id === currentUser?.id) { currentUser.balances.RC = user.balances.RC; updateBalances(); }
+        }
+        req.status = newStatus;
+        req.validatedBy = currentUser.id;
+        req.validationDate = todayStr();
+    } else if (type === 'hs') {
+        const decl = hsDeclarations.find(d => d.id === rest[0]);
+        if (!decl) return;
+        const user = getUserById(decl.userId);
+        if (decl.status === 'approved' && newStatus === 'rejected') {
+            user.balances.RC -= decl.rcGenerated;
+            if (user.id === currentUser?.id) { currentUser.balances.RC = user.balances.RC; updateBalances(); }
+        } else if (decl.status === 'rejected' && newStatus === 'approved') {
+            user.balances.RC += decl.rcGenerated;
+            if (user.id === currentUser?.id) { currentUser.balances.RC = user.balances.RC; updateBalances(); }
+        }
+        decl.status = newStatus;
+        decl.validatedBy = currentUser.id;
+        decl.validationDate = todayStr();
+    } else if (type === 'exchange') {
+        const req = rcExchangeRequests.find(r => r.id === rest[0]);
+        if (!req) return;
+        req.status = newStatus;
+        req.validatedBy = currentUser.id;
+        req.validationDate = todayStr();
+    }
+
+    showNotification(`Décision révisée — ${label}`, newStatus === 'approved' ? 'success' : 'info');
+    autoSave();
+    renderHistorique();
+    if (isChefDeService()) { updateValidationRCBadge(); renderCalendar(); }
+}
+
+function deleteHistoriqueRow(rowId) {
+    if (!confirm('Supprimer cette entrée de l\'historique ?')) return;
+    const [type, ...rest] = rowId.split(':');
+    if (type === 'leave') {
+        const userId = parseInt(rest[0]), date = rest[1];
+        const key = leaveKey(userId, date);
+        if (leaves[key]) { delete leaves[key]; }
+    } else if (type === 'credit') {
+        const id = rest[0];
+        const idx = rcCreditRequests.findIndex(r => r.id === id);
+        if (idx >= 0) rcCreditRequests.splice(idx, 1);
+    } else if (type === 'hs') {
+        const id = rest[0];
+        const idx = hsDeclarations.findIndex(d => d.id === id);
+        if (idx >= 0) hsDeclarations.splice(idx, 1);
+    } else if (type === 'exchange') {
+        const id = rest[0];
+        const idx = rcExchangeRequests.findIndex(r => r.id === id);
+        if (idx >= 0) rcExchangeRequests.splice(idx, 1);
+    }
+    autoSave();
+    renderHistorique();
+    if (isChefDeService()) updateValidationRCBadge();
+    showNotification('Entrée supprimée', 'success');
+}
+
+function exportHistoriqueCSV() {
+    const isManager = isChefDeService();
+    const rows = buildHistoriqueRows(isManager);
+    const headers = isManager
+        ? ['Salarié', 'Type', 'Date', 'Détail', 'Motif', 'Demandé le', 'Statut', 'Décidé le', 'Commentaire décision']
+        : ['Type', 'Date', 'Détail', 'Motif', 'Demandé le', 'Statut', 'Décidé le', 'Commentaire décision'];
+
+    const statusLabels = {
+        pending: 'En attente', approved: 'Validé', rejected: 'Refusé',
+        cancellation_requested: 'Annulation demandée'
+    };
+
+    const lines = [headers];
+    rows.forEach(r => {
+        const row = isManager ? [r.userName] : [];
+        row.push(
+            r.typeLabel.replace(/[📅🔵⏱️💶📊🔄]/g, '').trim(),
+            formatDateShort(r.date),
+            r.detail.replace(/<[^>]+>/g, ''),
+            r.comment || '-',
+            formatDateShort(r.dateRequested),
+            statusLabels[r.status] || r.status,
+            r.decidedAt ? formatDateShort(r.decidedAt) : '-',
+            r.comment || '-'
+        );
+        lines.push(row);
+    });
+
+    const csv = '\uFEFF' + lines.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `historique_${todayStr()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('✅ Historique exporté en CSV', 'success');
+}
+
+function resetHistoriqueFilters() {
+    document.getElementById('hist-filter-type').value = 'all';
+    document.getElementById('hist-filter-status').value = 'all';
+    document.getElementById('hist-filter-month').value = 'all';
+    const empSel = document.getElementById('hist-filter-emp');
+    if (empSel) empSel.value = 'all';
+    renderHistorique();
+}
 
 function togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
@@ -4694,6 +5276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderValidationRC();
             }
             else if (view === 'dashboard') renderMyCounters();
+            else if (view === 'historique') renderHistorique();
             else if (view === 'counters-manager') {
                 ['rc-credit-section','rc-exchange-section','rc-conflict-banner',
                  'rc-validation-table','cp-validation-section','rc-summary','cp-summary'].forEach(id => {
@@ -5025,19 +5608,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
         document.getElementById('reject-rc-quick').style.display = '';
-        rcQuickDate = null; rcQuickUserId = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
+        rcQuickDate = null; rcQuickUserId = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null; document.getElementById('approve-rc-quick').textContent = '✓ Valider'; document.getElementById('reject-rc-quick').style.display = '';
     });
     document.getElementById('cancel-rc-quick').addEventListener('click', () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
         document.getElementById('reject-rc-quick').style.display = '';
-        rcQuickDate = null; rcQuickUserId = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null;
+        rcQuickDate = null; rcQuickUserId = null; rcCreditRejectId = null; rcExchangeRejectId = null; hsRejectId = null; cpRejectUserId = null; cpRejectDates = null; document.getElementById('approve-rc-quick').textContent = '✓ Valider'; document.getElementById('reject-rc-quick').style.display = '';
     });
     document.getElementById('approve-rc-quick').addEventListener('click', () => {
         if (!rcQuickDate) return;
         validateLeave(rcQuickDate, 'approved', '', rcQuickUserId);
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
+        document.getElementById('approve-rc-quick').textContent = '✓ Valider';
+        document.getElementById('reject-rc-quick').style.display = '';
         rcQuickDate = null; rcQuickUserId = null;
         renderValidationRC(); updateValidationRCBadge(); renderCalendar();
     });
@@ -5083,6 +5668,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('json-file-input').click();
     });
     document.getElementById('json-file-input').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        importDataJSON(file);
+        e.target.value = '';
+    });
+    const jsonHistInput = document.getElementById('json-file-input-hist');
+    if (jsonHistInput) jsonHistInput.addEventListener('change', e => {
         const file = e.target.files[0];
         if (!file) return;
         importDataJSON(file);
