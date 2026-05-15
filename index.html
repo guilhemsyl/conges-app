@@ -676,7 +676,7 @@
                     </select>
                 </div>
                 <button class="btn btn-primary btn-sm" id="cm-apply-filter">Filtrer</button>
-                <button class="btn btn-primary btn-sm" id="export-counters-btn" onclick="exportXLSX()">📤 Exporter Excel</button>
+                <button class="btn btn-primary btn-sm" id="export-counters-btn">📤 Exporter Excel</button>
                 <button class="btn btn-secondary btn-sm" id="import-xlsx-btn">📥 Importer Excel</button>
                 <input type="file" id="xlsx-file-input" accept=".xlsx,.csv" style="display:none;">
             </div>
@@ -4435,32 +4435,29 @@ function importXLSX(file) {
     reader.onload = e => {
         try {
             const wb = XLSX.read(e.target.result, { type: 'binary' });
+            let updatedSoldes = 0, addedConges = 0;
 
             // Lire l'onglet Soldes salariés
             const wsSoldes = wb.Sheets['Soldes salariés'];
             if (wsSoldes) {
                 const rows = XLSX.utils.sheet_to_json(wsSoldes, { header: 1 }).slice(1);
-                let updated = 0;
                 rows.forEach(row => {
                     const email = (row[0]||'').toLowerCase().trim();
-                    // Colonne 8 = [IMPORT] CP solde, colonne 9 = [IMPORT] RC minutes
-                    const cpVal = row[8]; // CP brut
-                    const rcVal = row[9]; // RC en minutes
+                    const cpVal = row[8];
+                    const rcVal = row[9];
                     const user = users.find(u => u.email.toLowerCase() === email);
                     if (!user) return;
                     if (cpVal !== undefined && cpVal !== '' && !isNaN(parseInt(cpVal))) user.balances.CP = parseInt(cpVal);
                     if (rcVal !== undefined && rcVal !== '' && !isNaN(parseInt(rcVal))) user.balances.RC = parseInt(rcVal);
                     if (user.id === currentUser?.id) { currentUser.balances = {...user.balances}; updateBalances(); }
-                    updated++;
+                    updatedSoldes++;
                 });
-                showNotification(`✅ ${updated} solde(s) mis à jour`, 'success');
             }
 
             // Lire l'onglet Congés
             const wsConges = wb.Sheets['Congés'];
             if (wsConges) {
                 const rows = XLSX.utils.sheet_to_json(wsConges, { header: 1 }).slice(1);
-                let added = 0;
                 rows.forEach(row => {
                     const email = (row[0]||'').toLowerCase().trim();
                     const date = (row[3]||'').trim();
@@ -4476,14 +4473,20 @@ function importXLSX(file) {
                         durationMin: type==='RC'?rcDayMinutes(user):null,
                         comment: row[7]||'', date, dateRequested: row[8]||todayStr(),
                         validationDate: row[9]||null };
-                    added++;
+                    addedConges++;
                 });
-                showNotification(`✅ ${added} congé(s) importé(s)`, 'success');
             }
 
             renderUsersList(); renderCountersManager(); renderCalendar(); generateLeaveList();
             if (isChefDeService()) { renderValidationRC(); updateValidationRCBadge(); }
             autoSave();
+
+            // Une seule notification finale
+            const parts = [];
+            if (updatedSoldes > 0) parts.push(`${updatedSoldes} solde(s) mis à jour`);
+            if (addedConges > 0) parts.push(`${addedConges} congé(s) importé(s)`);
+            showNotification(`✅ Import réussi — ${parts.join(', ')}`, 'success');
+
         } catch(err) {
             showNotification('❌ Erreur import : ' + err.message, 'error');
         }
