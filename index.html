@@ -676,7 +676,7 @@
                     </select>
                 </div>
                 <button class="btn btn-primary btn-sm" id="cm-apply-filter">Filtrer</button>
-                <button class="btn btn-primary btn-sm" id="export-counters-btn">📤 Exporter Excel</button>
+                <button class="btn btn-primary btn-sm" id="export-counters-btn" onclick="exportXLSX()">📤 Exporter Excel</button>
                 <button class="btn btn-secondary btn-sm" id="import-xlsx-btn">📥 Importer Excel</button>
                 <input type="file" id="xlsx-file-input" accept=".xlsx,.csv" style="display:none;">
             </div>
@@ -1114,8 +1114,8 @@
         <div class="modal-body">
             <p id="cancel-leave-message"></p>
             <div class="form-group">
-                <label for="cancel-reason">Raison (obligatoire):</label>
-                <textarea id="cancel-reason" placeholder="Indiquez la raison de l'annulation"></textarea>
+                <label for="cancel-reason" id="cancel-reason-label">Raison :</label>
+                <textarea id="cancel-reason" placeholder="Indiquez la raison de l'annulation (facultatif pour une demande en attente)"></textarea>
             </div>
         </div>
         <div class="modal-footer">
@@ -2188,15 +2188,47 @@ function addLeave(dates, type) {
     if (userInArray) userInArray.balances = { ...currentUser.balances };
     updateBalances();
 
+    // ---- Détecter chevauchements avec collègues de la même équipe ----
+    const teamConflictNames = [];
+    if (currentUser.teamId) {
+        dates.forEach(dateStr => {
+            Object.values(leaves).forEach(l => {
+                if (l.userId === currentUser.id) return;
+                if (l.date !== dateStr) return;
+                if (l.status === 'rejected' || l.status === 'cancellation_requested') return;
+                const colleague = getUserById(l.userId);
+                if (!colleague || colleague.teamId !== currentUser.teamId) return;
+                if (!teamConflictNames.includes(colleague.name)) teamConflictNames.push(colleague.name);
+            });
+        });
+    }
+    // Marquer les congés posés si conflit équipe détecté
+    if (teamConflictNames.length > 0) {
+        dates.forEach(dateStr => {
+            const l = leaves[leaveKey(currentUser.id, dateStr)];
+            if (l) l.teamConflict = true;
+        });
+    }
+
     // Notifier le(s) chef(s) de service
     const chefId = getChefDeServiceOf(currentUser);
-    sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'new_leave_request', {
+    const notifType = teamConflictNames.length > 0 ? 'new_leave_request_team_conflict' : 'new_leave_request';
+    sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), notifType, {
         userName: currentUser.name, leaveType: type,
-        date: dates[0], count: dates.length
+        date: dates[0], count: dates.length,
+        conflictNames: teamConflictNames
     });
 
     if (isChefDeService()) updateValidationRCBadge();
-    showNotification(type === 'CP' ? `CP posé : ${totalDays} jour(s)` : `RC posé`, 'success');
+    if (teamConflictNames.length > 0) {
+        showNotification(
+            (type === 'CP' ? `CP posé : ${totalDays} jour(s)` : `RC posé`) +
+            ` — ⚠️ Alerte envoyée au manager : ${teamConflictNames.join(', ')} déjà absent(e)(s) sur ces dates`,
+            'info'
+        );
+    } else {
+        showNotification(type === 'CP' ? `CP posé : ${totalDays} jour(s)` : `RC posé`, 'success');
+    }
     autoSave();
     return true;
 }
@@ -2204,8 +2236,30 @@ function addLeave(dates, type) {
 function cancelLeave(dateStr) {
     const leave = getUserLeaveOnDate(currentUser.id, dateStr);
     if (!leave) return false;
-    if (leave.status !== 'approved') { showNotification('Seuls les congés validés peuvent être annulés', 'error'); return false; }
     const reason = document.getElementById('cancel-reason').value;
+
+    if (leave.status === 'pending') {
+        // Congé en attente : annulation immédiate, remboursement automatique
+        const lKey = leaveKey(currentUser.id, dateStr);
+        if (leave.type === 'CP') {
+            currentUser.balances.CP += 1;
+            const u = getUserById(currentUser.id);
+            if (u) u.balances.CP = currentUser.balances.CP;
+        } else if (leave.type === 'RC') {
+            const refund = leave.durationMin || rcDayMinutes(currentUser);
+            currentUser.balances.RC += refund;
+            const u = getUserById(currentUser.id);
+            if (u) u.balances.RC = currentUser.balances.RC;
+        }
+        delete leaves[lKey];
+        updateBalances();
+        showNotification('🗑️ Congé annulé et solde restitué', 'success');
+        return true;
+    }
+
+    if (leave.status !== 'approved') { showNotification('Seuls les congés en attente ou validés peuvent être annulés', 'error'); return false; }
+
+    // Congé approuvé : demande d'annulation soumise au manager
     leave.status = 'cancellation_requested';
     leave.cancelReason = reason;
     leave.cancelDate = todayStr();
@@ -2220,7 +2274,7 @@ function cancelLeave(dateStr) {
     sendInternalNotif(chefId ? [chefId] : getAllChefDeService(), 'cancel_request', {
         userName: currentUser.name, leaveType: leave.type, date: dateStr
     });
-    showNotification("Demande d'annulation envoyée", 'success');
+    showNotification("Demande d'annulation envoyée au manager", 'success');
     return true;
 }
 
@@ -3239,6 +3293,8 @@ function renderValidationRC() {
 
             // Détecter conflits CP : d'autres salariés en attente sur les mêmes dates
             const cpConflicts = [];
+            // Collègues de la même équipe déjà absents (approved OU pending)
+            const teamAbsents = [];
             if (isPending) {
                 sorted.forEach(d => {
                     Object.values(leaves).filter(l =>
@@ -3248,11 +3304,26 @@ function renderValidationRC() {
                         const cn = getUserById(l.userId)?.name;
                         if (cn && !cpConflicts.includes(cn)) cpConflicts.push(cn);
                     });
+                    // Collègues de la même équipe avec n'importe quel congé (approved ou pending)
+                    if (user.teamId) {
+                        Object.values(leaves).filter(l =>
+                            l.userId !== grp.userId && l.date === d &&
+                            (l.status === 'approved' || l.status === 'pending')
+                        ).forEach(l => {
+                            const colleague = getUserById(l.userId);
+                            if (!colleague || colleague.teamId !== user.teamId) return;
+                            if (!teamAbsents.includes(colleague.name)) teamAbsents.push(colleague.name);
+                        });
+                    }
                 });
             }
-            const conflictHtml = cpConflicts.length > 0
-                ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${cpConflicts.join(', ')}</span>`
-                : '';
+            const conflictHtml =
+                (cpConflicts.length > 0
+                    ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${cpConflicts.join(', ')} aussi en attente</span>`
+                    : '') +
+                (teamAbsents.length > 0
+                    ? `<br><span style="display:inline-block;margin-top:4px;background:#e74c3c;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">🔴 Collègue(s) absent(s) — ${teamAbsents.join(', ')}</span>`
+                    : '');
 
             tr.innerHTML = `
                 <td><strong>${user.name}</strong></td>
@@ -3376,12 +3447,25 @@ function renderValidationRC() {
         const plafonne = isRCPlafonné(leave);
         const volumeHtml = `${formatMinutes(dur)}${plafonne ? ' <span class="plafonne-badge">⚠️ plafonné</span>' : ''}`;
         const statusLabel = { pending: '⏳ En attente', approved: '✅ Validé', rejected: '❌ Refusé' };
+        // Collègues de la même équipe déjà absents (approved ou pending) sur cette date
+        const rcTeamAbsents = [];
+        if (isPending && user.teamId) {
+            Object.values(leaves).filter(l =>
+                l.userId !== leave.userId && l.date === dateStr &&
+                (l.status === 'approved' || l.status === 'pending')
+            ).forEach(l => {
+                const colleague = getUserById(l.userId);
+                if (!colleague || colleague.teamId !== user.teamId) return;
+                if (!rcTeamAbsents.includes(colleague.name)) rcTeamAbsents.push(colleague.name);
+            });
+        }
         const conflictBadge = isConflict
-            ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">
-                ⚠️ Conflit — ${conflictNamesMap[dateStr]}
-               </span>`
+            ? `<br><span style="display:inline-block;margin-top:4px;background:#f39c12;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">⚠️ Conflit — ${conflictNamesMap[dateStr]}</span>`
             : '';
-        const statusHtml = `<span class="status-badge ${leave.status}">${statusLabel[leave.status] || leave.status}</span>${conflictBadge}`;
+        const teamAbsentBadge = rcTeamAbsents.length > 0
+            ? `<br><span style="display:inline-block;margin-top:4px;background:#e74c3c;color:white;border-radius:4px;font-size:0.72rem;padding:2px 7px;font-weight:bold;">🔴 Collègue(s) absent(s) — ${rcTeamAbsents.join(', ')}</span>`
+            : '';
+        const statusHtml = `<span class="status-badge ${leave.status}">${statusLabel[leave.status] || leave.status}</span>${conflictBadge}${teamAbsentBadge}`;
         let actionsHtml = '-';
         if (isPending) {
             actionsHtml = `<button class="btn btn-success btn-sm" onclick="quickValidateRC('${dateStr}','approved')" style="margin-right:4px;">✓ Valider</button>
@@ -4024,8 +4108,8 @@ function generateLeaveList() {
             <td>${dur}</td>
             <td>${statusHtml}</td>
             <td>${commentHtml}</td>
-            <td>${leave.status === 'approved' && !isPastDate(dateStr)
-                ? `<button class="btn btn-danger btn-sm" onclick="showCancelLeaveModal('${dateStr}')">Annuler</button>`
+            <td>${(leave.status === 'approved' || leave.status === 'pending') && !isPastDate(dateStr) && leave.status !== 'cancellation_requested'
+                ? `<button class="btn btn-danger btn-sm" onclick="showCancelLeaveModal('${dateStr}')">🗑️ Annuler</button>`
                 : '-'}</td>`;
         tbody.appendChild(tr);
     });
@@ -4190,6 +4274,10 @@ function buildNotifDisplay(notif) {
             return { ...INF, icon: '📋',
                 titre: `Nouvelle demande de congé — ${notif.userName}`,
                 corps: `${notif.leaveType} — ${formatDateShort(notif.date)}${notif.count > 1 ? ` (${notif.count} jours)` : ''}` };
+        case 'new_leave_request_team_conflict':
+            return { bg: '#fdedec', border: '#e74c3c', color: '#721c24', icon: '🔴',
+                titre: `⚠️ Congé avec absence équipe — ${notif.userName}`,
+                corps: `${notif.leaveType} — ${formatDateShort(notif.date)}${notif.count > 1 ? ` (${notif.count} jours)` : ''} — 🔴 Déjà absent(s) : ${(notif.conflictNames||[]).join(', ')}` };
         case 'new_credit_request':
             return { ...INF, icon: '⏱️',
                 titre: `Nouvelle demande d'heures sup — ${notif.userName}`,
@@ -4254,10 +4342,20 @@ function dismissRCModalNotif(notifId) {
 
 function showCancelLeaveModal(dateStr) {
     if (!isLoggedIn) return;
-    const leave = leaves[dateStr];
+    const leave = leaves[leaveKey(currentUser.id, dateStr)] || leaves[dateStr];
     if (!leave) return;
-    document.getElementById('cancel-leave-message').textContent = `Annuler le congé ${leave.type} du ${formatDate(dateStr)} ?`;
+    const isPending = leave.status === 'pending';
+    const msgEl = document.getElementById('cancel-leave-message');
+    if (isPending) {
+        msgEl.innerHTML = `<strong>Annuler la demande</strong> de congé ${leave.type} du ${formatDate(dateStr)} ?`
+            + `<br><span style="color:#27ae60;font-size:0.9rem;margin-top:6px;display:block;">✅ Votre solde sera restitué immédiatement (aucune validation manager requise).</span>`;
+    } else {
+        msgEl.innerHTML = `<strong>Demander l’annulation</strong> du congé ${leave.type} du ${formatDate(dateStr)} ?`
+            + `<br><span style="color:#f39c12;font-size:0.9rem;margin-top:6px;display:block;">⚠️ Ce congé est déjà validé. La demande sera soumise à votre manager.</span>`;
+    }
     document.getElementById('cancel-reason').value = '';
+    const labelEl = document.getElementById('cancel-reason-label');
+    if (labelEl) labelEl.textContent = isPending ? 'Raison (facultative) :' : 'Raison (obligatoire) :';
     document.getElementById('cancel-leave-modal').dataset.date = dateStr;
     document.getElementById('cancel-leave-modal').classList.add('active');
 }
@@ -4435,29 +4533,32 @@ function importXLSX(file) {
     reader.onload = e => {
         try {
             const wb = XLSX.read(e.target.result, { type: 'binary' });
-            let updatedSoldes = 0, addedConges = 0;
 
             // Lire l'onglet Soldes salariés
             const wsSoldes = wb.Sheets['Soldes salariés'];
             if (wsSoldes) {
                 const rows = XLSX.utils.sheet_to_json(wsSoldes, { header: 1 }).slice(1);
+                let updated = 0;
                 rows.forEach(row => {
                     const email = (row[0]||'').toLowerCase().trim();
-                    const cpVal = row[8];
-                    const rcVal = row[9];
+                    // Colonne 8 = [IMPORT] CP solde, colonne 9 = [IMPORT] RC minutes
+                    const cpVal = row[8]; // CP brut
+                    const rcVal = row[9]; // RC en minutes
                     const user = users.find(u => u.email.toLowerCase() === email);
                     if (!user) return;
                     if (cpVal !== undefined && cpVal !== '' && !isNaN(parseInt(cpVal))) user.balances.CP = parseInt(cpVal);
                     if (rcVal !== undefined && rcVal !== '' && !isNaN(parseInt(rcVal))) user.balances.RC = parseInt(rcVal);
                     if (user.id === currentUser?.id) { currentUser.balances = {...user.balances}; updateBalances(); }
-                    updatedSoldes++;
+                    updated++;
                 });
+                showNotification(`✅ ${updated} solde(s) mis à jour`, 'success');
             }
 
             // Lire l'onglet Congés
             const wsConges = wb.Sheets['Congés'];
             if (wsConges) {
                 const rows = XLSX.utils.sheet_to_json(wsConges, { header: 1 }).slice(1);
+                let added = 0;
                 rows.forEach(row => {
                     const email = (row[0]||'').toLowerCase().trim();
                     const date = (row[3]||'').trim();
@@ -4473,20 +4574,14 @@ function importXLSX(file) {
                         durationMin: type==='RC'?rcDayMinutes(user):null,
                         comment: row[7]||'', date, dateRequested: row[8]||todayStr(),
                         validationDate: row[9]||null };
-                    addedConges++;
+                    added++;
                 });
+                showNotification(`✅ ${added} congé(s) importé(s)`, 'success');
             }
 
             renderUsersList(); renderCountersManager(); renderCalendar(); generateLeaveList();
             if (isChefDeService()) { renderValidationRC(); updateValidationRCBadge(); }
             autoSave();
-
-            // Une seule notification finale
-            const parts = [];
-            if (updatedSoldes > 0) parts.push(`${updatedSoldes} solde(s) mis à jour`);
-            if (addedConges > 0) parts.push(`${addedConges} congé(s) importé(s)`);
-            showNotification(`✅ Import réussi — ${parts.join(', ')}`, 'success');
-
         } catch(err) {
             showNotification('❌ Erreur import : ' + err.message, 'error');
         }
@@ -5665,10 +5760,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal: annuler congé
     document.getElementById('confirm-cancel-leave')?.addEventListener('click', () => {
         if (!isLoggedIn) return;
-        const reason = document.getElementById('cancel-reason').value.trim();
-        if (!reason) { showNotification('Veuillez indiquer une raison', 'error'); return; }
         const dateStr = document.getElementById('cancel-leave-modal').dataset.date;
-        if (cancelLeave(dateStr)) { document.getElementById('cancel-leave-modal').classList.remove('active'); renderCalendar(); generateLeaveList(); }
+        const leave = leaves[leaveKey(currentUser.id, dateStr)] || leaves[dateStr];
+        const reason = document.getElementById('cancel-reason').value.trim();
+        // Pour les congés approved, la raison est obligatoire (transmise au manager)
+        if (leave && leave.status === 'approved' && !reason) { showNotification('Veuillez indiquer une raison', 'error'); return; }
+        if (cancelLeave(dateStr)) { document.getElementById('cancel-leave-modal').classList.remove('active'); renderCalendar(); generateLeaveList(); autoSave(); }
     });
     document.getElementById('cancel-cancel-leave')?.addEventListener('click', () => { document.getElementById('cancel-leave-modal').classList.remove('active'); });
     document.getElementById('close-cancel-leave-modal')?.addEventListener('click', () => { document.getElementById('cancel-leave-modal').classList.remove('active'); });
