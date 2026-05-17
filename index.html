@@ -574,6 +574,9 @@
                 </div>
             </div>
             <div class="months-container" id="list-calendar" style="margin-bottom:30px;"></div>
+            <div style="background:#fff8e1;border-left:4px solid #f39c12;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:16px;font-size:0.88rem;color:#7d5a00;">
+                📅 <strong>Rappel :</strong> Un minimum de <strong>2 semaines de congés (CA) consécutifs</strong> (lundi au samedi) doit être pris entre les <strong>semaines 26 et 35</strong> (du 22 juin au 30 août 2026).
+            </div>
             <hr style="margin-bottom:20px;border-color:#eee;">
 
 
@@ -683,8 +686,6 @@
                     </select>
                 </div>
                 <button class="btn btn-primary btn-sm" id="cm-apply-filter">Filtrer</button>
-                <button class="btn btn-primary btn-sm" id="export-counters-btn" onclick="exportXLSX()">📤 Exporter Excel</button>
-                <button class="btn btn-secondary btn-sm" id="import-xlsx-btn">📥 Importer Excel</button>
                 <input type="file" id="xlsx-file-input" accept=".xlsx,.csv" style="display:none;">
             </div>
 
@@ -731,6 +732,7 @@
                     <option value="all">Tous les statuts</option><option value="approved">✅ Validé</option>
                     <option value="rejected">❌ Refusé</option><option value="pending">⏳ En attente</option>
                     <option value="cancellation_requested">🔄 Annulation demandée</option>
+                    <option value="cancelled">✖ Annulé</option>
                 </select>
                 <select id="hist-filter-month" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:0.88rem;"><option value="all">Tous les mois</option></select>
                 <button class="btn btn-primary btn-sm" onclick="renderHistorique()">Filtrer</button>
@@ -1781,6 +1783,7 @@ function getVisibleLeaves() {
         const dateStr = leave.date;
         const leaveUser = getUserById(leave.userId);
         if (!leaveUser || !dateStr) return;
+        if (leave.status === 'cancelled') return;
         if (leave.status === 'cancellation_requested' && leave.userId === currentUser.id && !isChefDeService()) {
             if (!leave.cancelledFromApproved) return;
         }
@@ -1885,13 +1888,15 @@ function isRCPlafonné(leave) {
 
 // ========== BADGE NOTIFICATION onglet Validation RC ==========
 function getPendingRCCount() {
-    const leavePending    = Object.values(leaves).filter(l => l.type === 'RC' && l.status === 'pending').length;
+    const allLeaves = Object.values(leaves);
+    const cpLeavePending  = new Set(allLeaves.filter(l => l.type === 'CP' && l.status === 'pending').map(l => l.userId)).size;
+    const rcLeavePending  = new Set(allLeaves.filter(l => l.type === 'RC' && l.status === 'pending').map(l => l.userId)).size;
     const creditPending   = rcCreditRequests.filter(r => r.status === 'pending').length;
     const exchangePending = rcExchangeRequests.filter(r => r.status === 'pending').length;
     const hsPending       = hsDeclarations.filter(d => d.status === 'pending').length;
-    // Inclure les annulations en attente de validation manager (CP et RC)
-    const cancelPending   = Object.values(leaves).filter(l => l.status === 'cancellation_requested' && l.cancelledFromApproved).length;
-    return leavePending + creditPending + exchangePending + hsPending + cancelPending;
+    const cpCancelPending = new Set(allLeaves.filter(l => l.type === 'CP' && l.status === 'cancellation_requested' && l.cancelledFromApproved && !l.validationDate).map(l => l.userId)).size;
+    const rcCancelPending = new Set(allLeaves.filter(l => l.type === 'RC' && l.status === 'cancellation_requested' && l.cancelledFromApproved).map(l => l.userId)).size;
+    return cpLeavePending + rcLeavePending + creditPending + exchangePending + hsPending + cpCancelPending + rcCancelPending;
 }
 
 function updateValidationRCBadge() {
@@ -2255,7 +2260,6 @@ function cancelLeave(dateStr) {
 
     if (leave.status === 'pending') {
         // Congé en attente : annulation immédiate, remboursement automatique
-        const lKey = leaveKey(currentUser.id, dateStr);
         if (leave.type === 'CP') {
             currentUser.balances.CP += 1;
             const u = getUserById(currentUser.id);
@@ -2266,7 +2270,9 @@ function cancelLeave(dateStr) {
             const u = getUserById(currentUser.id);
             if (u) u.balances.RC = currentUser.balances.RC;
         }
-        delete leaves[lKey];
+        leave.status = 'cancelled';
+        leave.validationDate = todayStr();
+        leave.validatedBy = currentUser.id;
         updateBalances();
         showNotification('🗑️ Congé annulé et solde restitué', 'success');
         return true;
@@ -3149,25 +3155,28 @@ function confirmCPReject(comment) {
 
 // Dédupliquer les échanges RC identiques (même userId + dateGive + startGive + endGive + dateReceive)
 function deduplicateExchanges() {
-    const seen = new Set();
-    const deduped = [];
+    const statusOrder = { approved: 3, rejected: 2, pending: 1 };
+    const best = {};
     rcExchangeRequests.forEach(r => {
-        const key = `${r.userId}|${r.dateGive}|${r.startGive}|${r.endGive}|${r.dateReceive}|${r.startReceive}|${r.endReceive}|${r.status}`;
-        if (!seen.has(key)) { seen.add(key); deduped.push(r); }
+        const key = `${r.userId}|${r.dateGive}|${r.startGive}|${r.endGive}|${r.dateReceive}|${r.startReceive}|${r.endReceive}`;
+        const prev = best[key];
+        if (!prev || (statusOrder[r.status]||0) >= (statusOrder[prev.status]||0)) best[key] = r;
     });
     rcExchangeRequests.length = 0;
-    deduped.forEach(r => rcExchangeRequests.push(r));
-    const removed = deduped.length - seen.size; // always 0 but keep for clarity
+    Object.values(best).forEach(r => rcExchangeRequests.push(r));
 }
 function deduplicateCredits() {
-    const seen = new Set();
-    const deduped = [];
+    // Clé sans status : même crédit = même userId + date + horaires + durée
+    // On garde la version avec le statut le plus avancé (approved > rejected > pending)
+    const statusOrder = { approved: 3, rejected: 2, pending: 1 };
+    const best = {};
     rcCreditRequests.forEach(r => {
-        const key = `${r.userId}|${r.date}|${r.startTime}|${r.endTime}|${r.durationMin}|${r.mode}|${r.status}`;
-        if (!seen.has(key)) { seen.add(key); deduped.push(r); }
+        const key = `${r.userId}|${r.date}|${r.startTime}|${r.endTime}|${r.durationMin}|${r.mode}`;
+        const prev = best[key];
+        if (!prev || (statusOrder[r.status]||0) >= (statusOrder[prev.status]||0)) best[key] = r;
     });
     rcCreditRequests.length = 0;
-    deduped.forEach(r => rcCreditRequests.push(r));
+    Object.values(best).forEach(r => rcCreditRequests.push(r));
 }
 
 
@@ -3317,7 +3326,7 @@ function renderValidationRC() {
     const cpRejected = allCP.filter(l => l.status === 'rejected');
 
     // CP en attente de validation + annulations demandées (approved -> cancellation_requested)
-    let cpRows = allCP.filter(l => l.status === 'pending' || (l.status === 'cancellation_requested' && l.cancelledFromApproved));
+    let cpRows = allCP.filter(l => l.status === 'pending' || (l.status === 'cancellation_requested' && l.cancelledFromApproved && !l.validationDate));
 
     // Regrouper par salaré + plage de dates consécutives
     const cpGroups = {};
@@ -3362,8 +3371,8 @@ function renderValidationRC() {
                 ? `<button class="btn btn-success btn-sm" onclick='approveCP(${grp.userId}, ${JSON.stringify(sorted)})' style="margin-right:4px;">✓ Valider</button>
                    <button class="btn btn-danger btn-sm"  onclick='rejectCP(${grp.userId}, ${JSON.stringify(sorted)})'>✗ Refuser</button>`
                 : isCancelReq
-                ? `<button class="btn btn-success btn-sm" onclick='validateCancelCP(${grp.userId}, ${JSON.stringify(sorted)}, true)' style="margin-right:4px;">✓ Accepter annulation</button>
-                   <button class="btn btn-danger btn-sm" onclick='validateCancelCP(${grp.userId}, ${JSON.stringify(sorted)}, false)'>✗ Refuser annulation</button>`
+                ? `<button class="btn btn-success btn-sm" onclick='validateCancelCP(${grp.userId}, ${JSON.stringify(sorted)}, true, true)' style="margin-right:4px;">✓ Accepter annulation</button>
+                   <button class="btn btn-danger btn-sm" onclick='validateCancelCP(${grp.userId}, ${JSON.stringify(sorted)}, false, true)'>✗ Refuser annulation</button>`
                 : (grp.validationComment ? `<em style="font-size:0.8rem;color:#7f8c8d;">${grp.validationComment}</em>` : '-');
 
             // Détecter conflits CP : d'autres salariés en attente sur les mêmes dates
@@ -3499,7 +3508,7 @@ function renderValidationRC() {
     const empFilter    = document.getElementById('rc-filter-employee').value;
 
     // Inclure les RC en attente + annulations demandées (approved -> cancellation_requested)
-    let rows = allRC.filter(l => l.status !== 'cancellation_requested' || l.cancelledFromApproved);
+    let rows = allRC.filter(l => l.status !== 'cancelled' && (l.status !== 'cancellation_requested' || (l.cancelledFromApproved && !l.validationDate)));
     if (statusFilter !== 'all') rows = rows.filter(l => l.status === statusFilter);
     if (empFilter !== 'all')    rows = rows.filter(l => l.userId === parseInt(empFilter));
     rows.sort((a, b) => {
@@ -4105,7 +4114,7 @@ function renderListCalendar() {
             const lh = getFrenchHolidays(listYear);
             if (lh[dateStr]) { el.classList.add(dateStr.endsWith('-05-01') ? 'may-first' : 'public-holiday'); el.title = lh[dateStr]; }
             const leave = getUserLeaveOnDate(currentUser.id, dateStr);
-            const showLeave = leave && (
+            const showLeave = leave && leave.status !== 'cancelled' && (
                 leave.status !== 'cancellation_requested' ||
                 leave.cancelledFromApproved
             );
@@ -4213,6 +4222,7 @@ function generateLeaveList() {
             const dateStr = leave.date || '';
             // Annulation d'un pending : disparait immédiatement -> historique
             // Annulation d'un approved : reste visible (en attente manager) -> historique seulement quand accepté
+            if (leave.status === 'cancelled') return false;
             if (leave.status === 'cancellation_requested' && !leave.cancelledFromApproved) return false;
             if (year !== 'all' && !dateStr.startsWith(year)) return false;
             if (type !== 'all' && leave.type !== type) return false;
@@ -5092,7 +5102,21 @@ function renderHistorique() {
     if (!isLoggedIn) return;
     const isManager = isChefDeService();
     const btnsDiv = document.getElementById('historique-export-btns');
-    if (btnsDiv) btnsDiv.innerHTML = '';
+    if (btnsDiv) {
+        btnsDiv.innerHTML = '';
+        if (isManager) {
+            const btnExp = document.createElement('button');
+            btnExp.className = 'btn btn-primary btn-sm';
+            btnExp.innerHTML = '📤 Exporter Excel';
+            btnExp.onclick = () => exportXLSX();
+            const btnImp = document.createElement('button');
+            btnImp.className = 'btn btn-secondary btn-sm';
+            btnImp.innerHTML = '📥 Importer Excel';
+            btnImp.onclick = () => document.getElementById('xlsx-file-input').click();
+            btnsDiv.appendChild(btnExp);
+            btnsDiv.appendChild(btnImp);
+        }
+    }
     const colSal = document.getElementById('hist-col-salarie');
     const colAct = document.getElementById('hist-col-actions');
     if (colSal) colSal.style.display = isManager ? '' : 'none';
@@ -5120,7 +5144,8 @@ function renderHistorique() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7f8c8d;padding:20px;">Aucun résultat</td></tr>'; return; }
-    const statusBadge = { pending:'<span class="status-badge pending">⏳ En attente</span>', approved:'<span class="status-badge approved">✅ Validé</span>', rejected:'<span class="status-badge rejected">❌ Refusé</span>', cancellation_requested:'<span class="status-badge" style="background:#fff3cd;color:#856404;border:1px solid #f39c12;">🔄 Annulation demandée</span>' };
+    const statusBadge = { pending:'<span class="status-badge pending">⏳ En attente</span>', approved:'<span class="status-badge approved">✅ Validé</span>', rejected:'<span class="status-badge rejected">❌ Refusé</span>', cancellation_requested:'<span class="status-badge" style="background:#fff3cd;color:#856404;border:1px solid #f39c12;">🔄 Annulation demandée</span>',
+    cancelled:'<span class="status-badge" style="background:#d5d8dc;color:#2c3e50;border:1px solid #95a5a6;">✖ Annulé</span>' };
     rows.forEach(r => {
         const tr = document.createElement('tr');
         if (r.status==='pending'||r.status==='cancellation_requested') tr.classList.add('row-pending');
@@ -5156,20 +5181,25 @@ function deleteHistoriqueRow(rowId) {
     showNotification('Entrée supprimée','success'); autoSave(); renderHistorique();
 }
 // Valider ou refuser une annulation de plage CP (plusieurs jours)
-function validateCancelCP(userId, dates, accept) {
+function validateCancelCP(userId, dates, accept, skipConfirm) {
     const user = getUserById(userId);
     if (!user) return;
-    const label = accept
-        ? `Accepter l’annulation de ${dates.length} jour(s) CP ? (le solde sera restitué)`
-        : `Refuser l’annulation ? (les congés restent actifs)`;
-    if (!confirm(label)) return;
+    if (!skipConfirm) {
+        const label = accept
+            ? `Accepter l’annulation de ${dates.length} jour(s) CP ? (le solde sera restitué)`
+            : `Refuser l’annulation ? (les congés restent actifs)`;
+        if (!confirm(label)) return;
+    }
     let cpRefund = 0;
     dates.forEach(d => {
         const leave = getUserLeaveOnDate(userId, d);
         if (!leave || leave.status !== 'cancellation_requested') return;
         if (accept) {
             cpRefund++;
-            delete leaves[leaveKey(userId, d)];
+            leave.status = 'cancelled';
+            leave.cancelledFromApproved = true;
+            leave.validationDate = todayStr();
+            leave.validatedBy = currentUser?.id || null;
         } else {
             leave.status = 'approved';
             delete leave.cancelledFromApproved;
@@ -5200,7 +5230,7 @@ function requalifyHistorique(rowId,newStatus) {
                 const allDates = Object.values(leaves)
                     .filter(l => l.userId === uid && l.type === 'CP' && l.status === 'cancellation_requested' && l.cancelledFromApproved)
                     .map(l => l.date).sort();
-                validateCancelCP(uid, allDates, newStatus === 'approved');
+                validateCancelCP(uid, allDates, newStatus === 'approved', true);
                 renderHistorique();
                 return;
             }
@@ -5210,7 +5240,9 @@ function requalifyHistorique(rowId,newStatus) {
             if (!confirm(label)) return;
             if (newStatus === 'approved') {
                 if (user.id === currentUser?.id) { currentUser.balances = {...user.balances}; updateBalances(); }
-                delete leaves[leaveKey(uid, d)];
+                leave.status = 'cancelled';
+                leave.validationDate = todayStr();
+                leave.validatedBy = currentUser?.id || null;
                 sendInternalNotif([uid], 'cancel_approved', { leaveType: leave.type, date: d });
                 showNotification('Annulation acceptée — congé supprimé ✅', 'success');
             } else {
@@ -5495,6 +5527,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     Object.assign(userNotifications, data.userNotifications || {});
                     window._lastSavedAt = data.savedAt;
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+                    // Resauvegarder pour écrire les données dédupliquées dans Firebase
+                    setTimeout(() => saveToStorage(), 500);
                 }
             } catch(e) { console.warn('Firebase load failed:', e); }
         }
@@ -5505,10 +5539,16 @@ document.addEventListener('DOMContentLoaded', () => {
         users.length = 0; data.users.forEach(u => users.push(u));
         teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
         Object.keys(leaves).forEach(k => delete leaves[k]); Object.assign(leaves, data.leaves||{});
+        const cBefore = (data.rcCreditRequests||[]).length;
+        const eBefore = (data.rcExchangeRequests||[]).length;
         rcCreditRequests.length = 0; (data.rcCreditRequests||[]).forEach(r => rcCreditRequests.push(r)); deduplicateCredits();
         hsDeclarations.length = 0; (data.hsDeclarations||[]).forEach(d => hsDeclarations.push(d));
         rcExchangeRequests.length = 0; (data.rcExchangeRequests||[]).forEach(r => rcExchangeRequests.push(r)); deduplicateExchanges();
         Object.keys(userNotifications).forEach(k => delete userNotifications[k]); Object.assign(userNotifications, data.userNotifications||{});
+        // Si doublons detectes, reecrire Firebase immediatement avec donnees propres
+        if (rcCreditRequests.length < cBefore || rcExchangeRequests.length < eBefore) {
+            setTimeout(() => saveToStorage(), 200);
+        }
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
         populateTestSalarieSelect();
         if (currentUser) {
