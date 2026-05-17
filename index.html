@@ -434,7 +434,7 @@
     <form class="login-form" id="login-form">
         <div class="form-group">
             <label for="login-username">Identifiant</label>
-            <input type="text" id="login-username" placeholder="Votre identifiant" required>
+            <input type="text" id="login-username" placeholder="" required autocomplete="username">
         </div>
         <div class="form-group">
             <label for="login-password">Mot de passe</label>
@@ -877,6 +877,7 @@
                     <tr>
                         <th class="th-sortable" onclick="sortUsersBy('id')">ID<span class="sort-icon"></span></th>
                         <th class="th-sortable" onclick="sortUsersBy('name')">Nom<span class="sort-icon"></span></th>
+                        <th>Prénom</th>
                         <th>Identifiant</th>
                         <th>Email</th>
                         <th class="th-sortable" onclick="sortUsersBy('role')">Rôle<span class="sort-icon"></span></th>
@@ -1187,11 +1188,17 @@
         <div class="modal-body">
             <div class="form-row">
                 <div class="form-group">
-                    <label for="new-user-name">Nom:</label>
-                    <input type="text" id="new-user-name" placeholder="Nom du salarié" required>
+                    <label for="new-user-name">Nom :</label>
+                    <input type="text" id="new-user-name" placeholder="Nom de famille" required>
                 </div>
                 <div class="form-group">
-                    <label for="new-user-email">Email:</label>
+                    <label for="new-user-firstname">Prénom :</label>
+                    <input type="text" id="new-user-firstname" placeholder="Prénom">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-user-email">Email :</label>
                     <input type="email" id="new-user-email" placeholder="email@entreprise.com" required>
                 </div>
             </div>
@@ -1260,11 +1267,17 @@
             <input type="hidden" id="edit-user-id">
             <div class="form-row">
                 <div class="form-group">
-                    <label for="edit-user-name">Nom:</label>
+                    <label for="edit-user-name">Nom :</label>
                     <input type="text" id="edit-user-name" required>
                 </div>
                 <div class="form-group">
-                    <label for="edit-user-email">Email:</label>
+                    <label for="edit-user-firstname">Prénom :</label>
+                    <input type="text" id="edit-user-firstname">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-user-email">Email :</label>
                     <input type="email" id="edit-user-email" required>
                 </div>
             </div>
@@ -1510,143 +1523,143 @@
 // ========== DONNÉES ==========
 let users = [
     // ---- Admins / Direction ----
-    { id: 1, username: "admin@monvillage.fr", password: "admin@monvillage.frassociationsaintemarie",
+    { id: 1, username: "admidire", password: "admidireassociationsaintemarie",
       name: "Admin Direction", email: "admin@monvillage.fr",
       role: "admin", managerId: null, service: "jour", teamId: null,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true },
-    { id: 2, username: "guilhem.syl@gmail.com", password: "guilhem.syl@gmail.comassociationsaintemarie",
+    { id: 2, username: "guilsylv", password: "guilsylvassociationsaintemarie",
       name: "Sylvain Guilhem", email: "guilhem.syl@gmail.com",
       role: "admin", managerId: null, service: "jour", teamId: null,
       balances: { CP: 0, RC: 0 }, mustChangePassword: false },
 
     // ---- Comptes test ----
-    { id: 3, username: "chef.service.test@monvillage.fr", password: "ChefService1",
+    { id: 3, username: "chefserv", password: "ChefService1",
       name: "Chef Service Test", email: "chef.service.test@monvillage.fr",
       role: "chef(fe) de service", managerId: null, service: "jour", teamId: null,
       balances: { CP: 0, RC: 0 }, mustChangePassword: false  },
-    { id: 4, username: "salarie.test@monvillage.fr", password: "Salarie1",
+    { id: 4, username: "salatest", password: "Salarie1",
       name: "Salarié Test", email: "salarie.test@monvillage.fr",
       role: "employé", managerId: 3, service: "jour", teamId: null,
       balances: { CP: 0, RC: 0 }, mustChangePassword: false  },
 
     // ---- Cycle 1 ----
-    { id: 10, username: "meldem@monvillage.fr", password: "meldem@monvillage.frassociationsaintemarie",
+    { id: 10, username: "meld", password: "meldassociationsaintemarie",
       name: "Meldem", email: "meldem@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 1,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 11, username: "mosa@monvillage.fr", password: "mosa@monvillage.frassociationsaintemarie",
+    { id: 11, username: "mosa", password: "mosaassociationsaintemarie",
       name: "Mosa", email: "mosa@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 3,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 12, username: "chamontin@monvillage.fr", password: "chamontin@monvillage.frassociationsaintemarie",
+    { id: 12, username: "cham", password: "chamassociationsaintemarie",
       name: "Chamontin", email: "chamontin@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 6,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 13, username: "giarratana@monvillage.fr", password: "giarratana@monvillage.frassociationsaintemarie",
+    { id: 13, username: "giar", password: "giarassociationsaintemarie",
       name: "Giarratana", email: "giarratana@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 7,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Cycle 2 ----
-    { id: 20, username: "bal@monvillage.fr", password: "bal@monvillage.frassociationsaintemarie",
+    { id: 20, username: "bal", password: "balassociationsaintemarie",
       name: "Bal", email: "bal@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 1,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 21, username: "gimondo@monvillage.fr", password: "gimondo@monvillage.frassociationsaintemarie",
+    { id: 21, username: "gimo", password: "gimoassociationsaintemarie",
       name: "Gimondo", email: "gimondo@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 3,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 22, username: "leguehennec@monvillage.fr", password: "leguehennec@monvillage.frassociationsaintemarie",
+    { id: 22, username: "legueh", password: "leguehassociationsaintemarie",
       name: "Le Guehennec", email: "leguehennec@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 5,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 23, username: "meargarcia@monvillage.fr", password: "meargarcia@monvillage.frassociationsaintemarie",
+    { id: 23, username: "meargarc", password: "meargarcassociationsaintemarie",
       name: "Mear Garcia", email: "meargarcia@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 7,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Cycle 3 ----
-    { id: 30, username: "chavagnat@monvillage.fr", password: "chavagnat@monvillage.frassociationsaintemarie",
+    { id: 30, username: "chav", password: "chavassociationsaintemarie",
       name: "Chavagnat", email: "chavagnat@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 1,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 31, username: "dezorzi@monvillage.fr", password: "dezorzi@monvillage.frassociationsaintemarie",
+    { id: 31, username: "dezorz", password: "dezorzassociationsaintemarie",
       name: "De Zorzi", email: "dezorzi@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 4,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 32, username: "gorge@monvillage.fr", password: "gorge@monvillage.frassociationsaintemarie",
+    { id: 32, username: "gorg", password: "gorgeassociationsaintemarie",
       name: "Gorge", email: "gorge@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 5,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 33, username: "ardouin@monvillage.fr", password: "ardouin@monvillage.frassociationsaintemarie",
+    { id: 33, username: "ardo", password: "ardoassociationsaintemarie",
       name: "Ardouin", email: "ardouin@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 7,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Cycle 4 ----
-    { id: 40, username: "commandeur@monvillage.fr", password: "commandeur@monvillage.frassociationsaintemarie",
+    { id: 40, username: "comm", password: "commassociationsaintemarie",
       name: "Commandeur", email: "commandeur@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 2,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 41, username: "pujol@monvillage.fr", password: "pujol@monvillage.frassociationsaintemarie",
+    { id: 41, username: "pujo", password: "pujoassociationsaintemarie",
       name: "Pujol", email: "pujol@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 4,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 42, username: "djelloul@monvillage.fr", password: "djelloul@monvillage.frassociationsaintemarie",
+    { id: 42, username: "djel", password: "djelassociationsaintemarie",
       name: "Djelloul", email: "djelloul@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 5,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Cycle 5 ----
-    { id: 50, username: "fortas@monvillage.fr", password: "fortas@monvillage.frassociationsaintemarie",
+    { id: 50, username: "fort", password: "fortassociationsaintemarie",
       name: "Fortas", email: "fortas@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 2,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 51, username: "innoncenti@monvillage.fr", password: "innoncenti@monvillage.frassociationsaintemarie",
+    { id: 51, username: "inno", password: "innoassociationsaintemarie",
       name: "Innoncenti", email: "innoncenti@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 4,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 52, username: "siksik@monvillage.fr", password: "siksik@monvillage.frassociationsaintemarie",
+    { id: 52, username: "siks", password: "siksassociationsaintemarie",
       name: "Siksik", email: "siksik@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 6,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Cycle 6 ----
-    { id: 60, username: "behague@monvillage.fr", password: "behague@monvillage.frassociationsaintemarie",
+    { id: 60, username: "beha", password: "behaassociationsaintemarie",
       name: "Behague", email: "behague@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 2,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 61, username: "everest@monvillage.fr", password: "everest@monvillage.frassociationsaintemarie",
+    { id: 61, username: "ever", password: "everassociationsaintemarie",
       name: "Everest", email: "everest@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 3,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
-    { id: 62, username: "tenza@monvillage.fr", password: "tenza@monvillage.frassociationsaintemarie",
+    { id: 62, username: "tenz", password: "tenzassociationsaintemarie",
       name: "Tenza", email: "tenza@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 6,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Externat ----
-    { id: 70, username: "raty@monvillage.fr", password: "raty@monvillage.frassociationsaintemarie",
+    { id: 70, username: "raty", password: "ratyassociationsaintemarie",
       name: "Raty", email: "raty@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 8,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
 
     // ---- Veilleurs de Nuit A (Guilhem + Martino) ----
-    { id: 80, username: "guilhem@monvillage.fr", password: "guilhem@monvillage.frassociationsaintemarie",
+    { id: 80, username: "guil", password: "guilassociationsaintemarie",
       name: "Guilhem", email: "guilhem@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 9,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true },
-    { id: 81, username: "martino@monvillage.fr", password: "martino@monvillage.frassociationsaintemarie",
+    { id: 81, username: "mart", password: "martassociationsaintemarie",
       name: "Martino", email: "martino@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 9,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true },
 
     // ---- Veilleurs de Nuit B (Baradi + Costa) ----
-    { id: 82, username: "baradi@monvillage.fr", password: "baradi@monvillage.frassociationsaintemarie",
+    { id: 82, username: "bara", password: "baraassociationsaintemarie",
       name: "Baradi", email: "baradi@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 10,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true },
-    { id: 83, username: "costa@monvillage.fr", password: "costa@monvillage.frassociationsaintemarie",
+    { id: 83, username: "cost", password: "costassociationsaintemarie",
       name: "Costa", email: "costa@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 10,
       balances: { CP: 0, RC: 0 }, mustChangePassword: true },
@@ -1699,6 +1712,9 @@ let teams = [
     { id: 9,  name: "Veilleurs Nuit A" },
     { id: 10, name: "Veilleurs Nuit B" },
 ];
+// Snapshot immuable pour purgeFirebase
+const DEFAULT_USERS = users.map(u => ({...u}));
+const DEFAULT_TEAMS = teams.map(t => ({...t}));
 
 // Plafond mensuel RC en minutes (exemple : 2 journées = 840 min pour service jour)
 const RC_PLAFOND_MENSUEL = { jour: 840, nuit: 1200 };
@@ -1859,6 +1875,13 @@ function getUserById(id) {
     const userId = typeof id === 'string' ? parseInt(id) : id;
     return users.find(u => u.id === userId) || null;
 }
+function normalizeStr(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
+}
+function generateUsername(nom, prenom) {
+    return normalizeStr(nom || '').slice(0, 4) + normalizeStr(prenom || '').slice(0, 4);
+}
+
 function getUserByUsername(username) {
     const norm = username.trim().toLowerCase();
     return users.find(u => u.email.toLowerCase() === norm || u.username.toLowerCase() === norm) || null;
@@ -1997,7 +2020,7 @@ function showTeamModal(teamId = null) {
 async function resetPassword(email) {
     const user = users.find(u => u.email === email.trim().toLowerCase());
     if (!user) return false;
-    const tempPassword = user.email + 'associationsaintemarie';
+    const tempPassword = user.username + 'associationsaintemarie';
     user.password = tempPassword;
     user.mustChangePassword = true;
     autoSave();
@@ -2105,7 +2128,7 @@ function updateUIForCurrentUser() {
 function login(username, password) {
     const user = getUserByUsername(username);
     if (!user) { showNotification('Identifiant incorrect', 'error'); return false; }
-    const initialPassword = user.email.toLowerCase() + 'associationsaintemarie';
+    const initialPassword = user.username.toLowerCase() + 'associationsaintemarie';
     const passwordMatch = (user.password === password) || (user.mustChangePassword && password === initialPassword);
     if (!passwordMatch) { showNotification('Mot de passe incorrect', 'error'); return false; }
     currentUser = user;
@@ -3839,10 +3862,21 @@ function addUser(name, email, username, password, role, managerId, cp, rc) {
     if (users.some(u => u.email === email)) { showNotification('Email déjà utilisé', 'error'); return false; }
     const serviceVal = document.getElementById('new-user-service').value || 'jour';
     const teamVal = document.getElementById('new-user-team').value;
+    const firstname = document.getElementById('new-user-firstname')?.value.trim() || '';
+    // Generer identifiant : 4 lettres nom + 4 lettres prenom
+    let generatedUsername = generateUsername(name, firstname);
+    // Garantir unicite
+    let suffix = 0;
+    let baseUsername = generatedUsername;
+    while (users.some(u => u.username === generatedUsername)) {
+        suffix++;
+        generatedUsername = baseUsername + suffix;
+    }
+    const initialPassword = generatedUsername + 'associationsaintemarie';
     users.push({
-        id: generateId(), username: email,
-        password: email + 'associationsaintemarie',
-        name, email, role,
+        id: generateId(), username: generatedUsername,
+        password: initialPassword,
+        name, firstname, email, role,
         managerId: managerId ? parseInt(managerId) : null,
         service: serviceVal,
         teamId: teamVal ? parseInt(teamVal) : null,
@@ -3863,7 +3897,8 @@ function editUser(id, name, email, username, password, role, managerId, cp, rc) 
     if (!user) { showNotification('Salarié introuvable', 'error'); return false; }
     if (users.some(u => u.username === username && u.id !== id)) { showNotification('Identifiant déjà utilisé', 'error'); return false; }
     if (users.some(u => u.email === email && u.id !== id)) { showNotification('Email déjà utilisé', 'error'); return false; }
-    user.name = name; user.email = email; user.username = username;
+    const editFirstname = document.getElementById('edit-user-firstname')?.value.trim() || '';
+    user.name = name; user.firstname = editFirstname; user.email = email; user.username = username;
     if (password && password.trim()) {
         if (password.length < 4) { showNotification('Mot de passe trop court (4 caractères minimum)', 'error'); return false; }
         user.password = password;
@@ -4365,6 +4400,7 @@ function renderUsersList() {
         tr.innerHTML = `
             <td>${user.id}</td>
             <td>${user.name}</td>
+            <td>${user.firstname || '-'}</td>
             <td>${user.username}</td>
             <td>${user.email}</td>
             <td>${user.role}</td>
@@ -4618,6 +4654,8 @@ function showEditUserModal(id) {
     if (!user) { showNotification('Salarié introuvable', 'error'); return; }
     document.getElementById('edit-user-id').value = user.id;
     document.getElementById('edit-user-name').value = user.name;
+    const editFirstnameEl = document.getElementById('edit-user-firstname');
+    if (editFirstnameEl) editFirstnameEl.value = user.firstname || '';
     document.getElementById('edit-user-email').value = user.email;
     document.getElementById('edit-user-username').value = user.username;
     document.getElementById('edit-user-password').value = '';
@@ -5371,11 +5409,12 @@ function purgeFirebase() {
     rcExchangeRequests.length = 0;
     Object.keys(userNotifications).forEach(k => delete userNotifications[k]);
 
+    // Repartir des donnees du code source (DEFAULT_USERS) et non de la memoire
     const cleanData = {
         version: 1,
         savedAt: new Date().toISOString(),
-        users: users.map(u => ({...u})),
-        teams,
+        users: DEFAULT_USERS.map(u => ({...u})),
+        teams: DEFAULT_TEAMS,
         leaves: {},
         rcCreditRequests: [],
         hsDeclarations: [],
@@ -6300,6 +6339,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+});
+</script>
+<script>
+// Protection copie
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    // Bloquer Ctrl+S, Ctrl+U, Ctrl+P, F12
+    if (e.ctrlKey && ['s','u','p'].includes(e.key.toLowerCase())) e.preventDefault();
+    if (e.key === 'F12') e.preventDefault();
+    // Bloquer Ctrl+Shift+I (DevTools)
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') e.preventDefault();
+    // Bloquer Ctrl+Shift+J (Console)
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'j') e.preventDefault();
+});
+// Bloquer la selection du texte sur double-clic hors champs
+document.addEventListener('selectstart', e => {
+    if (!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
 });
 </script>
 </body>
