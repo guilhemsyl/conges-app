@@ -2000,9 +2000,17 @@ async function resetPassword(email) {
     const tempPassword = user.email + 'associationsaintemarie';
     user.password = tempPassword;
     user.mustChangePassword = true;
+    autoSave();
+    // Envoyer le mail a l'administrateur (role admin) plutot qu'au salarie
+    const adminUser = users.find(u => u.role === 'admin');
+    const adminEmail = adminUser ? adminUser.email : null;
+    if (!adminEmail) { console.warn('Aucun administrateur avec email trouve'); return true; }
     await emailjs.send('service_oawv7mi', 'template_f82be1k', {
-        to_email: user.email, to_name: user.name,
-        user_email: user.email, temp_password: tempPassword
+        to_email: adminEmail,
+        to_name: adminUser.name,
+        user_email: user.email,
+        user_name: user.name,
+        temp_password: tempPassword
     });
     return true;
 }
