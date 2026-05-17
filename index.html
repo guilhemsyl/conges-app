@@ -879,7 +879,6 @@
                         <th class="th-sortable" onclick="sortUsersBy('name')">Nom<span class="sort-icon"></span></th>
                         <th>Prénom</th>
                         <th>Identifiant</th>
-                        <th>Email</th>
                         <th class="th-sortable" onclick="sortUsersBy('role')">Rôle<span class="sort-icon"></span></th>
                         <th class="th-sortable" onclick="sortUsersBy('uv')">UV<span class="sort-icon"></span></th>
                         <th>CP</th><th>RC</th><th>Chef(fe) de service</th><th>Actions</th>
@@ -1196,12 +1195,7 @@
                     <input type="text" id="new-user-firstname" placeholder="Prénom">
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="new-user-email">Email :</label>
-                    <input type="email" id="new-user-email" placeholder="email@entreprise.com" required>
-                </div>
-            </div>
+            <input type="hidden" id="new-user-email" value="">
             <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
                 ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
             </div>
@@ -1275,10 +1269,11 @@
                     <input type="text" id="edit-user-firstname">
                 </div>
             </div>
-            <div class="form-row">
+            <div class="form-row" id="edit-email-row" style="display:none;">
                 <div class="form-group">
-                    <label for="edit-user-email">Email :</label>
-                    <input type="email" id="edit-user-email" required>
+                    <label for="edit-user-email">Email (notifications admin) :</label>
+                    <input type="email" id="edit-user-email" placeholder="votre@email.fr">
+                    <small style="color:#7f8c8d;">Utilisé pour recevoir les notifications de réinitialisation de mot de passe</small>
                 </div>
             </div>
             <div class="form-row">
@@ -2018,20 +2013,23 @@ function showTeamModal(teamId = null) {
 
 // ========== RÉINITIALISATION MOT DE PASSE ==========
 async function resetPassword(email) {
-    const user = users.find(u => u.email === email.trim().toLowerCase());
+    const user = users.find(u => u.email === email.trim().toLowerCase() || u.username === email.trim().toLowerCase());
     if (!user) return false;
     const tempPassword = user.username + 'associationsaintemarie';
     user.password = tempPassword;
     user.mustChangePassword = true;
     autoSave();
     // Envoyer le mail a l'administrateur (role admin) plutot qu'au salarie
-    const adminUser = users.find(u => u.role === 'admin');
+    const adminUser = users.find(u => u.role === 'admin' && u.email);
     const adminEmail = adminUser ? adminUser.email : null;
-    if (!adminEmail) { console.warn('Aucun administrateur avec email trouve'); return true; }
+    if (!adminEmail) {
+        showNotification('⚠️ Mot de passe réinitialisé mais aucun email admin configuré. Communiquez le mot de passe manuellement.', 'info');
+        return true;
+    }
     await emailjs.send('service_oawv7mi', 'template_f82be1k', {
         to_email: adminEmail,
         to_name: adminUser.name,
-        user_email: user.email,
+        user_email: user.username,
         user_name: user.name,
         temp_password: tempPassword
     });
@@ -3856,10 +3854,7 @@ function quickValidateRC(dateStr, action) {
 
 // ========== GESTION DES SALARIÉS ==========
 function addUser(name, email, username, password, role, managerId, cp, rc) {
-    if (!name || !email || !username || !password) { showNotification('Champs obligatoires manquants', 'error'); return false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showNotification("Email invalide", 'error'); return false; }
-    if (users.some(u => u.username === username)) { showNotification('Identifiant déjà utilisé', 'error'); return false; }
-    if (users.some(u => u.email === email)) { showNotification('Email déjà utilisé', 'error'); return false; }
+    if (!name) { showNotification('Le nom est obligatoire', 'error'); return false; }
     const serviceVal = document.getElementById('new-user-service').value || 'jour';
     const teamVal = document.getElementById('new-user-team').value;
     const firstname = document.getElementById('new-user-firstname')?.value.trim() || '';
@@ -3891,8 +3886,7 @@ function addUser(name, email, username, password, role, managerId, cp, rc) {
 function editUser(id, name, email, username, password, role, managerId, cp, rc) {
     id = parseInt(id);
     if (isNaN(id)) { showNotification('ID invalide', 'error'); return false; }
-    if (!name || !email || !username) { showNotification('Champs obligatoires', 'error'); return false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showNotification("Email invalide", 'error'); return false; }
+    if (!name || !username) { showNotification('Champs obligatoires', 'error'); return false; }
     const user = getUserById(id);
     if (!user) { showNotification('Salarié introuvable', 'error'); return false; }
     if (users.some(u => u.username === username && u.id !== id)) { showNotification('Identifiant déjà utilisé', 'error'); return false; }
@@ -4402,7 +4396,6 @@ function renderUsersList() {
             <td>${user.name}</td>
             <td>${user.firstname || '-'}</td>
             <td>${user.username}</td>
-            <td>${user.email}</td>
             <td>${user.role}</td>
             <td>${userTeam ? userTeam.name : '-'}</td>
             <td>${user.balances.CP}</td><td>${formatMinutes(user.balances.RC)}</td>
@@ -4656,6 +4649,10 @@ function showEditUserModal(id) {
     document.getElementById('edit-user-name').value = user.name;
     const editFirstnameEl = document.getElementById('edit-user-firstname');
     if (editFirstnameEl) editFirstnameEl.value = user.firstname || '';
+    // Afficher le champ email uniquement pour les admins
+    const emailRow = document.getElementById('edit-email-row');
+    if (emailRow) emailRow.style.display = user.role === 'admin' ? '' : 'none';
+    document.getElementById('edit-user-email').value = user.email || '';
     document.getElementById('edit-user-email').value = user.email;
     document.getElementById('edit-user-username').value = user.username;
     document.getElementById('edit-user-password').value = '';
@@ -6293,12 +6290,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('confirm-add-user')?.addEventListener('click', () => {
         if (!isLoggedIn || !isAdmin()) return;
-        const email = document.getElementById('new-user-email').value.trim();
-        document.getElementById('new-user-username').value = email;
-        document.getElementById('new-user-password').value = email + 'associationsaintemarie';
         const ok = addUser(
-            document.getElementById('new-user-name').value.trim(), email, email,
-            email + 'associationsaintemarie',
+            document.getElementById('new-user-name').value.trim(), '', '',
+            '',
             document.getElementById('new-user-role').value,
             document.getElementById('new-user-manager').value,
             document.getElementById('new-user-cp').value,
@@ -6315,7 +6309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ok = editUser(
             document.getElementById('edit-user-id').value,
             document.getElementById('edit-user-name').value.trim(),
-            document.getElementById('edit-user-email').value.trim(),
+            document.getElementById('edit-user-email').value.trim() || '',
             document.getElementById('edit-user-username').value.trim(),
             document.getElementById('edit-user-password').value,
             document.getElementById('edit-user-role').value,
