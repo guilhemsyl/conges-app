@@ -44,11 +44,15 @@
         .user-avatar-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.25); color: white; border: 2px solid rgba(255,255,255,0.6); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
         .user-avatar-btn:hover { background: rgba(255,255,255,0.4); }
 
-        .nav-tabs { display: flex; background: var(--light-color); border-bottom: 1px solid #ddd; overflow-x: auto; }
-        .nav-tab { flex: 1; min-width: 100px; padding: 14px 10px; text-align: center; cursor: pointer; background: transparent; border: none; font-size: 0.92rem; transition: all 0.3s; white-space: nowrap; position: relative; }
+        .nav-tabs { display: flex; background: var(--light-color); border-bottom: 1px solid #ddd; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .nav-tab { flex: 0 0 auto; padding: 12px 14px; text-align: center; cursor: pointer; background: transparent; border: none; font-size: 0.88rem; transition: all 0.3s; white-space: nowrap; position: relative; }
         .nav-tab.active { background: white; border-bottom: 3px solid var(--primary-color); font-weight: bold; }
         .nav-tab.hidden { display: none; }
         .nav-tab:hover { background: rgba(255,255,255,0.5); }
+        @media (max-width: 600px) {
+            .nav-tab { font-size: 0.78rem; padding: 10px 10px; }
+        }
 
         /* Badge notification sur l'onglet */
         .tab-badge {
