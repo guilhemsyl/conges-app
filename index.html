@@ -1221,6 +1221,7 @@
                     <select id="new-user-service" required>
                         <option value="jour">Jour (7h/jour RC)</option>
                         <option value="nuit">Nuit (10h/jour RC)</option>
+                        <option value="cadre">Cadre</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1317,6 +1318,7 @@
                     <select id="edit-user-service" required>
                         <option value="jour">Jour (7h/jour RC)</option>
                         <option value="nuit">Nuit (10h/jour RC)</option>
+                        <option value="cadre">Cadre</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1828,7 +1830,7 @@ function parseRCInput(val) {
     return isNaN(n) ? 0 : roundToQuarter(n);
 }
 
-function rcDayMinutes(user) { return (user && user.service === 'nuit') ? 600 : 420; }
+function rcDayMinutes(user) { if (!user) return 420; if (user.service === 'nuit') return 600; if (user.service === 'cadre') return 0; return 420; }
 
 function formatMinutes(totalMin) {
     if (!totalMin && totalMin !== 0) return '0h';
@@ -3575,8 +3577,8 @@ function renderValidationRC() {
         if (isPending || isCancelReq) tr.classList.add('row-pending');
         if (isCancelReq) tr.style.cssText = 'background:#fff3cd !important;border-left:4px solid #e74c3c;';
         if (isConflict) tr.style.cssText = 'background:#fff8e1 !important;border-left:4px solid #f39c12;';
-        const serviceLabel = user.service === 'nuit' ? '🌙 Nuit' : '☀️ Jour';
-        const serviceHours = user.service === 'nuit' ? '21h→7h' : '7h→14h';
+        const serviceLabel = user.service === 'nuit' ? '🌙 Nuit' : user.service === 'cadre' ? '💼 Cadre' : '☀️ Jour';
+        const serviceHours = user.service === 'nuit' ? '21h→7h' : user.service === 'cadre' ? '-' : '7h→14h';
         const dur = leave.durationMin || rcDayMinutes(user);
         const plafonne = isRCPlafonné(leave);
         const volumeHtml = `${formatMinutes(dur)}${plafonne ? ' <span class="plafonne-badge">⚠️ plafonné</span>' : ''}`;
