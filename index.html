@@ -1203,7 +1203,7 @@
                 </div>
             </div>
             <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
-                ✅ L'identifiant sera l'email. Le mot de passe initial sera <em>email + associationsaintemarie</em>.
+                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
             </div>
             <input type="hidden" id="new-user-username">
             <input type="hidden" id="new-user-password">
@@ -1530,7 +1530,7 @@ let users = [
     { id: 2, username: "guilsylv", password: "guilsylvassociationsaintemarie",
       name: "Sylvain Guilhem", email: "guilhem.syl@gmail.com",
       role: "admin", managerId: null, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: false },
+      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
 
     // ---- Comptes test ----
     { id: 3, username: "chefserv", password: "ChefService1",
@@ -5003,7 +5003,12 @@ function loadFromStorage() {
         if (!data.version || !data.users) return false;
         // Restaurer les données
         users.length = 0;
-        data.users.forEach(u => users.push(u));
+        // Fusionner Firebase users avec DEFAULT_USERS (forcer username du code source)
+        data.users.forEach(fbUser => {
+            const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
+            users.push(def ? {...fbUser, username: def.username} : fbUser);
+        });
+        DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
         teams.length = 0;
         data.teams.forEach(t => teams.push(t));
         Object.keys(leaves).forEach(k => delete leaves[k]);
@@ -5058,7 +5063,12 @@ function importDataJSON(file) {
             if (!confirm(`Importer les données du ${new Date(data.savedAt).toLocaleString('fr-FR')} ?\n\nCela remplacera TOUTES les données actuelles.`)) return;
 
             users.length = 0;
-            data.users.forEach(u => users.push(u));
+            // Fusionner Firebase users avec DEFAULT_USERS (forcer username du code source)
+        data.users.forEach(fbUser => {
+            const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
+            users.push(def ? {...fbUser, username: def.username} : fbUser);
+        });
+        DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
             teams.length = 0;
             data.teams.forEach(t => teams.push(t));
             Object.keys(leaves).forEach(k => delete leaves[k]);
@@ -5567,7 +5577,12 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const data = await window._fbLoad();
                 if (data && data.users && data.users.length > 0) {
-                    users.length = 0; data.users.forEach(u => users.push(u));
+                    users.length = 0;
+                    data.users.forEach(fbUser => {
+                        const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
+                        users.push(def ? {...fbUser, username: def.username} : fbUser);
+                    });
+                    DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
                     teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
                     Object.keys(leaves).forEach(k => delete leaves[k]);
                     Object.assign(leaves, data.leaves || {});
@@ -5587,7 +5602,20 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     window._applyAndRefresh = function(data) {
-        users.length = 0; data.users.forEach(u => users.push(u));
+        // Fusionner les users Firebase avec DEFAULT_USERS
+        // Priorite au DEFAULT_USERS pour username et password (evite les anciens emails)
+        users.length = 0;
+        data.users.forEach(fbUser => {
+            const defaultUser = DEFAULT_USERS.find(d => d.id === fbUser.id);
+            if (defaultUser) {
+                // Garder les donnees Firebase (soldes, etc) mais forcer username/password du code
+                users.push({...fbUser, username: defaultUser.username, password: fbUser.password !== defaultUser.password ? fbUser.password : defaultUser.password});
+            } else {
+                users.push(fbUser);
+            }
+        });
+        // Ajouter les users du code source absents de Firebase
+        DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
         teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
         Object.keys(leaves).forEach(k => delete leaves[k]); Object.assign(leaves, data.leaves||{});
         const cBefore = (data.rcCreditRequests||[]).length;
