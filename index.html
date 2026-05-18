@@ -1209,7 +1209,7 @@
             </div>
             <input type="hidden" id="new-user-email" value="">
             <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
-                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
+                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em><strong>identifiant</strong> + associationsaintemarie</em>. Exemple�: pour <strong>fretbeat</strong>, le mot de passe sera <strong>fretbeatassociationsaintemarie</strong>.
             </div>
             <input type="hidden" id="new-user-username">
             <input type="hidden" id="new-user-password">
@@ -1281,7 +1281,7 @@
                 </div>
             </div>
             <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
-                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
+                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em><strong>identifiant</strong> + associationsaintemarie</em>. Exemple�: pour <strong>fretbeat</strong>, le mot de passe sera <strong>fretbeatassociationsaintemarie</strong>.
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -1767,6 +1767,47 @@ let teams = [
     { id: 9,  name: "Veilleurs Nuit A" },
     { id: 10, name: "Veilleurs Nuit B" },
 ];
+// ========== OVERRIDES UTILISATEURS LOCAUX ==========
+// Memorise les creations/suppressions/modifications faites depuis l'interface
+// pour les reappliquer apres chaque rechargement Firebase
+const USER_OVERRIDES_KEY = 'conges_user_overrides';
+
+function getUserOverrides() {
+    try { return JSON.parse(localStorage.getItem(USER_OVERRIDES_KEY) || '{}'); }
+    catch(e) { return {}; }
+}
+
+function saveUserOverride(type, user) {
+    const overrides = getUserOverrides();
+    overrides[user.id] = { type, user: {...user} };
+    localStorage.setItem(USER_OVERRIDES_KEY, JSON.stringify(overrides));
+}
+
+function removeUserOverride(id) {
+    const overrides = getUserOverrides();
+    delete overrides[id];
+    localStorage.setItem(USER_OVERRIDES_KEY, JSON.stringify(overrides));
+}
+
+function applyUserOverrides(usersArray) {
+    const overrides = getUserOverrides();
+    Object.values(overrides).forEach(o => {
+        if (o.type === 'deleted') {
+            const idx = usersArray.findIndex(u => u.id === o.user.id);
+            if (idx !== -1) usersArray.splice(idx, 1);
+        } else if (o.type === 'created' || o.type === 'modified') {
+            const idx = usersArray.findIndex(u => u.id === o.user.id);
+            if (idx !== -1) {
+                // Garder les soldes de Firebase, forcer username/name/role du override
+                usersArray[idx] = {...usersArray[idx], ...o.user,
+                    balances: usersArray[idx].balances || o.user.balances };
+            } else {
+                usersArray.push({...o.user});
+            }
+        }
+    });
+}
+
 // Snapshot immuable pour purgeFirebase
 const DEFAULT_USERS = users.map(u => ({...u}));
 const DEFAULT_TEAMS = teams.map(t => ({...t}));
@@ -3940,7 +3981,10 @@ function addUser(name, email, username, password, role, managerId, cp, rc, first
         balances: { CP: parseInt(cp)||0, RC: parseRCInput(rc) },
         mustChangePassword: true
     });
-    showNotification(`Salarié ${name} ajouté`, 'success');
+    // Sauvegarder le override pour survivre au rechargement Firebase
+    const newUser = users[users.length - 1];
+    if (newUser) saveUserOverride('created', newUser);
+    showNotification(`Salarié ${name} ajouté (identifiant�: ${generatedUsername})`, 'success');
     renderUsersList();
     return true;
 }
@@ -3985,6 +4029,8 @@ function deleteUser(id) {
     const idx = users.findIndex(u => u.id === id);
     if (idx === -1) { showNotification('Salarié introuvable', 'error'); return false; }
     Object.keys(leaves).forEach(key => { if (leaves[key].userId === id) delete leaves[key]; });
+    const deletedUser = users[idx];
+    saveUserOverride('deleted', deletedUser);
     users.splice(idx, 1);
     showNotification('Salarié supprimé', 'success');
     renderUsersList();
@@ -5067,9 +5113,17 @@ function loadFromStorage() {
         // Fusionner Firebase users avec DEFAULT_USERS (forcer username du code source)
         data.users.forEach(fbUser => {
             const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
-            users.push(def ? {...fbUser, username: def.username} : fbUser);
+            if (def) { users.push({...fbUser, username: def.username}); return; }
+            let fixedUser = {...fbUser};
+            if (fbUser.username && fbUser.username.includes('@')) {
+                const parts = (fbUser.name || '').trim().split(/\s+/);
+                const gen = generateUsername(parts[0] || '', parts[1] || '');
+                if (gen) { fixedUser.username = gen; fixedUser.password = gen + 'associationsaintemarie'; fixedUser.mustChangePassword = true; }
+            }
+            users.push(fixedUser);
         });
         DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
+        applyUserOverrides(users);
         teams.length = 0;
         data.teams.forEach(t => teams.push(t));
         Object.keys(leaves).forEach(k => delete leaves[k]);
@@ -5129,7 +5183,14 @@ function importDataJSON(file) {
             // Fusionner Firebase users avec DEFAULT_USERS (forcer username du code source)
         data.users.forEach(fbUser => {
             const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
-            users.push(def ? {...fbUser, username: def.username} : fbUser);
+            if (def) { users.push({...fbUser, username: def.username}); return; }
+            let fixedUser = {...fbUser};
+            if (fbUser.username && fbUser.username.includes('@')) {
+                const parts = (fbUser.name || '').trim().split(/\s+/);
+                const gen = generateUsername(parts[0] || '', parts[1] || '');
+                if (gen) { fixedUser.username = gen; fixedUser.password = gen + 'associationsaintemarie'; fixedUser.mustChangePassword = true; }
+            }
+            users.push(fixedUser);
         });
         DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
             teams.length = 0;
@@ -5496,6 +5557,7 @@ function purgeFirebase() {
     };
 
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(USER_OVERRIDES_KEY);
 
     if (window._fbSave) {
         window._fbSave(cleanData).then(() => {
@@ -5691,14 +5753,28 @@ document.addEventListener('DOMContentLoaded', () => {
         data.users.forEach(fbUser => {
             const defaultUser = DEFAULT_USERS.find(d => d.id === fbUser.id);
             if (defaultUser) {
-                // Garder les donnees Firebase (soldes, etc) mais forcer username/password du code
+                // Utilisateur du code source : forcer son username
                 users.push({...fbUser, username: defaultUser.username, password: fbUser.password !== defaultUser.password ? fbUser.password : defaultUser.password});
             } else {
-                users.push(fbUser);
+                // Utilisateur cree depuis l'interface
+                // Si le username ressemble a un email (ancien format), le regenerer depuis le nom
+                let fixedUser = {...fbUser};
+                if (fbUser.username && fbUser.username.includes('@')) {
+                    const parts = (fbUser.name || '').trim().split(/\s+/);
+                    const generatedUn = generateUsername(parts[0] || '', parts[1] || '');
+                    if (generatedUn) {
+                        fixedUser.username = generatedUn;
+                        fixedUser.password = generatedUn + 'associationsaintemarie';
+                        fixedUser.mustChangePassword = true;
+                    }
+                }
+                users.push(fixedUser);
             }
         });
         // Ajouter les users du code source absents de Firebase
         DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
+        // Appliquer les overrides locaux (creations/suppressions depuis l'interface)
+        applyUserOverrides(users);
         teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
         Object.keys(leaves).forEach(k => delete leaves[k]); Object.assign(leaves, data.leaves||{});
         const cBefore = (data.rcCreditRequests||[]).length;
