@@ -141,8 +141,10 @@
         .btn-success:hover { background: #27ae60; }
         .btn-danger { background: var(--danger-color); color: white; }
         .btn-danger:hover { background: #c0392b; }
-        .btn-warning { background: var(--warning-color); color: white; }
-        .btn-warning:hover { background: #e67e22; }
+        .btn-warning { background: #e67e22; color: white; }
+        .btn-warning:hover { background: #ca6f1e; }
+        .btn-import { background: #f1c40f; color: #2c3e50; }
+        .btn-import:hover { background: #d4ac0d; }
         .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -425,6 +427,15 @@
     </script>
 </head>
 <body>
+
+<!-- Banniere rappel export hebdomadaire -->
+<div id="export-reminder-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e67e22;color:white;padding:10px 20px;align-items:center;justify-content:space-between;gap:12px;font-size:0.9rem;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+    <span>📤 <strong>Rappel :</strong> Vous n'avez pas exporté vos données depuis plus d'une semaine. Pensez à sauvegarder !</span>
+    <div style="display:flex;gap:8px;">
+        <button onclick="exportDataJSON(); document.getElementById('export-reminder-banner').style.display='none';" style="background:white;color:#e67e22;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:bold;">📦 Exporter maintenant</button>
+        <button onclick="markExportDone(); document.getElementById('export-reminder-banner').style.display='none';" style="background:rgba(255,255,255,0.2);color:white;border:1px solid white;border-radius:4px;padding:6px 12px;cursor:pointer;">Plus tard</button>
+    </div>
+</div>
 
 <div id="login-page" class="login-container">
     <div class="login-header">
@@ -851,17 +862,18 @@
             <hr style="margin-bottom:20px;border-color:#eee;">
             <div class="admin-controls">
                 <button class="btn btn-primary" id="add-user-btn">➕ Ajouter un salarié</button>
-                <button class="btn btn-secondary" id="export-balances-btn">📤 Exporter soldes (CSV)</button>
-                <button class="btn btn-secondary" id="import-balances-btn">📥 Importer soldes (CSV)</button>
+                <button class="btn btn-primary" id="add-cadre-btn" style="margin-left:8px;">💼 Ajouter un cadre</button>
+                <button class="btn btn-warning" id="export-balances-btn">📤 Exporter soldes (CSV)</button>
+                <button class="btn btn-import" id="import-balances-btn">📥 Importer soldes (CSV)</button>
                 <input type="file" id="balances-file-input" accept=".csv" style="display:none;">
-                <button class="btn btn-secondary" id="export-ca-btn">📅 Exporter CA (CSV)</button>
-                <button class="btn btn-secondary" id="import-ca-btn">📅 Importer CA (CSV)</button>
+                <button class="btn btn-warning" id="export-ca-btn">📅 Exporter CA (CSV)</button>
+                <button class="btn btn-import" id="import-ca-btn">📅 Importer CA (CSV)</button>
                 <input type="file" id="ca-file-input" accept=".csv" style="display:none;">
             </div>
             <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#f0f7ff;border:1px solid #b3d4f5;border-radius:8px;padding:12px 16px;">
                 <span style="font-size:0.88rem;color:#1a6fad;font-weight:bold;">💾 Sauvegarde des données :</span>
-                <button class="btn btn-primary btn-sm" id="export-json-btn">📦 Exporter tout (JSON)</button>
-                <button class="btn btn-secondary btn-sm" id="import-json-btn">📂 Importer sauvegarde (JSON)</button>
+                <button class="btn btn-warning btn-sm" id="export-json-btn">📦 Exporter tout (JSON)</button>
+                <button class="btn btn-import btn-sm" id="import-json-btn">📂 Importer sauvegarde (JSON)</button>
                 <input type="file" id="json-file-input" accept=".json" style="display:none;">
                 <button class="btn btn-danger btn-sm" id="reset-storage-btn" title="Effacer localStorage et revenir aux données par défaut">🗑 Réinitialiser</button>
                 <button class="btn btn-danger btn-sm" onclick="purgeFirebase()" title="Purger toutes les données Firebase et repartir à zéro">🔥 Purger Firebase</button>
@@ -1203,7 +1215,7 @@
             <input type="hidden" id="new-user-password">
             <div class="form-row">
                 <div class="form-group">
-                    <label for="new-user-role">Rôle:</label>
+                    <label for="new-user-role">Rôle :</label>
                     <select id="new-user-role" required>
                         <option value="employé">Employé</option>
                         <option value="chef(fe) de service">Chef(fe) de service</option>
@@ -1221,7 +1233,6 @@
                     <select id="new-user-service" required>
                         <option value="jour">Jour (7h/jour RC)</option>
                         <option value="nuit">Nuit (10h/jour RC)</option>
-                        <option value="cadre">Cadre</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1247,6 +1258,57 @@
         <div class="modal-footer">
             <button class="btn btn-secondary" id="cancel-add-user">Annuler</button>
             <button class="btn btn-primary" id="confirm-add-user">Ajouter</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: ajouter cadre -->
+<div id="add-cadre-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>💼 Ajouter un cadre</h2>
+            <button class="modal-close" id="close-add-cadre-modal">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-cadre-name">Nom :</label>
+                    <input type="text" id="new-cadre-name" placeholder="Nom de famille" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-cadre-firstname">Prénom :</label>
+                    <input type="text" id="new-cadre-firstname" placeholder="Prénom">
+                </div>
+            </div>
+            <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
+                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-cadre-service">Service :</label>
+                    <select id="new-cadre-service" required>
+                        <option value="cadre_administratif">Administratif</option>
+                        <option value="cadre_technique">Technique</option>
+                        <option value="cadre_educatif">Éducatif</option>
+                        <option value="cadre_direction">Direction</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-cadre-manager">Chef(fe) de service :</label>
+                    <select id="new-cadre-manager"><option value="">Aucun</option></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-cadre-cp">Solde CA initial :</label>
+                    <input type="number" id="new-cadre-cp" value="0" min="0" required>
+                </div>
+                <div class="form-group"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancel-add-cadre">Annuler</button>
+            <button class="btn btn-primary" id="confirm-add-cadre">Ajouter</button>
         </div>
     </div>
 </div>
@@ -1300,12 +1362,7 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="edit-user-role">Rôle:</label>
-                    <select id="edit-user-role" required>
-                        <option value="employé">Employé</option>
-                        <option value="chef(fe) de service">Chef(fe) de service</option>
-                        <option value="admin">Administrateur</option>
-                    </select>
+                    <input type="hidden" id="edit-user-role" value="employé">
                 </div>
                 <div class="form-group">
                     <label for="edit-user-manager">Chef(fe) de service :</label>
@@ -1316,9 +1373,10 @@
                 <div class="form-group">
                     <label for="edit-user-service">Service :</label>
                     <select id="edit-user-service" required>
-                        <option value="jour">Jour (7h/jour RC)</option>
-                        <option value="nuit">Nuit (10h/jour RC)</option>
-                        <option value="cadre">Cadre</option>
+                        <option value="cadre_administratif">Cadre — Administratif</option>
+                        <option value="cadre_technique">Cadre — Technique</option>
+                        <option value="cadre_educatif">Cadre — Éducatif</option>
+                        <option value="cadre_direction">Cadre — Direction</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1830,7 +1888,7 @@ function parseRCInput(val) {
     return isNaN(n) ? 0 : roundToQuarter(n);
 }
 
-function rcDayMinutes(user) { if (!user) return 420; if (user.service === 'nuit') return 600; if (user.service === 'cadre') return 0; return 420; }
+function rcDayMinutes(user) { if (!user) return 420; if (user.service === 'nuit') return 600; if (user.service && user.service.startsWith('cadre')) return 0; return 420; }
 
 function formatMinutes(totalMin) {
     if (!totalMin && totalMin !== 0) return '0h';
@@ -2142,7 +2200,7 @@ function login(username, password) {
     updateUIForCurrentUser();
     renderCalendar();
     generateLeaveList();
-    if (isAdmin()) renderUsersList();
+    if (isAdmin()) { renderUsersList(); checkExportReminder(); }
     if (user.mustChangePassword) {
         document.getElementById('force-change-password-modal').classList.add('active');
         showNotification(`Bienvenue, ${user.name} ! Veuillez définir votre mot de passe.`, 'info');
@@ -3577,8 +3635,10 @@ function renderValidationRC() {
         if (isPending || isCancelReq) tr.classList.add('row-pending');
         if (isCancelReq) tr.style.cssText = 'background:#fff3cd !important;border-left:4px solid #e74c3c;';
         if (isConflict) tr.style.cssText = 'background:#fff8e1 !important;border-left:4px solid #f39c12;';
-        const serviceLabel = user.service === 'nuit' ? '🌙 Nuit' : user.service === 'cadre' ? '💼 Cadre' : '☀️ Jour';
-        const serviceHours = user.service === 'nuit' ? '21h→7h' : user.service === 'cadre' ? '-' : '7h→14h';
+        const isCadre = user.service && user.service.startsWith('cadre');
+        const cadreLabel = { cadre_administratif: 'Administratif', cadre_technique: 'Technique', cadre_educatif: 'Éducatif', cadre_direction: 'Direction' };
+        const serviceLabel = user.service === 'nuit' ? '🌙 Nuit' : isCadre ? `💼 ${cadreLabel[user.service] || 'Cadre'}` : '☀️ Jour';
+        const serviceHours = user.service === 'nuit' ? '21h→7h' : isCadre ? '-' : '7h→14h';
         const dur = leave.durationMin || rcDayMinutes(user);
         const plafonne = isRCPlafonné(leave);
         const volumeHtml = `${formatMinutes(dur)}${plafonne ? ' <span class="plafonne-badge">⚠️ plafonné</span>' : ''}`;
@@ -3855,13 +3915,13 @@ function quickValidateRC(dateStr, action) {
 }
 
 // ========== GESTION DES SALARIÉS ==========
-function addUser(name, email, username, password, role, managerId, cp, rc) {
+function addUser(name, email, username, password, role, managerId, cp, rc, firstname, serviceOverride) {
     if (!name) { showNotification('Le nom est obligatoire', 'error'); return false; }
-    const serviceVal = document.getElementById('new-user-service').value || 'jour';
-    const teamVal = document.getElementById('new-user-team').value;
-    const firstname = document.getElementById('new-user-firstname')?.value.trim() || '';
+    const serviceVal = serviceOverride || document.getElementById('new-user-service')?.value || 'jour';
+    const teamVal = document.getElementById('new-user-team')?.value || '';
+    const firstnameVal = (firstname !== undefined && firstname !== null) ? firstname : (document.getElementById('new-user-firstname')?.value.trim() || '');
     // Generer identifiant : 4 lettres nom + 4 lettres prenom
-    let generatedUsername = generateUsername(name, firstname);
+    let generatedUsername = generateUsername(name, firstnameVal);
     // Garantir unicite
     let suffix = 0;
     let baseUsername = generatedUsername;
@@ -3873,7 +3933,7 @@ function addUser(name, email, username, password, role, managerId, cp, rc) {
     users.push({
         id: generateId(), username: generatedUsername,
         password: initialPassword,
-        name, firstname, email, role,
+        name, firstname: firstnameVal, email, role,
         managerId: managerId ? parseInt(managerId) : null,
         service: serviceVal,
         teamId: teamVal ? parseInt(teamVal) : null,
@@ -4693,6 +4753,8 @@ function showEditUserModal(id) {
 
 // ========== EXPORT COMPTEURS CSV ==========
 function exportXLSX() {
+    markExportDone();
+    const banner = document.getElementById('export-reminder-banner'); if (banner) banner.style.display = 'none';
     if (typeof XLSX === 'undefined') { showNotification('❌ Librairie Excel non chargée', 'error'); return; }
     const wb = XLSX.utils.book_new();
 
@@ -5029,6 +5091,8 @@ function loadFromStorage() {
 }
 
 function exportDataJSON() {
+    markExportDone();
+    const banner = document.getElementById('export-reminder-banner'); if (banner) banner.style.display = 'none';
     const data = {
         version: 1,
         appName: 'Mon Village — Gestion des Congés',
@@ -5165,11 +5229,11 @@ function renderHistorique() {
         btnsDiv.innerHTML = '';
         if (isManager) {
             const btnExp = document.createElement('button');
-            btnExp.className = 'btn btn-primary btn-sm';
+            btnExp.className = 'btn btn-warning btn-sm';
             btnExp.innerHTML = '📤 Exporter Excel';
             btnExp.onclick = () => exportXLSX();
             const btnImp = document.createElement('button');
-            btnImp.className = 'btn btn-secondary btn-sm';
+            btnImp.className = 'btn btn-import btn-sm';
             btnImp.innerHTML = '📥 Importer Excel';
             btnImp.onclick = () => document.getElementById('xlsx-file-input').click();
             btnsDiv.appendChild(btnExp);
@@ -5443,6 +5507,26 @@ function purgeFirebase() {
     } else {
         showNotification('✅ Données locales purgées', 'success');
         setTimeout(() => location.reload(), 1500);
+    }
+}
+
+// ========== RAPPEL EXPORT HEBDOMADAIRE ==========
+const LAST_EXPORT_KEY = 'conges_last_export_date';
+
+function markExportDone() {
+    localStorage.setItem(LAST_EXPORT_KEY, new Date().toISOString());
+}
+
+function checkExportReminder() {
+    const last = localStorage.getItem(LAST_EXPORT_KEY);
+    const daysSince = last
+        ? Math.floor((Date.now() - new Date(last)) / 86400000)
+        : 999;
+    if (daysSince >= 7) {
+        setTimeout(() => {
+            const banner = document.getElementById('export-reminder-banner');
+            if (banner) banner.style.display = 'flex';
+        }, 2000);
     }
 }
 
@@ -6250,6 +6334,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ajouter salarié
     document.getElementById('add-user-btn')?.addEventListener('click', showAddUserModal);
+    document.getElementById('add-cadre-btn')?.addEventListener('click', () => {
+        if (!isLoggedIn || !isAdmin()) return;
+        // Peupler le select manager du modal cadre
+        const sel = document.getElementById('new-cadre-manager');
+        sel.innerHTML = '<option value="">Aucun</option>';
+        users.filter(u => u.role === 'chef(fe) de service').forEach(u => {
+            const o = document.createElement('option'); o.value = u.id; o.textContent = u.name; sel.appendChild(o);
+        });
+        // Reset champs
+        document.getElementById('new-cadre-name').value = '';
+        document.getElementById('new-cadre-firstname').value = '';
+        document.getElementById('new-cadre-cp').value = '0';
+        document.getElementById('add-cadre-modal').classList.add('active');
+    });
+    document.getElementById('cancel-add-cadre')?.addEventListener('click', () => document.getElementById('add-cadre-modal').classList.remove('active'));
+    document.getElementById('close-add-cadre-modal')?.addEventListener('click', () => document.getElementById('add-cadre-modal').classList.remove('active'));
+    document.getElementById('confirm-add-cadre')?.addEventListener('click', () => {
+        if (!isLoggedIn || !isAdmin()) return;
+        const name = document.getElementById('new-cadre-name').value.trim();
+        const firstname = document.getElementById('new-cadre-firstname').value.trim();
+        const service = document.getElementById('new-cadre-service').value;
+        const managerId = document.getElementById('new-cadre-manager').value;
+        const cp = document.getElementById('new-cadre-cp').value;
+        const ok = addUser(name, '', '', '', 'employé', managerId, cp, '0', firstname, service);
+        if (ok) document.getElementById('add-cadre-modal').classList.remove('active');
+    });
 
     // ---- Sauvegarde JSON ----
     document.getElementById('export-json-btn')?.addEventListener('click', exportDataJSON);
