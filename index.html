@@ -428,15 +428,6 @@
 </head>
 <body>
 
-<!-- Banniere rappel export hebdomadaire -->
-<div id="export-reminder-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e67e22;color:white;padding:10px 20px;align-items:center;justify-content:space-between;gap:12px;font-size:0.9rem;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-    <span>📤 <strong>Rappel :</strong> Vous n'avez pas exporté vos données depuis plus d'une semaine. Pensez à sauvegarder !</span>
-    <div style="display:flex;gap:8px;">
-        <button onclick="exportDataJSON(); document.getElementById('export-reminder-banner').style.display='none';" style="background:white;color:#e67e22;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:bold;">📦 Exporter maintenant</button>
-        <button onclick="markExportDone(); document.getElementById('export-reminder-banner').style.display='none';" style="background:rgba(255,255,255,0.2);color:white;border:1px solid white;border-radius:4px;padding:6px 12px;cursor:pointer;">Plus tard</button>
-    </div>
-</div>
-
 <div id="login-page" class="login-container">
     <div class="login-header">
         <h1>Gestion des Congés</h1>
@@ -483,14 +474,11 @@
             <button onclick="quickLogin('chef')" class="btn btn-sm" style="flex:1;background:#e67e22;color:white;padding:9px;">
                 🔑 Chef de service
             </button>
-
+            <button onclick="quickLogin('admin')" class="btn btn-sm" style="flex:1;background:#2c3e50;color:white;padding:9px;">
+                ⚙️ Admin
+            </button>
         </div>
     </div>
-</div>
-
-<!-- Bouton admin discret en bas de page -->
-<div style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:10;">
-    <button onclick="quickLogin('admin')" style="background:none;border:none;cursor:pointer;color:#d5d8dc;font-size:1.1rem;padding:6px;opacity:0.4;" title="">⚙️</button>
 </div>
 
 <!-- Modal: réinitialisation mot de passe -->
@@ -780,22 +768,6 @@
                     <table class="data-table" id="cp-validation-table">
                         <thead><tr><th>Salarié</th><th>UV</th><th>Date début</th><th>Date fin</th><th>Durée</th><th>Commentaire</th><th>Soumis le</th><th>Statut</th><th>Actions</th></tr></thead>
                         <tbody id="cp-validation-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <hr style="margin:24px 0 20px;border-color:#ecf0f1;">
-
-            <!-- ===== ANNULATIONS EN ATTENTE ===== -->
-            <div style="font-size:0.85rem;font-weight:bold;color:#e74c3c;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">🔄 Demandes d’annulation</div>
-            <div class="validation-summary" id="cancel-summary">
-                <div class="summary-card" style="border-color:#e74c3c;background:#fdedec;"><span class="count" style="color:#e74c3c;" id="cancel-count-pending">0</span><span class="label">⏳ En attente de validation</span></div>
-            </div>
-            <div id="cancel-validation-section">
-                <div style="overflow-x:auto;margin-bottom:8px;">
-                    <table class="data-table" id="cancel-validation-table">
-                        <thead><tr><th>Salarié</th><th>UV</th><th>Type</th><th>Date début</th><th>Date fin</th><th>Durée</th><th>Raison</th><th>Soumis le</th><th>Actions</th></tr></thead>
-                        <tbody id="cancel-validation-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -1228,7 +1200,7 @@
             </div>
             <input type="hidden" id="new-user-email" value="">
             <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
-                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em><strong>identifiant</strong> + associationsaintemarie</em>. Exemple�: pour nom <strong>Guilhem</strong> + prénom <strong>Sylvain</strong> → identifiant <strong>guilsylv</strong> → mot de passe <strong>guilsylvassociationsaintemarie</strong>.
+                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
             </div>
             <input type="hidden" id="new-user-username">
             <input type="hidden" id="new-user-password">
@@ -1300,7 +1272,7 @@
                 </div>
             </div>
             <div style="background:#eafaf1;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;color:#27ae60;border:1px solid #2ecc71;">
-                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em><strong>identifiant</strong> + associationsaintemarie</em>. Exemple�: pour nom <strong>Guilhem</strong> + prénom <strong>Sylvain</strong> → identifiant <strong>guilsylv</strong> → mot de passe <strong>guilsylvassociationsaintemarie</strong>.
+                ✅ L'identifiant sera généré automatiquement : <strong>4 lettres du nom + 4 lettres du prénom</strong>. Le mot de passe initial sera <em>identifiant + associationsaintemarie</em>.
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -1392,8 +1364,10 @@
                 <div class="form-group">
                     <label for="edit-user-service">Service :</label>
                     <select id="edit-user-service" required>
-                        <option value="jour">Jour (7h/jour RC)</option>
-                        <option value="nuit">Nuit (10h/jour RC)</option>
+                        <option value="cadre_administratif">Cadre — Administratif</option>
+                        <option value="cadre_technique">Cadre — Technique</option>
+                        <option value="cadre_educatif">Cadre — Éducatif</option>
+                        <option value="cadre_direction">Cadre — Direction</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1784,47 +1758,6 @@ let teams = [
     { id: 9,  name: "Veilleurs Nuit A" },
     { id: 10, name: "Veilleurs Nuit B" },
 ];
-// ========== OVERRIDES UTILISATEURS LOCAUX ==========
-// Memorise les creations/suppressions/modifications faites depuis l'interface
-// pour les reappliquer apres chaque rechargement Firebase
-const USER_OVERRIDES_KEY = 'conges_user_overrides';
-
-function getUserOverrides() {
-    try { return JSON.parse(localStorage.getItem(USER_OVERRIDES_KEY) || '{}'); }
-    catch(e) { return {}; }
-}
-
-function saveUserOverride(type, user) {
-    const overrides = getUserOverrides();
-    overrides[user.id] = { type, user: {...user} };
-    localStorage.setItem(USER_OVERRIDES_KEY, JSON.stringify(overrides));
-}
-
-function removeUserOverride(id) {
-    const overrides = getUserOverrides();
-    delete overrides[id];
-    localStorage.setItem(USER_OVERRIDES_KEY, JSON.stringify(overrides));
-}
-
-function applyUserOverrides(usersArray) {
-    const overrides = getUserOverrides();
-    Object.values(overrides).forEach(o => {
-        if (o.type === 'deleted') {
-            const idx = usersArray.findIndex(u => u.id === o.user.id);
-            if (idx !== -1) usersArray.splice(idx, 1);
-        } else if (o.type === 'created' || o.type === 'modified') {
-            const idx = usersArray.findIndex(u => u.id === o.user.id);
-            if (idx !== -1) {
-                // Garder les soldes de Firebase, forcer username/name/role du override
-                usersArray[idx] = {...usersArray[idx], ...o.user,
-                    balances: usersArray[idx].balances || o.user.balances };
-            } else {
-                usersArray.push({...o.user});
-            }
-        }
-    });
-}
-
 // Snapshot immuable pour purgeFirebase
 const DEFAULT_USERS = users.map(u => ({...u}));
 const DEFAULT_TEAMS = teams.map(t => ({...t}));
@@ -2258,7 +2191,7 @@ function login(username, password) {
     updateUIForCurrentUser();
     renderCalendar();
     generateLeaveList();
-    if (isAdmin()) { renderUsersList(); checkExportReminder(); }
+    if (isAdmin()) renderUsersList();
     if (user.mustChangePassword) {
         document.getElementById('force-change-password-modal').classList.add('active');
         showNotification(`Bienvenue, ${user.name} ! Veuillez définir votre mot de passe.`, 'info');
@@ -2449,46 +2382,6 @@ function cancelLeave(dateStr) {
     });
     showNotification("Demande d'annulation envoyée au manager", 'success');
     return true;
-}
-
-function renderCancelValidation() {
-    const tbody = document.getElementById('cancel-validation-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    const allLeaves = Object.values(leaves);
-    const cancelPending = allLeaves.filter(l =>
-        l.status === 'cancellation_requested' && l.cancelledFromApproved && !l.validationDate
-    );
-    const groups = {};
-    cancelPending.forEach(l => {
-        const key = `${l.userId}-${l.type}`;
-        if (!groups[key]) groups[key] = { userId: l.userId, type: l.type, dates: [], cancelReason: l.cancelReason, cancelDate: l.cancelDate };
-        groups[key].dates.push(l.date);
-    });
-    const list = Object.values(groups);
-    const countEl = document.getElementById('cancel-count-pending');
-    if (countEl) countEl.textContent = list.length;
-    if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7f8c8d;padding:16px;">Aucune demande d’annulation en attente</td></tr>';
-        return;
-    }
-    list.forEach(grp => {
-        const user = getUserById(grp.userId);
-        if (!user) return;
-        const team = getTeamById(user.teamId);
-        const sorted = [...grp.dates].sort();
-        const debut = sorted[0], fin = sorted[sorted.length-1], duree = sorted.length;
-        const tr = document.createElement('tr');
-        tr.style.cssText = 'background:#fff3cd;border-left:4px solid #e74c3c;';
-        const fullName = user.name + (user.firstname ? ' ' + user.firstname : '');
-        const cancelBtn = grp.type === 'CP'
-            ? `<button class="btn btn-success btn-sm" onclick='validateCancelCP(${grp.userId}, ${JSON.stringify(sorted)}, true, true)' style="margin-right:4px;">✓ Accepter</button><button class="btn btn-danger btn-sm" onclick='validateCancelCP(${grp.userId}, ${JSON.stringify(sorted)}, false, true)'>✗ Refuser</button>`
-            : `<button class="btn btn-success btn-sm" onclick="requalifyHistorique('leave:${grp.userId}:${sorted[0]}','approved')" style="margin-right:4px;">✓ Accepter</button><button class="btn btn-danger btn-sm" onclick="requalifyHistorique('leave:${grp.userId}:${sorted[0]}','rejected')">✗ Refuser</button>`;
-        tr.innerHTML = `<td><strong>${fullName}</strong></td><td>${team?.name||'-'}</td><td><span class="status-badge" style="background:#fff3cd;color:#856404;border:1px solid #f39c12;">${grp.type}</span></td><td>${formatDate(debut)}</td><td>${fin!==debut?formatDate(fin):'-'}</td><td>${duree} jour${duree>1?'s':''}</td><td>${grp.cancelReason||'<em style="color:#aaa;">-</em>'}</td><td>${grp.cancelDate?formatDate(grp.cancelDate):'-'}</td><td>${cancelBtn}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-
 }
 
 function validateLeave(dateStr, status, comment, targetUserId) {
@@ -3297,7 +3190,7 @@ function approveCP(userId, dates) {
         leaveType: 'CP', date: dates[0], count: dates.length
     });
     showNotification(`CP validé pour ${user.name} (${dates.length} jour${dates.length > 1 ? 's' : ''}) ✅`, 'success');
-    renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); renderCalendar();
+    renderValidationRC(); updateValidationRCBadge(); renderCalendar();
     autoSave();
 }
 
@@ -3341,7 +3234,7 @@ function confirmCPReject(comment) {
     });
     showNotification(`CP refusé pour ${user.name}`, 'info');
     cpRejectUserId = null; cpRejectDates = null;
-    renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); renderCalendar(); generateLeaveList();
+    renderValidationRC(); updateValidationRCBadge(); renderCalendar(); generateLeaveList();
 }
 
 // Dédupliquer les échanges RC identiques (même userId + dateGive + startGive + endGive + dateReceive)
@@ -4038,10 +3931,7 @@ function addUser(name, email, username, password, role, managerId, cp, rc, first
         balances: { CP: parseInt(cp)||0, RC: parseRCInput(rc) },
         mustChangePassword: true
     });
-    // Sauvegarder le override pour survivre au rechargement Firebase
-    const newUser = users[users.length - 1];
-    if (newUser) saveUserOverride('created', newUser);
-    showNotification(`Salarié ${name} ajouté (identifiant�: ${generatedUsername})`, 'success');
+    showNotification(`Salarié ${name} ajouté`, 'success');
     renderUsersList();
     return true;
 }
@@ -4086,8 +3976,6 @@ function deleteUser(id) {
     const idx = users.findIndex(u => u.id === id);
     if (idx === -1) { showNotification('Salarié introuvable', 'error'); return false; }
     Object.keys(leaves).forEach(key => { if (leaves[key].userId === id) delete leaves[key]; });
-    const deletedUser = users[idx];
-    saveUserOverride('deleted', deletedUser);
     users.splice(idx, 1);
     showNotification('Salarié supprimé', 'success');
     renderUsersList();
@@ -4164,7 +4052,7 @@ function handleDateClick(dateStr) {
         return;
     }
 
-    if (myLeave && myLeave.status !== 'cancellation_requested' && myLeave.status !== 'cancelled') {
+    if (myLeave && myLeave.status !== 'cancellation_requested') {
         if (myLeave.status === 'approved' || myLeave.status === 'pending') enterCancelMode(dateStr);
         resetRangeSelection(); return;
     }
@@ -4856,8 +4744,6 @@ function showEditUserModal(id) {
 
 // ========== EXPORT COMPTEURS CSV ==========
 function exportXLSX() {
-    markExportDone();
-    const banner = document.getElementById('export-reminder-banner'); if (banner) banner.style.display = 'none';
     if (typeof XLSX === 'undefined') { showNotification('❌ Librairie Excel non chargée', 'error'); return; }
     const wb = XLSX.utils.book_new();
 
@@ -5002,7 +4888,7 @@ function importXLSX(file) {
             }
 
             renderUsersList(); renderCountersManager(); renderCalendar(); generateLeaveList();
-            if (isChefDeService()) { renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); }
+            if (isChefDeService()) { renderValidationRC(); updateValidationRCBadge(); }
             autoSave();
         } catch(err) {
             showNotification('❌ Erreur import : ' + err.message, 'error');
@@ -5115,7 +5001,6 @@ function quickLogin(type) {
     // Connexion directe sans vérification de mot de passe
     currentUser = user;
     isLoggedIn = true;
-    window._isLoggedIn = true;
     currentYear = new Date().getFullYear();
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-container').style.display = 'block';
@@ -5124,9 +5009,7 @@ function quickLogin(type) {
     updateUIForCurrentUser();
     renderCalendar();
     generateLeaveList();
-    if (isAdmin()) { renderUsersList(); checkExportReminder(); }
-    if (isChefDeService()) { renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); }
-    updateBellBadge();
+    if (isAdmin()) renderUsersList();
     showNotification(`Connecté en tant que ${user.name} (${user.role}) ✅`, 'success');
 }
 
@@ -5173,17 +5056,9 @@ function loadFromStorage() {
         // Fusionner Firebase users avec DEFAULT_USERS (forcer username du code source)
         data.users.forEach(fbUser => {
             const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
-            if (def) { users.push({...fbUser, username: def.username}); return; }
-            let fixedUser = {...fbUser};
-            if (fbUser.username && fbUser.username.includes('@')) {
-                const parts = (fbUser.name || '').trim().split(/\s+/);
-                const gen = generateUsername(parts[0] || '', parts[1] || '');
-                if (gen) { fixedUser.username = gen; fixedUser.password = gen + 'associationsaintemarie'; fixedUser.mustChangePassword = true; }
-            }
-            users.push(fixedUser);
+            users.push(def ? {...fbUser, username: def.username} : fbUser);
         });
         DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
-        applyUserOverrides(users);
         teams.length = 0;
         data.teams.forEach(t => teams.push(t));
         Object.keys(leaves).forEach(k => delete leaves[k]);
@@ -5205,8 +5080,6 @@ function loadFromStorage() {
 }
 
 function exportDataJSON() {
-    markExportDone();
-    const banner = document.getElementById('export-reminder-banner'); if (banner) banner.style.display = 'none';
     const data = {
         version: 1,
         appName: 'Mon Village — Gestion des Congés',
@@ -5243,14 +5116,7 @@ function importDataJSON(file) {
             // Fusionner Firebase users avec DEFAULT_USERS (forcer username du code source)
         data.users.forEach(fbUser => {
             const def = DEFAULT_USERS.find(d => d.id === fbUser.id);
-            if (def) { users.push({...fbUser, username: def.username}); return; }
-            let fixedUser = {...fbUser};
-            if (fbUser.username && fbUser.username.includes('@')) {
-                const parts = (fbUser.name || '').trim().split(/\s+/);
-                const gen = generateUsername(parts[0] || '', parts[1] || '');
-                if (gen) { fixedUser.username = gen; fixedUser.password = gen + 'associationsaintemarie'; fixedUser.mustChangePassword = true; }
-            }
-            users.push(fixedUser);
+            users.push(def ? {...fbUser, username: def.username} : fbUser);
         });
         DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
             teams.length = 0;
@@ -5460,7 +5326,7 @@ function validateCancelCP(userId, dates, accept, skipConfirm) {
         sendInternalNotif([userId], 'cancel_rejected', { leaveType: 'CP', date: dates[0] });
         showNotification('Annulation refusée — congés rétablis', 'info');
     }
-    autoSave(); renderValidationRC(); renderCancelValidation(); renderCalendar(); generateLeaveList(); updateValidationRCBadge();
+    autoSave(); renderValidationRC(); renderCalendar(); generateLeaveList(); updateValidationRCBadge();
 }
 
 function requalifyHistorique(rowId,newStatus) {
@@ -5553,7 +5419,7 @@ function importCACSV(file) {
             leaves[key]={id:exists?leaves[key].id:'l-imp-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),userId:user.id,type:type==='RC'?'RC':'CP',status:['approved','rejected','pending','cancellation_requested'].includes(status)?status:'pending',durationMin:type==='RC'?rcDayMinutes(user):null,comment:'',date,dateRequested:todayStr()};
             if(exists)updated++;else added++;
         });
-        renderCalendar();generateLeaveList();if(isChefDeService()){renderValidationRC();renderCancelValidation();updateValidationRCBadge();}autoSave();
+        renderCalendar();generateLeaveList();if(isChefDeService()){renderValidationRC();updateValidationRCBadge();}autoSave();
         showNotification(errors.length===0?`✅ ${added} ajouté(s), ${updated} mis à jour`:`⚠️ ${added+updated} importé(s), ${errors.length} erreur(s)`,errors.length?'error':'success');
     };
     reader.readAsText(file,'UTF-8');
@@ -5617,7 +5483,6 @@ function purgeFirebase() {
     };
 
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(USER_OVERRIDES_KEY);
 
     if (window._fbSave) {
         window._fbSave(cleanData).then(() => {
@@ -5629,26 +5494,6 @@ function purgeFirebase() {
     } else {
         showNotification('✅ Données locales purgées', 'success');
         setTimeout(() => location.reload(), 1500);
-    }
-}
-
-// ========== RAPPEL EXPORT HEBDOMADAIRE ==========
-const LAST_EXPORT_KEY = 'conges_last_export_date';
-
-function markExportDone() {
-    localStorage.setItem(LAST_EXPORT_KEY, new Date().toISOString());
-}
-
-function checkExportReminder() {
-    const last = localStorage.getItem(LAST_EXPORT_KEY);
-    const daysSince = last
-        ? Math.floor((Date.now() - new Date(last)) / 86400000)
-        : 999;
-    if (daysSince >= 7) {
-        setTimeout(() => {
-            const banner = document.getElementById('export-reminder-banner');
-            if (banner) banner.style.display = 'flex';
-        }, 2000);
     }
 }
 
@@ -5789,16 +5634,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
                     teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
-                    // Preserver les statuts locaux avant ecrasement Firebase
-                    const initCancelStatuses = {};
-                    Object.entries(leaves).forEach(([k, l]) => {
-                        if (l.status === 'cancellation_requested' || l.status === 'cancelled') initCancelStatuses[k] = {...l};
-                    });
                     Object.keys(leaves).forEach(k => delete leaves[k]);
                     Object.assign(leaves, data.leaves || {});
-                    Object.entries(initCancelStatuses).forEach(([k, local]) => {
-                        if (leaves[k] && leaves[k].status !== 'cancellation_requested' && leaves[k].status !== 'cancelled') leaves[k] = {...leaves[k], ...local};
-                    });
                     rcCreditRequests.length = 0; (data.rcCreditRequests||[]).forEach(r => rcCreditRequests.push(r)); deduplicateCredits();
                     hsDeclarations.length = 0; (data.hsDeclarations||[]).forEach(d => hsDeclarations.push(d));
                     rcExchangeRequests.length = 0; (data.rcExchangeRequests||[]).forEach(r => rcExchangeRequests.push(r)); deduplicateExchanges();
@@ -5821,44 +5658,16 @@ document.addEventListener('DOMContentLoaded', () => {
         data.users.forEach(fbUser => {
             const defaultUser = DEFAULT_USERS.find(d => d.id === fbUser.id);
             if (defaultUser) {
-                // Utilisateur du code source : forcer son username
+                // Garder les donnees Firebase (soldes, etc) mais forcer username/password du code
                 users.push({...fbUser, username: defaultUser.username, password: fbUser.password !== defaultUser.password ? fbUser.password : defaultUser.password});
             } else {
-                // Utilisateur cree depuis l'interface
-                // Si le username ressemble a un email (ancien format), le regenerer depuis le nom
-                let fixedUser = {...fbUser};
-                if (fbUser.username && fbUser.username.includes('@')) {
-                    const parts = (fbUser.name || '').trim().split(/\s+/);
-                    const generatedUn = generateUsername(parts[0] || '', parts[1] || '');
-                    if (generatedUn) {
-                        fixedUser.username = generatedUn;
-                        fixedUser.password = generatedUn + 'associationsaintemarie';
-                        fixedUser.mustChangePassword = true;
-                    }
-                }
-                users.push(fixedUser);
+                users.push(fbUser);
             }
         });
         // Ajouter les users du code source absents de Firebase
         DEFAULT_USERS.forEach(d => { if (!users.find(u => u.id === d.id)) users.push({...d}); });
-        // Appliquer les overrides locaux (creations/suppressions depuis l'interface)
-        applyUserOverrides(users);
         teams.length = 0; (data.teams||[]).forEach(t => teams.push(t));
-        // Preserver les statuts locaux importants (cancellation_requested, cancelled)
-        // avant d'ecraser avec Firebase
-        const localCancelStatuses = {};
-        Object.entries(leaves).forEach(([k, l]) => {
-            if (l.status === 'cancellation_requested' || l.status === 'cancelled') {
-                localCancelStatuses[k] = {...l};
-            }
-        });
         Object.keys(leaves).forEach(k => delete leaves[k]); Object.assign(leaves, data.leaves||{});
-        // Reappliquer les statuts locaux si Firebase a des versions plus anciennes
-        Object.entries(localCancelStatuses).forEach(([k, local]) => {
-            if (leaves[k] && leaves[k].status !== 'cancellation_requested' && leaves[k].status !== 'cancelled') {
-                leaves[k] = {...leaves[k], ...local};
-            }
-        });
         const cBefore = (data.rcCreditRequests||[]).length;
         const eBefore = (data.rcExchangeRequests||[]).length;
         rcCreditRequests.length = 0; (data.rcCreditRequests||[]).forEach(r => rcCreditRequests.push(r)); deduplicateCredits();
@@ -6362,7 +6171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = document.getElementById('leave-type').value;
         if (addLeave(selectedDates, type)) {
             resetLeaveModal(); renderCalendar(); generateLeaveList();
-            if (isChefDeService()) { renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); }
+            if (isChefDeService()) { renderValidationRC(); updateValidationRCBadge(); }
         }
     });
     function resetLeaveModal() {
@@ -6409,7 +6218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (validateLeave(dateStr, 'approved', comment)) {
             document.getElementById('validate-leave-modal').classList.remove('active');
             renderCalendar(); renderTeamCalendar(); generateLeaveList();
-            if (isChefDeService()) { renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); }
+            if (isChefDeService()) { renderValidationRC(); updateValidationRCBadge(); }
         }
     });
     document.getElementById('reject-leave')?.addEventListener('click', () => {
@@ -6420,7 +6229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (validateLeave(dateStr, 'rejected', comment)) {
             document.getElementById('validate-leave-modal').classList.remove('active');
             renderCalendar(); renderTeamCalendar(); generateLeaveList();
-            if (isChefDeService()) { renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); }
+            if (isChefDeService()) { renderValidationRC(); updateValidationRCBadge(); }
         }
     });
     document.getElementById('cancel-validation')?.addEventListener('click', () => { document.getElementById('validate-leave-modal').classList.remove('active'); });
@@ -6445,7 +6254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
         rcQuickDate = null;
-        renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); renderCalendar();
+        renderValidationRC(); updateValidationRCBadge(); renderCalendar();
     });
     document.getElementById('reject-rc-quick')?.addEventListener('click', () => {
         const comment = document.getElementById('rc-quick-comment') ? document.getElementById('rc-quick-comment').value.trim() : '';
@@ -6475,7 +6284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('rc-quick-validate-modal').classList.remove('active');
         document.getElementById('approve-rc-quick').style.display = '';
-        renderValidationRC(); renderCancelValidation(); updateValidationRCBadge(); updateListTabBadge(); renderCalendar();
+        renderValidationRC(); updateValidationRCBadge(); updateListTabBadge(); renderCalendar();
     });
 
     // Équipes
@@ -6634,10 +6443,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-// Protection copie (F12 temporairement autorise pour debug)
+// Protection copie
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
+    // Bloquer Ctrl+S, Ctrl+U, Ctrl+P, F12
     if (e.ctrlKey && ['s','u','p'].includes(e.key.toLowerCase())) e.preventDefault();
+    if (e.key === 'F12') e.preventDefault();
+    // Bloquer Ctrl+Shift+I (DevTools)
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') e.preventDefault();
+    // Bloquer Ctrl+Shift+J (Console)
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'j') e.preventDefault();
+});
+// Bloquer la selection du texte sur double-clic hors champs
+document.addEventListener('selectstart', e => {
+    if (!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
 });
 </script>
 </body>
