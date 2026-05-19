@@ -1574,7 +1574,7 @@ let users = [
       role: "admin", managerId: null, service: "jour", teamId: null,
       balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
     { id: 2, username: "guilsylv", password: "guilsylvassociationsaintemarie",
-      name: "Sylvain Guilhem", email: "guilhem.syl@gmail.com",
+      name: "Sylvain Guilhem", email: "",
       role: "admin", managerId: null, service: "jour", teamId: null,
       balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
 
@@ -5659,7 +5659,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const defaultUser = DEFAULT_USERS.find(d => d.id === fbUser.id);
             if (defaultUser) {
                 // Garder les donnees Firebase (soldes, etc) mais forcer username/password du code
-                users.push({...fbUser, username: defaultUser.username, password: fbUser.password !== defaultUser.password ? fbUser.password : defaultUser.password});
+                const emailToUse = fbUser.email || defaultUser.email || '';
+                users.push({...fbUser, username: defaultUser.username, email: emailToUse, password: fbUser.password !== defaultUser.password ? fbUser.password : defaultUser.password});
             } else {
                 users.push(fbUser);
             }
