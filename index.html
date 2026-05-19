@@ -2071,10 +2071,20 @@ async function resetPassword(email) {
     user.mustChangePassword = true;
     autoSave();
     // Envoyer le mail a l'administrateur (role admin) plutot qu'au salarie
+    // Recharger les donnees Firebase pour s'assurer d'avoir l'email a jour
+    if (window._fbLoad) {
+        const freshData = await window._fbLoad();
+        if (freshData && freshData.users) {
+            freshData.users.forEach(fbUser => {
+                const u = users.find(x => x.id === fbUser.id);
+                if (u && fbUser.email) u.email = fbUser.email;
+            });
+        }
+    }
     const adminUser = users.find(u => u.role === 'admin' && u.email);
     const adminEmail = adminUser ? adminUser.email : null;
     if (!adminEmail) {
-        showNotification('⚠️ Mot de passe réinitialisé mais aucun email admin configuré. Communiquez le mot de passe manuellement.', 'info');
+        showNotification('⚠️ Mot de passe réinitialisé mais aucun email admin configuré. Allez dans Administration > Éditer votre profil pour ajouter votre email.', 'info');
         return true;
     }
     await emailjs.send('service_oawv7mi', 'template_f82be1k', {
