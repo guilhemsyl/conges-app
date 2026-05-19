@@ -490,11 +490,11 @@
         </div>
         <div class="modal-body">
             <p style="margin-bottom:15px;color:#7f8c8d;font-size:0.95rem;">
-                Entrez votre adresse email. Si elle est reconnue, votre mot de passe sera réinitialisé au mot de passe initial.
+                Entrez votre identifiant. Votre administrateur sera averti de votre demande de réinitialisation de mot de passe.
             </p>
             <div class="form-group">
-                <label for="reset-email">Adresse email :</label>
-                <input type="email" id="reset-email" placeholder="votre@email.com">
+                <label for="reset-email">Identifiant :</label>
+                <input type="text" id="reset-email" placeholder="ex�: guilsylv" autocomplete="username">
             </div>
             <div id="reset-confirm-msg" style="display:none;margin-top:12px;padding:12px;border-radius:6px;font-size:0.9rem;"></div>
         </div>
@@ -1572,143 +1572,143 @@ let users = [
     { id: 1, username: "admidire", password: "admidireassociationsaintemarie",
       name: "Admin Direction", email: "admin@monvillage.fr",
       role: "admin", managerId: null, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
     { id: 2, username: "guilsylv", password: "guilsylvassociationsaintemarie",
       name: "Sylvain Guilhem", email: "guilhem.syl@gmail.com",
       role: "admin", managerId: null, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
 
     // ---- Comptes test ----
     { id: 3, username: "chefserv", password: "ChefService1",
       name: "Chef Service Test", email: "chef.service.test@monvillage.fr",
       role: "chef(fe) de service", managerId: null, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: false  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: false  },
     { id: 4, username: "salatest", password: "Salarie1",
       name: "Salarié Test", email: "salarie.test@monvillage.fr",
       role: "employé", managerId: 3, service: "jour", teamId: null,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: false  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: false  },
 
     // ---- Cycle 1 ----
     { id: 10, username: "meld", password: "meldassociationsaintemarie",
       name: "Meldem", email: "meldem@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 1,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 11, username: "mosa", password: "mosaassociationsaintemarie",
       name: "Mosa", email: "mosa@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 3,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 12, username: "cham", password: "chamassociationsaintemarie",
       name: "Chamontin", email: "chamontin@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 6,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 13, username: "giar", password: "giarassociationsaintemarie",
       name: "Giarratana", email: "giarratana@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 7,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Cycle 2 ----
     { id: 20, username: "bal", password: "balassociationsaintemarie",
       name: "Bal", email: "bal@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 1,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 21, username: "gimo", password: "gimoassociationsaintemarie",
       name: "Gimondo", email: "gimondo@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 3,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 22, username: "legueh", password: "leguehassociationsaintemarie",
       name: "Le Guehennec", email: "leguehennec@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 5,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 23, username: "meargarc", password: "meargarcassociationsaintemarie",
       name: "Mear Garcia", email: "meargarcia@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 7,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Cycle 3 ----
     { id: 30, username: "chav", password: "chavassociationsaintemarie",
       name: "Chavagnat", email: "chavagnat@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 1,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 31, username: "dezorz", password: "dezorzassociationsaintemarie",
       name: "De Zorzi", email: "dezorzi@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 4,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 32, username: "gorg", password: "gorgeassociationsaintemarie",
       name: "Gorge", email: "gorge@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 5,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 33, username: "ardo", password: "ardoassociationsaintemarie",
       name: "Ardouin", email: "ardouin@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 7,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Cycle 4 ----
     { id: 40, username: "comm", password: "commassociationsaintemarie",
       name: "Commandeur", email: "commandeur@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 2,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 41, username: "pujo", password: "pujoassociationsaintemarie",
       name: "Pujol", email: "pujol@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 4,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 42, username: "djel", password: "djelassociationsaintemarie",
       name: "Djelloul", email: "djelloul@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 5,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Cycle 5 ----
     { id: 50, username: "fort", password: "fortassociationsaintemarie",
       name: "Fortas", email: "fortas@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 2,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 51, username: "inno", password: "innoassociationsaintemarie",
       name: "Innoncenti", email: "innoncenti@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 4,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 52, username: "siks", password: "siksassociationsaintemarie",
       name: "Siksik", email: "siksik@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 6,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Cycle 6 ----
     { id: 60, username: "beha", password: "behaassociationsaintemarie",
       name: "Behague", email: "behague@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 2,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 61, username: "ever", password: "everassociationsaintemarie",
       name: "Everest", email: "everest@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 3,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
     { id: 62, username: "tenz", password: "tenzassociationsaintemarie",
       name: "Tenza", email: "tenza@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 6,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Externat ----
     { id: 70, username: "raty", password: "ratyassociationsaintemarie",
       name: "Raty", email: "raty@monvillage.fr",
       role: "employé", managerId: 1, service: "jour", teamId: 8,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true  },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true  },
 
     // ---- Veilleurs de Nuit A (Guilhem + Martino) ----
     { id: 80, username: "guil", password: "guilassociationsaintemarie",
       name: "Guilhem", email: "guilhem@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 9,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
     { id: 81, username: "mart", password: "martassociationsaintemarie",
       name: "Martino", email: "martino@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 9,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
 
     // ---- Veilleurs de Nuit B (Baradi + Costa) ----
     { id: 82, username: "bara", password: "baraassociationsaintemarie",
       name: "Baradi", email: "baradi@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 10,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
     { id: 83, username: "cost", password: "costassociationsaintemarie",
       name: "Costa", email: "costa@monvillage.fr",
       role: "employé", managerId: 1, service: "nuit", teamId: 10,
-      balances: { CP: 0, RC: 0 }, mustChangePassword: true },
+      balances: { CP: 30, RC: 1800 }, mustChangePassword: true },
 ];
 
 // Génère les dates d'une semaine ISO à partir de son numéro
@@ -5726,7 +5726,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('confirm-reset-password'); btn.style.display = ''; btn.disabled = false; btn.textContent = 'Réinitialiser';
     });
     document.getElementById('confirm-reset-password')?.addEventListener('click', async () => {
-        const email = document.getElementById('reset-email').value.trim();
+        const email = document.getElementById('reset-email').value.trim(); // contient l'identifiant
         const msgEl = document.getElementById('reset-confirm-msg');
         const btn   = document.getElementById('confirm-reset-password');
         if (!email) { showNotification('Veuillez saisir votre email', 'error'); return; }
